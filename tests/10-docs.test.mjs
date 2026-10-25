@@ -127,6 +127,7 @@ test('cooking mode notes: why steps use replaceState, the hash, tap zones, the w
   const doc = read('docs/cooking-mode-notes.md');
   assert.match(doc, /replaceState[^\n]*Back leaves cooking mode/i);
   assert.match(doc, /`#step-N`[^\n]*`#done`/);
+  assert.match(doc, /hashchange[^\n]*Back[^\n]*forward[^\n]*re-render/i, 'browser Back/forward changing the hash re-renders the step');
   assert.match(doc, /left 35%[^\n]*back/i);
   assert.match(doc, /Screen stays on[^\n]*Screen may sleep/i);
   assert.match(doc, /Done clears[^\n]*ticks[^\n]*Undo/i);

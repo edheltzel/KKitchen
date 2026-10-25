@@ -8,6 +8,18 @@ import { tmpdir } from 'node:os';
 import { join, extname, resolve } from 'node:path';
 
 const dist = resolve(new URL('../dist', import.meta.url).pathname);
+/** The `/*` block of dist/_headers (what Cloudflare would add to every response), so the e2e runs under the live headers. */
+function headerRules() {
+  const file = join(dist, '_headers');
+  if (!existsSync(file)) return {};
+  const out = {};
+  let inAll = false;
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    if (/^\S/.test(line)) inAll = line.trim() === '/*';
+    else if (inAll && line.includes(':')) { const i = line.indexOf(':'); out[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
+  }
+  return out;
+}
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webmanifest': 'application/manifest+json' };
 
 /** The phone every e2e emulates (CSS pixels). One place, so a check never hardcodes the screen height. */
@@ -16,7 +28,9 @@ export const PHONE_HEIGHT = 844;
 
 export async function startHarness({ port = Number(process.env.PORT ?? 4399), debug = 9334, scheme = 'light' } = {}) {
   const chromePath = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  const liveHeaders = headerRules();
   const server = createServer((req, res) => {
+    for (const [k, v] of Object.entries(liveHeaders)) res.setHeader(k, v);
     const path = new URL(req.url, 'http://x').pathname;
     let file = join(dist, path);
     if (!file.startsWith(dist)) return res.writeHead(403).end();
