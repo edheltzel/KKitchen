@@ -169,9 +169,9 @@ export function filterOptions(): { meal: string[]; time: string[]; diet: string[
 /** Every ingredient line of a recipe, in page order. */
 export const flatItems = (recipe: ExampleRecipe): Ingredient[] => recipe.groups.flatMap((g) => [...g.items]);
 
-/** Up to and including 120 minutes stays in minutes; above that it reads in hours: 125 is "2 h 5 min", 360 is "6 h". */
+/** Under 120 minutes stays in minutes; from 120 it reads in hours: 120 is "2 h", 125 is "2 h 5 min", 360 is "6 h". */
 export const formatMinutes = (n: number): string => {
-  if (n <= 120) return `${n} min`;
+  if (n < 120) return `${n} min`;
   const h = Math.floor(n / 60);
   const m = n % 60;
   return m === 0 ? `${h} h` : `${h} h ${m} min`;

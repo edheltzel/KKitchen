@@ -83,8 +83,8 @@ test('the meta line leaves the prep out when the note gives no prep time, so it 
   assert.equal(recipeMeta({ ...base, prep: 0, cook: 0, serves: 2 }), 'No cooking · Serves 2');
 });
 
-test('formatMinutes: minutes up to and including 120, hours and minutes above it', () => {
-  const cases = [[0, '0 min'], [1, '1 min'], [45, '45 min'], [119, '119 min'], [120, '120 min'], [121, '2 h 1 min'], [125, '2 h 5 min'], [180, '3 h'], [360, '6 h'], [385, '6 h 25 min'], [480, '8 h'], [1450, '24 h 10 min']];
+test('formatMinutes: minutes up to 119, hours from 120 (120 is "2 h")', () => {
+  const cases = [[0, '0 min'], [1, '1 min'], [45, '45 min'], [119, '119 min'], [120, '2 h'], [121, '2 h 1 min'], [125, '2 h 5 min'], [180, '3 h'], [360, '6 h'], [385, '6 h 25 min'], [480, '8 h'], [1450, '24 h 10 min']];
   for (const [n, text] of cases) assert.equal(formatMinutes(n), text, String(n));
 });
 

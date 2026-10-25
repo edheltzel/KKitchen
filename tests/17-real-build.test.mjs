@@ -115,7 +115,7 @@ test('the Done screen says "Dinner\'s ready" for the dinners and "All done" for 
   assert.equal(heading('high-protein-brownies'), 'All done');
 });
 
-test('home cards and recipe pages show honest times: the wait next to the minutes, hours above 120 min', () => {
+test('home cards and recipe pages show honest times: the wait next to the minutes, hours from 120 min', () => {
   const home = page('index.html');
   assert.ok(home.includes('60 min +\u00a02\u00a0h\u00a0marinate'));
   assert.ok(home.includes('6 h 25 min'));
