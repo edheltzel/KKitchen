@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { realNotes } from '../src/data/recipes.ts';
-import { flatItems, recipeMeta, confirmedTags, TIME_OPTIONS } from '../src/data/examples.ts';
+import { flatItems, recipeMeta, cardTime, confirmedTags, TIME_OPTIONS } from '../src/data/examples.ts';
 import { isValidId } from '../src/scripts/ratings.ts';
 
 // These tests read the real data module directly, so they pass whatever KK_DATA says.
@@ -27,15 +27,16 @@ test('the stub, the furniture note and the Recipes index are not in the data', (
   assert.ok(!/youtube|furniture/i.test(json));
 });
 
-test('fried chicken: serves 6, prep 15, cook 45, three groups, 16 ingredients, 6 steps, 4 notes', () => {
+test('fried chicken: serves 6, prep 15, cook 45, three groups, 16 ingredients, 6 steps, 5 notes', () => {
   const r = by('gluten-free-fried-chicken');
   assert.equal(r.meal, 'dinner');
   assert.deepEqual([r.serves, r.prep, r.cook, r.minutes], [6, 15, 45, 60]);
   assert.deepEqual(r.groups.map((g) => [g.title, g.items.length]), [['Marinade', 6], ['Breading', 9], ['For frying', 1]]);
   assert.equal(flatItems(r).length, 16);
   assert.equal(r.steps.length, 6);
-  assert.equal(r.notes.length, 4);
-  assert.equal(recipeMeta(r), 'Prep 15 min · Cook 45 min · Serves 6');
+  assert.equal(r.notes.length, 5);
+  assert.equal(recipeMeta(r), 'Prep 15 min · Cook 45 min · Plus 2 h marinate · Serves 6');
+  assert.equal(cardTime(r), '60 min + 2 h marinate');
 });
 
 test('fried chicken: the 2 hour marinate is in the first note and in step 1, so 60 min is not the whole story', () => {
@@ -126,4 +127,21 @@ test('the shared data rules hold: prep + cook = minutes, valid unique item ids, 
     }
     for (const n of r.notes) assert.ok(n.length > 0 && !/\n/.test(n));
   }
+});
+
+test('fried chicken: the wait is 2 h marinate, "at least" stays in the notes, and a note says frying in batches takes longer than the 45 min', () => {
+  const r = by('gluten-free-fried-chicken');
+  assert.equal(r.wait, '2 h marinate');
+  assert.match(r.notes[0], /at least 2 hours to marinate, overnight is best/);
+  assert.ok(r.notes.some((n) => /12 pieces/.test(n) && /3 or 4 at a time/.test(n) && /15-18 minutes/.test(n) && /longer than the 45 min/.test(n)));
+  assert.deepEqual([r.prep, r.cook, r.minutes], [15, 45, 60], 'the figures stay as the note has them');
+});
+
+test('only the fried chicken has a wait, and the roast reads in hours', () => {
+  assert.deepEqual(realNotes.filter((r) => r.wait).map((r) => r.id), ['gluten-free-fried-chicken']);
+  const roast = by('slow-cooker-roast');
+  assert.equal(cardTime(roast), '6 h 25 min');
+  assert.equal(recipeMeta(roast), 'Prep 25 min · Cook 6 h · Serves 8');
+  assert.match(roast.notes[0], /6 to 8 hours on HIGH/);
+  assert.equal(cardTime(by('high-protein-brownies')), '25 min');
 });

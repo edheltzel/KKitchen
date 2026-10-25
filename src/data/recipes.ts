@@ -3,7 +3,7 @@
 // Approval: these notes carry no approved marker, but the captain asked for these three by name, so each is treated as approved.
 // Gluten-free: the gluten-free tag is held until the captain confirms it (the fried chicken is still open), so no recipe has any tag.
 // Credit: `source` shows as the "Original recipe" link. `author` is stored only; no page shows it yet.
-// Time: `minutes` is prep + cook. Wait time is not part of it, so it goes in the notes (marinate) and in the step text.
+// Time: `minutes` is prep + cook, and the time filter uses it. A wait (the chicken's marinate) is `wait`: shown beside the minutes, not in them. The note's own words (at least 2 hours) stay in the notes.
 import type { ExampleRecipe, Ingredient, Step } from './examples.ts';
 
 const it = (id: string, text: string): Ingredient => ({ id, text });
@@ -13,7 +13,7 @@ const friedChicken: ExampleRecipe = {
   id: 'gluten-free-fried-chicken', name: 'Gluten-Free Fried Chicken', meal: 'dinner', approved: true, tags: [],
   source: 'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/',
   ingredients: ['chicken', 'milk', 'vinegar', 'flour', 'cornstarch', 'paprika', 'oil'],
-  prep: 15, cook: 45, minutes: 60, serves: 6,
+  prep: 15, cook: 45, minutes: 60, wait: '2 h marinate', serves: 6,
   groups: [
     { title: 'Marinade', items: [
       it('chicken-thighs', '6 chicken thighs'),
@@ -48,6 +48,7 @@ const friedChicken: ExampleRecipe = {
   ],
   notes: [
     'Plus at least 2 hours to marinate, overnight is best. That time is not in the 60 min.',
+    'Frying 12 pieces, 3 or 4 at a time, at 15-18 minutes each takes longer than the 45 min cook time.',
     'Use a thermometer to keep the oil at 350°F. It will dip when the chicken goes in, so let it climb back to 350°F before the next batch.',
     'Let the breaded chicken sit on a baking sheet for 5 minutes before frying.',
     'Leftovers: cool completely, store airtight in the fridge up to 3 days. Reheat in the microwave, or on a baking sheet at 350°F for 15-20 minutes.',

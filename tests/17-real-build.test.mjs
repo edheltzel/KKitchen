@@ -95,7 +95,7 @@ test('the real build stays under the same 102,400 byte CSS cap', () => {
 });
 
 test('each recipe page shows its notes under the steps, one line per note, and the marinate time is the first chicken note', () => {
-  const counts = { 'gluten-free-fried-chicken': 4, 'slow-cooker-roast': 4, 'high-protein-brownies': 3 };
+  const counts = { 'gluten-free-fried-chicken': 5, 'slow-cooker-roast': 4, 'high-protein-brownies': 3 };
   for (const id of IDS) {
     const html = page(`recipe/${id}/index.html`);
     const section = html.match(/<section aria-labelledby="notes-title"[\s\S]*?<\/section>/);
@@ -113,4 +113,17 @@ test('the Done screen says "Dinner\'s ready" for the dinners and "All done" for 
   assert.equal(heading('gluten-free-fried-chicken'), "Dinner's ready");
   assert.equal(heading('slow-cooker-roast'), "Dinner's ready");
   assert.equal(heading('high-protein-brownies'), 'All done');
+});
+
+test('home cards and recipe pages show honest times: the wait next to the minutes, hours above 120 min', () => {
+  const home = page('index.html');
+  assert.ok(home.includes('60 min + 2 h marinate'));
+  assert.ok(home.includes('6 h 25 min'));
+  assert.ok(!home.includes('385 min'));
+  assert.ok(home.includes('25 min'));
+  assert.ok(page('recipe/gluten-free-fried-chicken/index.html').includes('Prep 15 min · Cook 45 min · Plus 2 h marinate · Serves 6'));
+  assert.ok(page('recipe/slow-cooker-roast/index.html').includes('Prep 25 min · Cook 6 h · Serves 8'));
+  assert.ok(!page('recipe/slow-cooker-roast/index.html').includes('360 min'));
+  assert.match(home, /data-minutes="60"/);
+  assert.match(home, /data-minutes="385"/);
 });
