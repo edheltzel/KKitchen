@@ -20,3 +20,9 @@ test('the cook screens obey [hidden] (flex would otherwise win) and every tap ta
   for (const cls of ['.kk-exit,', '.kk-wake-dismiss', '.kk-cook-main', '.kk-cook-back']) assert.ok(section.includes(cls), cls);
   for (const m of section.matchAll(/min-height: ([\d.]+)rem/g)) assert.ok(Number(m[1]) >= 2.25, m[0]);
 });
+
+test('on a step the Use now rows are not struck through or greyed; the strike stays the general rule (Gather)', () => {
+  assert.match(css, /\.kk-use-now \.kk-tick:has\(input:checked\) span \{\s*color: inherit;\s*text-decoration: none;\s*\}/);
+  assert.match(css, /\.kk-tick:has\(input:checked\) span \{[^}]*line-through/);
+  assert.match(read('src/pages/cook/[id].astro'), /id="use-now" class="[^"]*kk-use-now/);
+});

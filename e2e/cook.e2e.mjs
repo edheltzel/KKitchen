@@ -38,8 +38,16 @@ try {
   await click('#use-now input[data-use]');
   await click('#back-step');
   check('Back goes to Gather, where the spaghetti tick from Use now is the same tick', (await shown()) === 'gather' && (await hash()) === '' && (await ticked()) === 'garlic,spaghetti,tomato' && (await text('#ready-count')) === '3 of 4 ready · tap a row');
+  const look = (sel) => ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); const s = getComputedStyle(e); return { line: s.textDecorationLine, color: s.color }; })()`);
+  const gatherTicked = await look('#screen-gather label:has(input:checked) span');
+  check('(Gather keeps its strike-through and muted color on a ticked row)', gatherTicked.line === 'line-through', JSON.stringify(gatherTicked));
   await click('#start');
   check('step 1 again: the Use now row is ticked', (await used()) === 'spaghetti');
+  const useTicked = await look('#use-now label:has(input:checked) span');
+  await ev("document.querySelector('#use-now input').click()");
+  const useOff = await look('#use-now label span');
+  await ev("document.querySelector('#use-now input').click()");
+  check('on Step a ticked Use now row shows the tick but no line-through, and the text is the same full-strength color as an unticked row', useTicked.line === 'none' && useTicked.color === useOff.color && useTicked.color !== gatherTicked.color, JSON.stringify([useTicked, useOff, gatherTicked]));
   check('Next step is the primary button and Back is the quiet one, both 44px or more', await ev("(() => { const n = document.querySelector('#next'), b = document.querySelector('#back-step'); return n.classList.contains('btn-primary') && !b.classList.contains('btn-primary') && n.getBoundingClientRect().height >= 44 && b.getBoundingClientRect().height >= 44 && n.getBoundingClientRect().width > b.getBoundingClientRect().width; })()"));
   check('on a phone the step screen does not scroll sideways and the buttons are inside the screen', await ev("document.documentElement.scrollWidth <= innerWidth && document.querySelector('#next').getBoundingClientRect().bottom <= innerHeight"));
 
