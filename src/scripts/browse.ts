@@ -29,7 +29,7 @@ const empty = $('#empty');
 const emptyText = $('#empty-message');
 
 // Filter options and their labels come from the tray markup, which is built from approved data only.
-const options: Options = { meal: [], time: [], diet: [] };
+const options: Options = { meal: [], time: [], diet: [], who: [] };
 const labels = new Map<string, string>();
 const trayChips = [...tray.querySelectorAll<HTMLButtonElement>('button[data-group]')];
 for (const chip of trayChips) {

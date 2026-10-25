@@ -15,6 +15,7 @@ const OPTIONS = {
   meal: ['breakfast', 'lunch', 'dinner'],
   time: ['15', '30', '45'],
   diet: ['Meatless'],
+  who: ['favorite', 'ed', 'kristina', 'untried'],
 };
 
 const recipes = [
@@ -28,7 +29,7 @@ const names = (state) => filterRecipes(recipes, state).map((r) => r.name);
 test('state round-trips through the address (refresh and shared link give the same results)', () => {
   const link = '?q=tomato&meal=lunch,dinner&time=30&diet=Meatless';
   const state = parseState(link, OPTIONS);
-  assert.deepEqual(state, { q: 'tomato', meal: ['lunch', 'dinner'], time: ['30'], diet: ['Meatless'] });
+  assert.deepEqual(state, { q: 'tomato', meal: ['lunch', 'dinner'], time: ['30'], diet: ['Meatless'], who: [] });
   assert.equal(serializeState(state, OPTIONS), '?q=tomato&meal=lunch%2Cdinner&time=30&diet=Meatless');
   const again = parseState(serializeState(state, OPTIONS), OPTIONS);
   assert.deepEqual(again, state);
@@ -56,49 +57,49 @@ test('unknown params and values from a hand-edited link are dropped; q is capped
 
 // --- filter logic ---------------------------------------------------------------------------------
 test('search matches names and ingredients, case-insensitively', () => {
-  assert.deepEqual(names({ q: 'PASTA', meal: [], time: [], diet: [] }), ['Weeknight Pasta']);
-  assert.deepEqual(names({ q: 'Tomato', meal: [], time: [], diet: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: 'rolled', meal: [], time: [], diet: [] }), ['Overnight Oats']);
+  assert.deepEqual(names({ q: 'PASTA', meal: [], time: [], diet: [], who: [] }), ['Weeknight Pasta']);
+  assert.deepEqual(names({ q: 'Tomato', meal: [], time: [], diet: [], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: 'rolled', meal: [], time: [], diet: [], who: [] }), ['Overnight Oats']);
 });
 
 test('every word of the search must match a name or an ingredient', () => {
-  assert.deepEqual(names({ q: 'tomato garlic', meal: [], time: [], diet: [] }), ['Weeknight Pasta']);
-  assert.deepEqual(names({ q: 'tomato oats', meal: [], time: [], diet: [] }), []);
+  assert.deepEqual(names({ q: 'tomato garlic', meal: [], time: [], diet: [], who: [] }), ['Weeknight Pasta']);
+  assert.deepEqual(names({ q: 'tomato oats', meal: [], time: [], diet: [], who: [] }), []);
 });
 
 test('filters are AND across groups; meal is any-of, time is loosest-wins', () => {
-  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: [], diet: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['30'], diet: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['15'], diet: [] }), []);
-  assert.deepEqual(names({ q: '', meal: [], time: ['15', '30'], diet: ['Meatless'] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: 'tomato', meal: ['dinner'], time: [], diet: [] }), ['Weeknight Pasta']);
+  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: [], diet: [], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['30'], diet: [], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['15'], diet: [], who: [] }), []);
+  assert.deepEqual(names({ q: '', meal: [], time: ['15', '30'], diet: ['Meatless'], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: 'tomato', meal: ['dinner'], time: [], diet: [], who: [] }), ['Weeknight Pasta']);
 });
 
 test('a 30-minute recipe (Tomato Soup) appears under the "30 min or less" chip', () => {
   const searchable = exampleRecipes.map((r) => ({ name: r.name, ingredients: [...r.ingredients], meal: r.meal, minutes: r.minutes, diet: confirmedTags(r) }));
-  const shown = filterRecipes(searchable, { q: '', meal: [], time: ['30'], diet: [] }).map((r) => r.name);
+  const shown = filterRecipes(searchable, { q: '', meal: [], time: ['30'], diet: [], who: [] }).map((r) => r.name);
   assert.ok(shown.includes('Tomato Soup'));
   assert.ok(!shown.includes('Sheet-Pan Vegetables'), '40 minutes is not 30 or less');
 });
 
 test('toggleValue adds and removes one filter value without touching the rest', () => {
-  const s1 = toggleValue({ q: 'x', meal: [], time: [], diet: [] }, 'meal', 'dinner', OPTIONS);
-  assert.deepEqual(s1, { q: 'x', meal: ['dinner'], time: [], diet: [] });
+  const s1 = toggleValue({ q: 'x', meal: [], time: [], diet: [], who: [] }, 'meal', 'dinner', OPTIONS);
+  assert.deepEqual(s1, { q: 'x', meal: ['dinner'], time: [], diet: [], who: [] });
   const s2 = toggleValue(s1, 'meal', 'lunch', OPTIONS);
   assert.deepEqual(s2.meal, ['lunch', 'dinner']);
   assert.deepEqual(toggleValue(s2, 'meal', 'lunch', OPTIONS).meal, ['dinner']);
   assert.equal(activeFilterCount(s2), 2);
-  assert.equal(activeFilterCount({ q: 'only search', meal: [], time: [], diet: [] }), 0);
+  assert.equal(activeFilterCount({ q: 'only search', meal: [], time: [], diet: [], who: [] }), 0);
 });
 
 test('zero-result messages', () => {
-  assert.equal(emptyMessage({ q: 'saffron', meal: [], time: [], diet: [] }), "No recipe lists 'saffron'");
-  assert.equal(emptyMessage({ q: 'saffron', meal: ['dinner'], time: [], diet: [] }), "No recipe lists 'saffron' with these filters");
-  assert.equal(emptyMessage({ q: '', meal: ['dinner'], time: [], diet: [] }), 'No recipes match these filters');
+  assert.equal(emptyMessage({ q: 'saffron', meal: [], time: [], diet: [], who: [] }), "No recipe lists 'saffron'");
+  assert.equal(emptyMessage({ q: 'saffron', meal: ['dinner'], time: [], diet: [], who: [] }), "No recipe lists 'saffron' with these filters");
+  assert.equal(emptyMessage({ q: '', meal: ['dinner'], time: [], diet: [], who: [] }), 'No recipes match these filters');
 });
 
 test('diet tags combine with "every": a recipe needs ALL the picked tags', () => {
-  const options = { meal: [], time: [], diet: ['A', 'B'] };
+  const options = { meal: [], time: [], diet: ['A', 'B'], who: [] };
   const fixtures = [
     { name: 'Only A', ingredients: ['x'], meal: 'dinner', minutes: 10, diet: ['A'] },
     { name: 'A and B', ingredients: ['y'], meal: 'dinner', minutes: 10, diet: ['A', 'B'] },
@@ -109,7 +110,7 @@ test('diet tags combine with "every": a recipe needs ALL the picked tags', () =>
   assert.deepEqual(pick(['A', 'B']), ['A and B']);
   assert.deepEqual(pick(['B']), ['A and B']);
   assert.deepEqual(pick([]), ['Only A', 'A and B', 'Neither']);
-  assert.deepEqual(toggleValue(toggleValue({ q: '', meal: [], time: [], diet: [] }, 'diet', 'B', options), 'diet', 'A', options).diet, ['A', 'B']);
+  assert.deepEqual(toggleValue(toggleValue({ q: '', meal: [], time: [], diet: [], who: [] }, 'diet', 'B', options), 'diet', 'A', options).diet, ['A', 'B']);
 });
 
 // --- tab switches / Back: the session remembers the Recipes URL and the scroll per URL ----------
@@ -176,4 +177,63 @@ test('session survives storage that throws (private mode)', () => {
   session.saveScroll('/', 5);
   assert.equal(session.recipesHref(), '/');
   assert.equal(session.readScroll('/'), 0);
+});
+
+// --- "Who liked it" rating filter -------------------------------------------------------------
+const rated = [
+  { id: 'r-pasta', name: 'Weeknight Pasta', ingredients: ['tomato'], meal: 'dinner', minutes: 25, diet: [] },
+  { id: 'r-soup', name: 'Tomato Soup', ingredients: ['tomato'], meal: 'lunch', minutes: 30, diet: [] },
+  { id: 'r-oats', name: 'Overnight Oats', ingredients: ['oats'], meal: 'breakfast', minutes: 10, diet: [] },
+  { id: 'r-rice', name: 'Lemon Rice', ingredients: ['rice'], meal: 'lunch', minutes: 20, diet: [] },
+];
+const at = (value) => ({ value, at: 1 });
+const ratings = {
+  'r-pasta': { ed: at('loved'), kristina: at('loved') }, // Family favorite
+  'r-soup': { ed: at('loved') },
+  'r-oats': { kristina: at('loved'), ed: at('not-for-us') },
+  // r-rice: nobody has rated it
+};
+const whoNames = (who, extra = {}, r = ratings) =>
+  filterRecipes(rated, { q: '', meal: [], time: [], diet: [], who, ...extra }, r).map((x) => x.name);
+
+test('who: address round trip in canonical order; unknown values are dropped', () => {
+  const state = parseState('?who=untried,bob,ed&diet=Meatless&q=x&meal=lunch', OPTIONS);
+  assert.deepEqual(state.who, ['ed', 'untried']);
+  assert.equal(serializeState(state, OPTIONS), '?q=x&meal=lunch&diet=Meatless&who=ed%2Cuntried', 'who comes last, in option order');
+  assert.deepEqual(parseState(serializeState(state, OPTIONS), OPTIONS), state);
+  assert.deepEqual(parseState('?who=bob,%3Cscript%3E', OPTIONS).who, []);
+  assert.equal(serializeState(parseState('?who=favorite&who=ed', OPTIONS), OPTIONS), '?who=favorite', 'first who parameter only');
+});
+
+test('who: toggling and counting', () => {
+  const s1 = toggleValue({ q: '', meal: [], time: [], diet: [], who: [] }, 'who', 'untried', OPTIONS);
+  const s2 = toggleValue(s1, 'who', 'favorite', OPTIONS);
+  assert.deepEqual(s2.who, ['favorite', 'untried']);
+  assert.equal(activeFilterCount(s2), 2);
+  assert.deepEqual(toggleValue(s2, 'who', 'favorite', OPTIONS).who, ['untried']);
+});
+
+test('who: Family favorites shows only recipes both people loved', () => {
+  assert.deepEqual(whoNames(['favorite']), ['Weeknight Pasta']);
+});
+
+test('who: "Ed loved it" / "Kristina loved it" / "Not tried yet"', () => {
+  assert.deepEqual(whoNames(['ed']), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(whoNames(['kristina']), ['Weeknight Pasta', 'Overnight Oats']);
+  assert.deepEqual(whoNames(['untried']), ['Lemon Rice']);
+});
+
+test('who: several picks mean any of them; different groups still all have to match', () => {
+  assert.deepEqual(whoNames(['ed', 'kristina']), ['Weeknight Pasta', 'Tomato Soup', 'Overnight Oats']);
+  assert.deepEqual(whoNames(['ed', 'untried']), ['Weeknight Pasta', 'Tomato Soup', 'Lemon Rice']);
+  assert.deepEqual(whoNames(['ed', 'kristina'], { meal: ['lunch'] }), ['Tomato Soup']);
+  assert.deepEqual(whoNames(['favorite'], { meal: ['lunch'] }), []);
+  assert.deepEqual(filterRecipes(rated, { q: 'tomato', meal: [], time: [], diet: [], who: ['ed'] }, ratings).map((x) => x.name), ['Weeknight Pasta', 'Tomato Soup']);
+});
+
+test('who: an empty "no ratings yet" store and an unavailable store (null) both keep browsing working', () => {
+  assert.deepEqual(whoNames([], {}, null), ['Weeknight Pasta', 'Tomato Soup', 'Overnight Oats', 'Lemon Rice']);
+  assert.deepEqual(whoNames(['favorite'], {}, {}), [], 'nothing is a favorite yet');
+  assert.equal(whoNames(['untried'], {}, {}).length, 4, 'everything is untried yet');
+  assert.equal(whoNames(['favorite'], {}, null).length, 4, 'ratings unavailable: the rating filter is not applied');
 });

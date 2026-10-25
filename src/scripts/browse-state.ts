@@ -1,7 +1,10 @@
 // Pure browse state: no DOM, so node:test can run it. The page address is the source of truth
-// (?q=...&meal=...&time=...&diet=...), which makes refresh, Back and shared links restore the same results.
+// (?q=...&meal=...&time=...&diet=...&who=...), which makes refresh, Back and shared links restore the same results.
 
-export const GROUPS = ['meal', 'time', 'diet'] as const;
+import { likedBy, type Liked, type Ratings } from './ratings.ts';
+
+// `who` is the "Who liked it" rating group: favorite, ed, kristina, untried (see ratings.ts).
+export const GROUPS = ['meal', 'time', 'diet', 'who'] as const;
 export type Group = (typeof GROUPS)[number];
 export type Options = Record<Group, string[]>;
 
@@ -10,9 +13,11 @@ export interface BrowseState {
   meal: string[];
   time: string[];
   diet: string[];
+  who: string[];
 }
 
 export interface Searchable {
+  id?: string;
   name: string;
   ingredients: string[];
   meal: string;
@@ -22,7 +27,7 @@ export interface Searchable {
 
 const MAX_QUERY = 100;
 
-export const emptyState = (): BrowseState => ({ q: '', meal: [], time: [], diet: [] });
+export const emptyState = (): BrowseState => ({ q: '', meal: [], time: [], diet: [], who: [] });
 
 // Keep only known values, in the canonical option order.
 const canonical = (values: string[], allowed: string[]): string[] => allowed.filter((v) => values.includes(v));
@@ -35,6 +40,7 @@ export function parseState(search: string, options: Options): BrowseState {
     meal: list('meal'),
     time: list('time'),
     diet: list('diet'),
+    who: list('who'),
   };
 }
 
@@ -64,8 +70,10 @@ export function toggleValue(state: BrowseState, group: Group, value: string, opt
 
 // Search: every word must appear in the name or in an ingredient. Filters: AND across groups.
 // Within a group: meal is any-of, time is "N min or less" (several picks mean the loosest one),
-// diet is every-of (a recipe needs ALL the picked tags).
-export function matchesRecipe(recipe: Searchable, state: BrowseState): boolean {
+// diet is every-of (a recipe needs ALL the picked tags), who is any-of (Ed loved it OR Kristina loved it).
+// `ratings` is null while the ratings store is unavailable: the who group is then not applied, so
+// browsing and search keep working.
+export function matchesRecipe(recipe: Searchable, state: BrowseState, ratings: Ratings | null = null): boolean {
   const name = recipe.name.toLowerCase();
   const ingredients = recipe.ingredients.map((i) => i.toLowerCase());
   const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -73,11 +81,15 @@ export function matchesRecipe(recipe: Searchable, state: BrowseState): boolean {
   if (state.meal.length && !state.meal.includes(recipe.meal)) return false;
   if (state.time.length && recipe.minutes > Math.max(...state.time.map(Number))) return false;
   if (!state.diet.every((d) => recipe.diet.includes(d))) return false;
+  if (ratings && state.who.length) {
+    const liked = recipe.id ? likedBy(ratings, recipe.id) : new Set<Liked>(['untried']);
+    if (!state.who.some((w) => liked.has(w as Liked))) return false;
+  }
   return true;
 }
 
-export const filterRecipes = <T extends Searchable>(recipes: readonly T[], state: BrowseState): T[] =>
-  recipes.filter((r) => matchesRecipe(r, state));
+export const filterRecipes = <T extends Searchable>(recipes: readonly T[], state: BrowseState, ratings: Ratings | null = null): T[] =>
+  recipes.filter((r) => matchesRecipe(r, state, ratings));
 
 export function emptyMessage(state: BrowseState): string {
   const q = state.q.trim();
