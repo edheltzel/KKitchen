@@ -882,6 +882,29 @@
 .kk-cook-wide {
   width: 100%;
 }
+/* Over 900px the room is read from an arm's length away, so the step sentence, Use now rows and Next step grow together.
+   Phones keep the sizes above. The tap zones are measured on the column, which does not change. */
+@media (min-width: 901px) {
+  .kk-step-text {
+    font-size: 2.5rem;
+  }
+  .kk-ticks-big .kk-tick {
+    min-height: 4.5rem;
+    font-size: 1.5rem;
+  }
+  .kk-ticks-big .kk-tick-box {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .kk-cook-main {
+    min-height: 4.75rem;
+    font-size: 1.5rem;
+  }
+  .kk-cook-back {
+    min-height: 4.75rem;
+    font-size: 1.25rem;
+  }
+}
 .kk-done-mark {
   display: flex;
   align-items: center;

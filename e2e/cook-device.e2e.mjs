@@ -129,6 +129,11 @@ try {
   await loaded();
   check('opened from the recipe page, Exit goes back to it and Back from there does not return to cooking', (await ev('location.pathname')) === '/recipe/example-1/' && (await ev('location.hash')) === '');
 
+  const sizes = () => ev(`(() => { const px = (q) => parseFloat(getComputedStyle(document.querySelector(q)).fontSize); return { text: px('#step-text'), row: px('#use-now .kk-tick span'), next: px('#next'), nextH: document.querySelector('#next').getBoundingClientRect().height }; })()`);
+  await goto('/cook/example-1/#step-1');
+  const phone = await sizes();
+  check('phone: the step sentence, Use now rows and Next step keep their sizes (30px, 18px, 18px)', phone.text === 30 && phone.row === 18 && phone.next === 18, JSON.stringify(phone));
+
   // --- desktop column -------------------------------------------------------------------------------------------------------------------
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
   await goto('/cook/example-1/#step-2');
@@ -136,6 +141,19 @@ try {
   check('desktop: a centred reading column, no sideways scroll, no tab bar', d.w <= 760 && d.w > 360 && Math.abs(d.x * 2 + d.w - d.inner) < 20 && d.scroll <= d.inner && !d.tabs, JSON.stringify(d));
   await tap(20, 400);
   check('desktop: empty space beside the column is not a tap zone', (await hash()) === '#step-2', await hash());
+  await goto('/cook/example-1/#step-1');
+  const big = await sizes();
+  check('desktop: the step sentence is about 40px and Use now rows and Next step scale up with it', big.text >= 38 && big.text <= 46 && big.row >= 22 && big.next >= 22 && big.nextH > phone.nextH, JSON.stringify(big));
+  const wide = await ev("(() => { const r = document.querySelector('#cook').getBoundingClientRect(); return { x: r.x, w: r.width, h: document.documentElement.scrollWidth <= innerWidth }; })()");
+  check('desktop: the larger text still fits the column without sideways scroll', wide.h, JSON.stringify(wide));
+  await goto('/cook/example-1/#step-2');
+  const col2 = await rect('#cook');
+  await tap(Math.round(col2.x + col2.w * 0.9), 120);
+  check('desktop, larger text: a tap on the right of the reading column goes forward', (await hash()) === '#step-3', await hash());
+  await tap(Math.round(col2.x + col2.w * 0.1), 120);
+  check('desktop, larger text: a tap on the left of the reading column goes back', (await hash()) === '#step-2', await hash());
+  await tap(Math.round(col2.x - 30), 120);
+  check('desktop, larger text: a tap beside the column still does nothing', (await hash()) === '#step-2', await hash());
 } catch (e) {
   check('the run finished without an error: ' + e.message, false);
 }
