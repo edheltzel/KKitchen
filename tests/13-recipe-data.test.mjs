@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allExampleNotes, exampleRecipes, recipeMeta, flatItems } from '../src/data/examples.ts';
+import { allExampleNotes, exampleRecipes, recipeMeta, flatItems, formatMinutes, cardTime } from '../src/data/examples.ts';
 import { isValidId } from '../src/scripts/ratings.ts';
 
 const ITEM_ID = /^[a-z][a-z0-9-]{0,39}$/;
@@ -81,4 +81,21 @@ test('the meta line leaves the prep out when the note gives no prep time, so it 
   const base = exampleRecipes[0];
   assert.equal(recipeMeta({ ...base, prep: 0, cook: 25, serves: 8 }), 'Cook 25 min · Serves 8');
   assert.equal(recipeMeta({ ...base, prep: 0, cook: 0, serves: 2 }), 'No cooking · Serves 2');
+});
+
+test('formatMinutes: minutes up to and including 120, hours and minutes above it', () => {
+  const cases = [[0, '0 min'], [1, '1 min'], [45, '45 min'], [119, '119 min'], [120, '120 min'], [121, '2 h 1 min'], [125, '2 h 5 min'], [180, '3 h'], [360, '6 h'], [385, '6 h 25 min'], [480, '8 h'], [1450, '24 h 10 min']];
+  for (const [n, text] of cases) assert.equal(formatMinutes(n), text, String(n));
+});
+
+test('a wait (marinate, chill) is shown after the active time: "+ 2 h marinate" on the card, "Plus 2 h marinate" in the meta line, and only when set', () => {
+  const base = exampleRecipes[0];
+  const waiting = { ...base, prep: 15, cook: 45, minutes: 60, serves: 6, wait: '2 h marinate' };
+  assert.equal(cardTime(waiting), '60 min + 2 h marinate');
+  assert.equal(recipeMeta(waiting), 'Prep 15 min · Cook 45 min · Plus 2 h marinate · Serves 6');
+  const plain = { ...waiting, wait: undefined };
+  assert.equal(cardTime(plain), '60 min');
+  assert.equal(recipeMeta(plain), 'Prep 15 min · Cook 45 min · Serves 6');
+  assert.equal(cardTime({ ...plain, minutes: 385 }), '6 h 25 min');
+  assert.equal(recipeMeta({ ...plain, prep: 25, cook: 360, serves: 8 }), 'Prep 25 min · Cook 6 h · Serves 8');
 });

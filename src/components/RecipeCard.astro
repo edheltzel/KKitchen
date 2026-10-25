@@ -1,7 +1,7 @@
 ---
 import RatingBlock from './RatingBlock.astro';
 import PlanBlock from './PlanBlock.astro';
-import { confirmedTags, exampleTitle, isFixture, type ExampleRecipe } from '../data/examples';
+import { cardTime, confirmedTags, exampleTitle, isFixture, type ExampleRecipe } from '../data/examples';
 
 interface Props {
   recipe: ExampleRecipe;
@@ -28,7 +28,7 @@ const tags = confirmedTags(recipe);
   {isFixture && <span class="badge absolute right-2 top-2 border-0 bg-base-content font-bold text-base-100">Example</span>}
   <div class="card-body gap-1 p-3">
     <h2 class="card-title text-[15px] leading-tight"><a href={`/recipe/${recipe.id}/`} class="kk-card-link">{exampleTitle(recipe)}</a></h2>
-    <p class="font-mono text-[13px] text-kk-muted">{recipe.minutes} min{tags.length > 0 && ` · ${tags.join(', ')}`}</p>
+    <p class="font-mono text-[13px] text-kk-muted">{cardTime(recipe)}{tags.length > 0 && ` · ${tags.join(', ')}`}</p>
     <RatingBlock title={exampleTitle(recipe)} />
     <PlanBlock title={exampleTitle(recipe)} />
   </div>

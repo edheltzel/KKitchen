@@ -42,6 +42,8 @@ export interface ExampleRecipe {
   /** prep + cook = minutes (the total shown on the card). A prep of 0 means the note gives none, and the meta line then leaves it out. */
   prep: number;
   cook: number;
+  /** Hands-off time that is not in `minutes` (a marinate), as short text like "2 h marinate". Shown beside the minutes; the time filter ignores it. */
+  wait?: string;
   serves: number;
   groups: readonly IngredientGroup[];
   steps: readonly Step[];
@@ -167,10 +169,23 @@ export function filterOptions(): { meal: string[]; time: string[]; diet: string[
 /** Every ingredient line of a recipe, in page order. */
 export const flatItems = (recipe: ExampleRecipe): Ingredient[] => recipe.groups.flatMap((g) => [...g.items]);
 
+/** Up to and including 120 minutes stays in minutes; above that it reads in hours: 125 is "2 h 5 min", 360 is "6 h". */
+export const formatMinutes = (n: number): string => {
+  if (n <= 120) return `${n} min`;
+  const h = Math.floor(n / 60);
+  const m = n % 60;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+};
+
+/** The time on a recipe card: "60 min + 2 h marinate", or just "25 min". */
+export const cardTime = (recipe: ExampleRecipe): string =>
+  recipe.wait ? `${formatMinutes(recipe.minutes)} + ${recipe.wait}` : formatMinutes(recipe.minutes);
+
 /** "Prep 10 min · Cook 15 min · Serves 4" */
 export const recipeMeta = (recipe: ExampleRecipe): string =>
   [
-    ...(recipe.prep > 0 ? [`Prep ${recipe.prep} min`] : []),
-    recipe.cook > 0 ? `Cook ${recipe.cook} min` : 'No cooking',
+    ...(recipe.prep > 0 ? [`Prep ${formatMinutes(recipe.prep)}`] : []),
+    recipe.cook > 0 ? `Cook ${formatMinutes(recipe.cook)}` : 'No cooking',
+    ...(recipe.wait ? [`Plus ${recipe.wait}`] : []),
     `Serves ${recipe.serves}`,
   ].join(' · ');
