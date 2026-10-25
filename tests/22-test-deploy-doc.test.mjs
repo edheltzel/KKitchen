@@ -45,3 +45,12 @@ test('test-deploy doc has no secret-looking strings and does not tell anyone to 
   assert.ok(!/wrangler login/.test(d.replace(/Never run `wrangler login`[^\n]*/g, '')));
   assert.ok(!/[A-Za-z0-9_-]{40,}/.test(d), 'nothing token-like');
 });
+
+test('test-deploy doc says CLOUDFLARE_ACCOUNT_ID must be set, and to tell Atlas rather than widen the token', () => {
+  const d = doc();
+  assert.match(d, /CLOUDFLARE_ACCOUNT_ID/);
+  assert.match(d, /account read permission/i);
+  assert.match(d, /tell Atlas/i);
+  assert.match(d, /do not widen the token/i);
+  assert.ok(!/CLOUDFLARE_ACCOUNT_ID\s*=\s*[0-9a-f]{8,}/i.test(d), 'the variable name only, never an account id');
+});

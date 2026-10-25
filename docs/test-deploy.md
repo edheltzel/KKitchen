@@ -55,6 +55,8 @@ There is no history on the server to restore, so rolling back means redeploying 
 ## Token
 
 - Use a scoped API token with Workers edit only (Workers Scripts: Edit, and nothing else on the one account).
+- Set `CLOUDFLARE_ACCOUNT_ID` in the same shell as the token (the id is not secret, but keep it out of the repo). Without it wrangler may try to look the account up, which needs an account read permission that a Workers-edit-only token does not have.
+- If wrangler still asks for more than Workers edit, stop and tell Atlas. Do not widen the token quietly.
 - Before first use, confirm in the token's permission list that there is no D1, KV or DNS permission, no zone access and no account-wide admin. If any is there, do not use the token.
 - Delete the setup token after the first session. Make a new scoped token for any later session.
 - Nothing in this repo contains a token, an account id or a zone id.
