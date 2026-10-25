@@ -179,6 +179,16 @@
   color: var(--color-base-content);
 }
 
+/* Room under the page for whatever is stacked at the bottom: tab bar, Undo bar, search field, banners.
+   stack-room.ts measures the stack; before it runs (or without script) the old fixed room applies. */
+.kk-room {
+  --kk-stack-fallback: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--kk-stack-height, var(--kk-stack-fallback)) + 1.5rem);
+}
+.kk-room[data-search] {
+  --kk-stack-fallback: calc(8.5rem + env(safe-area-inset-bottom));
+}
+
 /* A rating tap with nobody picked highlights the hint. */
 #me-hint[data-nudge='on'] {
   color: var(--kk-accent-text);

@@ -51,3 +51,11 @@ test('the Undo bar takes the tab bar\'s place, just before the nav, hidden to st
   assert.match(bar, /<button[^>]*id="undo-button"[^>]*>\s*Undo\s*<\/button>/);
   assert.ok(stack.indexOf('id="undo-bar"') < stack.indexOf('<nav'));
 });
+
+test('the page leaves room for whatever is stacked at the bottom (tab bar, Undo bar, banner), measured not guessed', () => {
+  const base = read('src/layouts/Base.astro');
+  assert.match(base, /kk-room/);
+  assert.match(base, /import ['"]\.\.\/scripts\/stack-room['"]/);
+  assert.match(read('src/styles/global.css'), /\.kk-room\s*\{[^}]*padding-bottom:\s*calc\(var\(--kk-stack-height,/);
+  assert.match(read('src/scripts/stack-room.ts'), /ResizeObserver[\s\S]*--kk-stack-height/);
+});

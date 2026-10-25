@@ -125,6 +125,32 @@ try {
   await click('#week-retry');
   await sleep(200);
   check('Retry saves the waiting removal, the banner goes and the controls come back', !(await visible('#week-unavailable')) && (await visible(`${row(THU)} [data-role="add"]`)) && (await saved()).entries[THU].recipeId === null && !(await ev("[...document.querySelectorAll('#week-list button')].some((b) => b.disabled)")));
+
+  // 9. room at the bottom: with every day filled, the last day and the hint clear the tab bar and the Undo bar
+  const seedAll = () => ev(`(() => { const at = Date.now(); const ids = ['example-1', 'example-2', 'example-3', 'example-4', 'example-5', 'example-6', 'example-1']; const days = ['${MON}', '${TUE}', '${WED}', '${THU}', '${FRI}', '${SAT}', '${SUN}']; localStorage.setItem('kk:week', JSON.stringify({ v: 1, entries: Object.fromEntries(days.map((d, i) => [d, { recipeId: ids[i], at }])) })); })()`);
+  await seedAll();
+  await goto('/week/');
+  const clearance = async (barSel) => {
+    await ev('scrollTo(0, document.documentElement.scrollHeight)');
+    await sleep(150);
+    const bar = await rect(barSel), last = await rect(`${row(SUN)}`), hint = await rect('#week-list + p');
+    return { gapRow: bar.y - (last.y + last.h), gapHint: bar.y - (hint.y + hint.h) };
+  };
+  const tabGap = await clearance('.kk-dock');
+  check('all seven days are filled for the room check', (await ev(`document.querySelectorAll('#week-list [data-role="name"]').length`)) === 7);
+  check('scrolled to the bottom, Sunday ends at least 8px above the tab bar', tabGap.gapRow >= 8, JSON.stringify(tabGap));
+  check('and the hint line ends above the tab bar too', tabGap.gapHint >= 0, JSON.stringify(tabGap));
+  await click(`${row(MON)} [data-role="remove"]`);
+  const undoGap = await clearance('#undo-bar');
+  check('with the Undo bar showing, Sunday ends at least 8px above it and the hint clears it', (await visible('#undo-bar')) && undoGap.gapRow >= 8 && undoGap.gapHint >= 0, JSON.stringify(undoGap));
+
+  await seedAll();
+  await goto('/week/');
+  await ev("const set3 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:week') throw new Error('full'); return set3.call(this, k, v); };");
+  await click(`${row(MON)} [data-role="remove"]`);
+  const bannerGap = await clearance('#bottom-stack');
+  check('with the Week plan unavailable banner on top of the tab bar, Sunday and the hint still clear the whole bottom stack', (await visible('#week-unavailable')) && bannerGap.gapRow >= 8 && bannerGap.gapHint >= 0, JSON.stringify(bannerGap));
+
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {
