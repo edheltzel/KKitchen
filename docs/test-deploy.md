@@ -19,12 +19,12 @@ Confirm the random name is free, so the deploy cannot overwrite an existing Work
 Wrangler reads the Cloudflare token from the captain's `.env` file in the folder it is started in, so every wrangler command is run from `/Users/ed` and pointed at the project with `-c`. Build and test in the project first, then deploy from `/Users/ed`:
 
 ```
-cd /Users/ed/Developer/KKitchen && rm -rf dist && npm test
+cd /Users/ed/Developer/KKitchen && npm test && rm -rf dist && npm run build
 cd /Users/ed && wrangler deploy -c /Users/ed/Developer/KKitchen/wrangler.jsonc
 ```
 
 - Run it by hand each time. No CI, no watcher, no hook and no schedule publishes this: manual only, and there is no automatic republish.
-- `npm test` builds `dist` and runs every check, including the leak scan and the headers and config tests, so a failing test stops the deploy.
+- `npm test` builds the example fixture into `dist` and runs every check, including the leak scan and the headers and config tests, so a failing test stops the deploy. Its `dist` holds the example recipes, so the deploy always rebuilds afterwards with a plain `npm run build`, which holds only the real recipes. Check `ls dist/recipe` before deploying.
 - Offline rehearsal that needs no login: `cd /Users/ed && wrangler deploy --dry-run -c /Users/ed/Developer/KKitchen/wrangler.jsonc`. It should say the assets directory is the project's `dist`. Last saved output: `~/.agents/Grokbot/kk-proof/kk-05-dry-run.txt`.
 - Wrangler 4.151.0 is what was used on BigMac. It is not a project dependency. Never run `wrangler login`. The token comes from `/Users/ed/.env`: never print or open /Users/ed/.env, and never copy the token into the repo, a log or any output.
 
@@ -64,7 +64,7 @@ There is no history on the server to restore, so rolling back means rebuilding a
 ```
 SRC=$(mktemp -d /private/tmp/kk-rollback.XXXXXX)
 git -C /Users/ed/Developer/KKitchen archive <good-commit> | tar -x -C "$SRC"
-cd "$SRC" && npm ci && rm -rf dist && npm test
+cd "$SRC" && npm ci && npm test && rm -rf dist && npm run build
 cd /Users/ed && wrangler deploy -c "$SRC/wrangler.jsonc"
 ```
 
