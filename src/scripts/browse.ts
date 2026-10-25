@@ -20,6 +20,7 @@ import { PERSON_LABEL, PEOPLE, RATING_LABEL, isFamilyFavorite, ratingOf, type Pe
 import { RATINGS_KEY, createIdentity, createLocalRatingsStore } from './ratings-store';
 import { createRatingsController } from './ratings-controller';
 import { phoneStorage } from './phone-storage';
+import { createUndoBar } from './undo-bar';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -34,8 +35,6 @@ const emptyText = $('#empty-message');
 const meButtons = [...document.querySelectorAll<HTMLButtonElement>('button[data-me]')];
 const meHint = $('#me-hint');
 const unavailableBar = $('#ratings-unavailable');
-const undoBar = $('#undo-bar');
-const bottomStack = $('#bottom-stack');
 const whoNote = $('#who-note');
 const whoNoteText = whoNote.textContent ?? '';
 
@@ -72,6 +71,7 @@ const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')
 // behind the same RatingsStore shape. Blocked storage reads as empty and refuses saves, which shows as
 // "Ratings unavailable" rather than silently losing a tap.
 const ratingsStorage = phoneStorage();
+const undoBar = createUndoBar({ bar: $('#undo-bar'), stack: $('#bottom-stack'), expire: () => controller.dismissUndo() });
 const controller = createRatingsController({
   store: createLocalRatingsStore({ storage: ratingsStorage }),
   identity: createIdentity(ratingsStorage),
@@ -163,7 +163,7 @@ function renderRatings(view: ReturnType<typeof controller.view>): void {
   if (me !== null) meHint.dataset.nudge = 'off';
   unavailableBar.hidden = !unavailable;
   whoNote.textContent = unavailable ? 'Ratings unavailable: this filter is paused until they load.' : whoNoteText;
-  showUndo(view.undo);
+  undoBar.show(view.undo);
 }
 
 // A rating tap with nobody picked: take them to the picker and point at the hint. Nothing is saved.
@@ -174,18 +174,6 @@ function nudgePicker(card: HTMLElement): void {
   meHint.dataset.nudge = 'on';
   $('#me-picker').scrollIntoView({ block: 'center' });
   meButtons[0]?.focus({ preventScroll: true });
-}
-
-// The Undo offer stays for a while, then goes away on its own.
-let undoTimer = 0;
-let shownUndo: object | null = null;
-function showUndo(undo: object | null): void {
-  undoBar.hidden = undo === null;
-  bottomStack.dataset.undo = undo ? 'on' : 'off'; // CSS swaps the tab bar for the Undo bar
-  if (undo === shownUndo) return;
-  shownUndo = undo;
-  clearTimeout(undoTimer);
-  if (undo) undoTimer = window.setTimeout(() => controller.dismissUndo(), 10000);
 }
 
 // replaceState everywhere: a tap or keystroke should not add a Back step, so Back leaves Recipes.

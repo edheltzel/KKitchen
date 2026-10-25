@@ -88,6 +88,29 @@ try {
   await ev(`(() => { const b = document.querySelector('${row(THU)} [data-role="remove"]'); b.click(); b.click(); b.click(); })()`);
   await sleep(300);
   check('three quick taps on Remove remove it once (one save)', (await ev('window.__writes')) === 1, String(await ev('window.__writes')));
+  // 7. the Undo bar takes the tab bar's place; Undo, a tap on nothing else, or 10 seconds, and the tab bar is back
+  await addFor(THU, 'example-1');
+  const dock = await rect('.kk-dock');
+  const tabs = () => ev("[...document.querySelectorAll('.kk-dock a')].map((a) => a.getAttribute('aria-current') === 'page' ? a.textContent.trim() : '').join('')");
+  check('before anything is removed the tab bar shows and the Undo bar is hidden', (await visible('.kk-dock')) && !(await visible('#undo-bar')) && (await tabs()) === 'Week');
+  await click(`${row(THU)} [data-role="remove"]`);
+  check('removing swaps the tab bar for the Undo bar', (await visible('#undo-bar')) && !(await visible('.kk-dock')));
+  check('the Undo bar says what came off which day', (await text('#undo-text')) === 'Took Weeknight Pasta off Thu', await text('#undo-text'));
+  const bar = await rect('#undo-bar');
+  check('the Undo bar is exactly the tab bar\'s height and sits where it was', Math.abs(bar.h - dock.h) < 1 && Math.abs(bar.y - dock.y) < 1, `${bar.h} vs ${dock.h}, y ${bar.y} vs ${dock.y}`);
+  check('the Undo button is at least 44px tall', (await rect('#undo-button')).h >= 44);
+  await click('#undo-button');
+  check('Undo puts the dinner back on the same day and the tab bar returns with Week still active', (await name(THU)) === 'Weeknight Pasta' && (await visible('.kk-dock')) && !(await visible('#undo-bar')) && (await tabs()) === 'Week');
+  check('the restored dinner is saved, not just drawn', (await saved()).entries[THU].recipeId === 'example-1');
+  await ev("window.__delays = []; const st = window.setTimeout; window.setTimeout = (fn, ms, ...a) => { window.__delays.push(ms); return st(fn, ms === 10000 ? 400 : ms, ...a); };");
+  await click(`${row(THU)} [data-role="remove"]`);
+  check('the Undo offer is set to last 10 seconds', (await ev('window.__delays.includes(10000)')) === true);
+  await sleep(800);
+  check('after the time runs out the tab bar is back, Week still active, and the dinner stays removed', (await visible('.kk-dock')) && !(await visible('#undo-bar')) && (await tabs()) === 'Week' && (await visible(`${row(THU)} [data-role="add"]`)));
+  await addFor(THU, 'example-1');
+  await click(`${row(THU)} [data-role="remove"]`);
+  await addFor(SAT, 'example-2');
+  check('planning something else ends the Undo offer', !(await visible('#undo-bar')) && (await visible('.kk-dock')));
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {

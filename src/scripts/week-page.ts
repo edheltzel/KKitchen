@@ -3,6 +3,7 @@
 import { createWeekController } from './week-controller';
 import { createLocalWeekStore } from './week-store';
 import { phoneStorage } from './phone-storage';
+import { createUndoBar } from './undo-bar';
 import { noteText, weekDays, weekRange, type WeekDay } from './week-plan';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
@@ -38,6 +39,9 @@ document.querySelectorAll<HTMLElement>('#week-list li[data-slot]').forEach((li) 
 
 const store = createLocalWeekStore({ storage: phoneStorage(), knownRecipeIds: new Set(recipes.keys()) });
 const controller = createWeekController({ store, days: keys });
+const undoBar = createUndoBar({ bar: $('#undo-bar'), stack: $('#bottom-stack'), expire: () => controller.dismissUndo() });
+const undoText = $('#undo-text');
+const shortOf = (key: string) => dayOf(key).short;
 
 const SVG = 'http://www.w3.org/2000/svg';
 function trashIcon(): SVGElement {
@@ -122,6 +126,8 @@ function render(): void {
   if (view.plan) lastPlan = view.plan;
   const plan = lastPlan ?? {};
   const note = noteText(view.note, longOf, nameOf);
+  if (view.undo) undoText.textContent = `Took ${nameOf(view.undo.recipeId)} off ${shortOf(view.undo.day)}`;
+  undoBar.show(view.undo);
   for (const day of days) {
     const { cell } = rows.get(day.key)!;
     const recipeId = plan[day.key]?.recipeId ?? null;
@@ -253,5 +259,6 @@ document.addEventListener('visibilitychange', () => {
   if (weekDays(new Date())[0].key !== keys[0]) location.reload();
   else void controller.refresh();
 });
+$('#undo-button').addEventListener('click', () => void controller.undo());
 addEventListener('storage', (event) => event.key === 'kk:week' && void controller.refresh());
 void controller.init();
