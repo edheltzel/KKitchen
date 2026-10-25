@@ -137,6 +137,9 @@ try {
     return { gapRow: bar.y - (last.y + last.h), gapHint: bar.y - (hint.y + hint.h) };
   };
   const tabGap = await clearance('.kk-dock');
+  const roomVar = await ev("document.documentElement.style.getPropertyValue('--kk-stack-height')");
+  check('after load the stack-height variable is set to a non-zero value', /^[\d.]+px$/.test(roomVar) && parseFloat(roomVar) > 0, roomVar);
+  check('and it matches the real bottom stack', Math.abs(parseFloat(roomVar) - (await rect('#bottom-stack')).h) <= 1, roomVar);
   check('all seven days are filled for the room check', (await ev(`document.querySelectorAll('#week-list [data-role="name"]').length`)) === 7);
   check('scrolled to the bottom, Sunday ends at least 8px above the tab bar', tabGap.gapRow >= 8, JSON.stringify(tabGap));
   check('and the hint line ends above the tab bar too', tabGap.gapHint >= 0, JSON.stringify(tabGap));

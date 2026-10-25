@@ -2,7 +2,13 @@
 // thing on the page always scrolls clear of it. The CSS reads --kk-stack-height (see .kk-room).
 const stack = document.getElementById('bottom-stack');
 if (stack && 'ResizeObserver' in window) {
-  const apply = () => document.documentElement.style.setProperty('--kk-stack-height', `${stack.offsetHeight}px`);
+  // A stack that reads 0 tall (not laid out yet, or hidden) must not be written: 0px would take away all the room.
+  // Leaving the variable unset keeps the CSS fallback until a real height arrives.
+  const apply = () => {
+    const { style } = document.documentElement;
+    if (stack.offsetHeight > 0) style.setProperty('--kk-stack-height', `${stack.offsetHeight}px`);
+    else style.removeProperty('--kk-stack-height');
+  };
   new ResizeObserver(apply).observe(stack);
   apply();
 }
