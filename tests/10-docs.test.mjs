@@ -19,4 +19,6 @@ test('ratings store notes cover ids, server time, the loading state and the Favo
   assert.match(doc, /Favorites tab[^\n]*Family favorites/i);
   assert.match(doc, /branch 5\/6/i);
   assert.ok(doc.split('\n').length < 40, 'stays short');
+  assert.match(doc, /Branch 7[^\n]*failed-operations list[^\n]*localStorage[^\n]*`online` event/i);
+  assert.match(doc, /Do not build it (now|yet)/i);
 });
