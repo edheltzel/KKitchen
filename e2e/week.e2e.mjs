@@ -35,7 +35,7 @@ try {
   check('picking a recipe closes the sheet and the dinner shows on Tuesday', !(await ev("document.querySelector('#add-sheet').open")) && (await name(TUE)) === 'Tomato Soup', await name(TUE));
   const s1 = await saved();
   check('it is saved under the one key kk:week with a time', s1?.v === 1 && s1.entries[TUE]?.recipeId === 'example-3' && typeof s1.entries[TUE].at === 'number', JSON.stringify(s1));
-  check('the Remove button is an icon: named exactly "Remove", no visible word, a hidden svg, outlined, a box of at least 44 by 44', await ev(`(() => { const b = document.querySelector('${row(TUE)} button[aria-label="Remove"]'); const r = b.getBoundingClientRect(); const v = b.querySelector('svg'); return b.getAttribute('aria-label') === 'Remove' && b.title === 'Remove' && b.textContent.trim() === '' && !!v && v.getAttribute('aria-hidden') === 'true' && r.height >= 44 && r.width >= 44 && getComputedStyle(b).borderTopWidth !== '0px'; })()`), JSON.stringify(await rect(`${row(TUE)} button[aria-label="Remove"]`)));
+  check('the Remove button is an icon: named "Remove <dish> from <day>", no visible word, no title, a hidden svg, outlined, a box of at least 44 by 44', await ev(`(() => { const b = document.querySelector('${row(TUE)} button[aria-label^="Remove "]'); const r = b.getBoundingClientRect(); const v = b.querySelector('svg'); return b.getAttribute('aria-label') === 'Remove Tomato Soup from Tuesday' && !b.hasAttribute('title') && b.textContent.trim() === '' && !!v && v.getAttribute('aria-hidden') === 'true' && r.height >= 44 && r.width >= 44 && getComputedStyle(b).borderTopWidth !== '0px'; })()`), JSON.stringify(await rect(`${row(TUE)} button[aria-label^="Remove "]`)));
 
   // 3. moving: planning a recipe that is on another day moves it and says so
   await addFor(THU, 'example-3');
@@ -67,7 +67,8 @@ try {
   await h.drag(340, y, 255, y); // 85px to the left, then let go
   const open = await left();
   check('a half swipe slides the card left and the red Remove shows', base - open >= 70 && (await rect(reveal)).w >= 70 && (await text(reveal)) === 'Remove', `${base - open}px, "${await text(reveal)}"`);
-  check('the Remove icon button is still on screen after the swipe, left of the red area', await ev(`(() => { const b = document.querySelector('${card} button[aria-label="Remove"]').getBoundingClientRect(); const v = document.querySelector('${reveal}').getBoundingClientRect(); return b.width >= 44 && b.height >= 44 && b.left >= 0 && b.right <= v.left + 0.5; })()`));
+  check('the Remove icon button is still on screen after the swipe, left of the red area', await ev(`(() => { const b = document.querySelector('${card} button[aria-label^="Remove "]').getBoundingClientRect(); const v = document.querySelector('${reveal}').getBoundingClientRect(); return b.width >= 44 && b.height >= 44 && b.left >= 0 && b.right <= v.left + 0.5; })()`));
+  check('the open row\'s icon button is named for its dish and day', (await ev(`document.querySelector('${card} button[aria-label^="Remove "]').getAttribute('aria-label')`)) === 'Remove Weeknight Pasta from Thursday');
   check('the revealed area is the primary red, with a Remove target at least 44px tall', (await ev(`getComputedStyle(document.querySelector('${reveal}')).backgroundColor`)) === primary && (await rect(reveal)).h >= 44);
   check('letting go there keeps it open and removes nothing', (await name(THU)) === 'Weeknight Pasta' && (await saved()).entries[THU].recipeId === 'example-1');
   await h.drag(255, y, 330, y); // a nudge to the right closes it
@@ -86,7 +87,7 @@ try {
   check('tapping the red Remove removes it', !(await ev(`!!document.querySelector('${row(THU)} [data-role="name"]')`)));
   await addFor(THU, 'example-1');
   await ev("window.__writes = 0; const set = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:week') window.__writes++; return set.call(this, k, v); };");
-  await ev(`(() => { const b = document.querySelector('${row(THU)} button[aria-label="Remove"]'); b.click(); b.click(); b.click(); })()`);
+  await ev(`(() => { const b = document.querySelector('${row(THU)} button[aria-label^="Remove "]'); b.click(); b.click(); b.click(); })()`);
   await sleep(300);
   check('three quick taps on Remove remove it once (one save)', (await ev('window.__writes')) === 1, String(await ev('window.__writes')));
   // 7. the Undo bar takes the tab bar's place; Undo, a tap on nothing else, or 10 seconds, and the tab bar is back
@@ -94,7 +95,7 @@ try {
   const dock = await rect('.kk-dock');
   const tabs = () => ev("[...document.querySelectorAll('.kk-dock a')].map((a) => a.getAttribute('aria-current') === 'page' ? a.textContent.trim() : '').join('')");
   check('before anything is removed the tab bar shows and the Undo bar is hidden', (await visible('.kk-dock')) && !(await visible('#undo-bar')) && (await tabs()) === 'Week');
-  await click(`${row(THU)} button[aria-label="Remove"]`);
+  await click(`${row(THU)} button[aria-label^="Remove "]`);
   check('removing swaps the tab bar for the Undo bar', (await visible('#undo-bar')) && !(await visible('.kk-dock')));
   check('the Undo bar says what came off which day', (await text('#undo-text')) === 'Took Weeknight Pasta off Thu', await text('#undo-text'));
   const bar = await rect('#undo-bar');
@@ -104,23 +105,23 @@ try {
   check('Undo puts the dinner back on the same day and the tab bar returns with Week still active', (await name(THU)) === 'Weeknight Pasta' && (await visible('.kk-dock')) && !(await visible('#undo-bar')) && (await tabs()) === 'Week');
   check('the restored dinner is saved, not just drawn', (await saved()).entries[THU].recipeId === 'example-1');
   await ev("window.__delays = []; const st = window.setTimeout; window.setTimeout = (fn, ms, ...a) => { window.__delays.push(ms); return st(fn, ms === 10000 ? 400 : ms, ...a); };");
-  await click(`${row(THU)} button[aria-label="Remove"]`);
+  await click(`${row(THU)} button[aria-label^="Remove "]`);
   check('the Undo offer is set to last 10 seconds', (await ev('window.__delays.includes(10000)')) === true);
   await sleep(800);
   check('after the time runs out the tab bar is back, Week still active, and the dinner stays removed', (await visible('.kk-dock')) && !(await visible('#undo-bar')) && (await tabs()) === 'Week' && (await visible(`${row(THU)} [data-role="add"]`)));
   await addFor(THU, 'example-1');
-  await click(`${row(THU)} button[aria-label="Remove"]`);
+  await click(`${row(THU)} button[aria-label^="Remove "]`);
   await addFor(SAT, 'example-2');
   check('planning something else ends the Undo offer', !(await visible('#undo-bar')) && (await visible('.kk-dock')));
   // 8. when saving fails: banner, controls paused, the change waits for Retry
   await addFor(THU, 'example-1');
   await ev("window.__fail = true; const set2 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (window.__fail && k === 'kk:week') throw new Error('full'); return set2.call(this, k, v); };");
-  await click(`${row(THU)} button[aria-label="Remove"]`); // fails: the dinner is not removed, no Undo is offered
+  await click(`${row(THU)} button[aria-label^="Remove "]`); // fails: the dinner is not removed, no Undo is offered
   check('a failed save shows "Week plan unavailable. Your changes will save when you tap Retry."', (await visible('#week-unavailable')) && (await text('#week-unavailable p')) === 'Week plan unavailable. Your changes will save when you tap Retry.', await text('#week-unavailable p'));
   check('a failed removal offers no Undo and the dinner is still shown', !(await visible('#undo-bar')) && (await visible('.kk-dock')) && (await name(THU)) === 'Weeknight Pasta');
   check('Retry is at least 44px tall', (await rect('#week-retry')).h >= 44);
   check('Add, change and Remove are paused while it is unavailable', await ev("[...document.querySelectorAll('#week-list button')].every((b) => b.disabled)"));
-  await ev(`document.querySelector('${row(THU)} button[aria-label="Remove"]').click()`);
+  await ev(`document.querySelector('${row(THU)} button[aria-label^="Remove "]').click()`);
   check('a paused Remove does nothing', (await name(THU)) === 'Weeknight Pasta');
   await ev('window.__fail = false');
   await click('#week-retry');
@@ -144,14 +145,14 @@ try {
   check('all seven days are filled for the room check', (await ev(`document.querySelectorAll('#week-list [data-role="name"]').length`)) === 7);
   check('scrolled to the bottom, Sunday ends at least 8px above the tab bar', tabGap.gapRow >= 8, JSON.stringify(tabGap));
   check('and the hint line ends above the tab bar too', tabGap.gapHint >= 0, JSON.stringify(tabGap));
-  await click(`${row(MON)} button[aria-label="Remove"]`);
+  await click(`${row(MON)} button[aria-label^="Remove "]`);
   const undoGap = await clearance('#undo-bar');
   check('with the Undo bar showing, Sunday ends at least 8px above it and the hint clears it', (await visible('#undo-bar')) && undoGap.gapRow >= 8 && undoGap.gapHint >= 0, JSON.stringify(undoGap));
 
   await seedAll();
   await goto('/week/');
   await ev("const set3 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:week') throw new Error('full'); return set3.call(this, k, v); };");
-  await click(`${row(MON)} button[aria-label="Remove"]`);
+  await click(`${row(MON)} button[aria-label^="Remove "]`);
   const bannerGap = await clearance('#bottom-stack');
   check('with the Week plan unavailable banner on top of the tab bar, Sunday and the hint still clear the whole bottom stack', (await visible('#week-unavailable')) && bannerGap.gapRow >= 8 && bannerGap.gapHint >= 0, JSON.stringify(bannerGap));
 
@@ -165,7 +166,7 @@ try {
   // 11. desktop width: the icon button keeps its 44 by 44 box, sits at the right end of the card and shows a focus ring from the keyboard
   await h.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false });
   await goto('/week/');
-  const rm = `${row(TUE)} button[aria-label="Remove"]`;
+  const rm = `${row(TUE)} button[aria-label^="Remove "]`;
   const box = await rect(rm), cardBox = await rect(`${row(TUE)} [data-role="card"]`);
   check('on desktop the Remove icon button is at least 44 by 44 and the page does not scroll sideways', box.w >= 44 && box.h >= 44 && (await ev('document.documentElement.scrollWidth <= innerWidth')), JSON.stringify(box));
   check('and it sits at the right end of its card, inside it', box.x + box.w <= cardBox.x + cardBox.w && box.x + box.w >= cardBox.x + cardBox.w - 24, JSON.stringify({ box, cardBox }));

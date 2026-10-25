@@ -61,12 +61,12 @@ test('the page leaves room for whatever is stacked at the bottom (tab bar, Undo 
   assert.match(read('src/scripts/stack-room.ts'), /ResizeObserver[\s\S]*--kk-stack-height/);
 });
 
-test('the Remove button is an icon: named exactly Remove, a hidden svg, no visible word, a 44px round box', () => {
+test('the Remove button is an icon: named for its dish and day, a hidden svg, no visible word, a 44px round box', () => {
   const script = read('src/scripts/week-page.ts');
   const block = script.match(/const remove = el\('button'[\s\S]*?card\.append\(/)?.[0] ?? '';
   assert.ok(block, 'the card Remove button is built in week-page.ts');
-  assert.match(block, /setAttribute\('aria-label', 'Remove'\)/);
-  assert.match(block, /remove\.title = 'Remove'/, 'a hover title, free of CSS');
+  assert.match(block, /setAttribute\('aria-label', `Remove \$\{name\} from \$\{day\.long\}`\)/);
+  assert.ok(!/title/.test(block), 'no title: it would repeat the label');
   assert.match(block, /remove\.append\(trashIcon\(\)\)/, 'only the icon goes inside the button');
   assert.ok(!/textContent/.test(block), 'no visible word inside the button');
   assert.match(script, /svg\.setAttribute\('aria-hidden', 'true'\)/);

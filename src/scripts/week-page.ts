@@ -91,8 +91,7 @@ function dinnerCell(day: WeekDay, recipeId: string, note: string | null, disable
   const remove = el('button', 'kk-week-remove', 'remove');
   remove.type = 'button';
   remove.disabled = disabled;
-  remove.setAttribute('aria-label', 'Remove');
-  remove.title = 'Remove'; // the hover title on desktop; the name stays the aria-label
+  remove.setAttribute('aria-label', `Remove ${name} from ${day.long}`);
   remove.append(trashIcon());
   card.append(tile, words, remove);
   // The red area under the card: a swipe slides the card left to show it. Not in the tab order, because the outlined
