@@ -10,7 +10,7 @@ const it = (id: string, text: string): Ingredient => ({ id, text });
 const step = (text: string, ...uses: string[]): Step => (uses.length > 0 ? { text, uses } : { text });
 
 const friedChicken: ExampleRecipe = {
-  id: 'fried-chicken', name: 'Fried Chicken', meal: 'dinner', approved: true, tags: [],
+  id: 'fried-chicken', name: 'Fried Chicken', meal: 'dinner', approved: true, tags: [], glutenFree: true,
   source: 'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/',
   ingredients: ['chicken', 'milk', 'vinegar', 'flour', 'cornstarch', 'paprika', 'oil'],
   prep: 15, cook: 45, minutes: 60, wait: '2 h marinate', serves: 6,
@@ -110,7 +110,7 @@ const roast: ExampleRecipe = {
 
 // A dessert or snack: Meal has no dessert, so it is a snack. The note gives no prep time, so prep is 0 and the meta line leaves it out.
 const brownies: ExampleRecipe = {
-  id: 'high-protein-brownies', name: 'High Protein Brownies', meal: 'snack', approved: true, tags: [],
+  id: 'high-protein-brownies', name: 'High Protein Brownies', meal: 'snack', approved: true, tags: [], glutenFree: true,
   source: 'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/', author: 'Instructables',
   ingredients: ['cottage cheese', 'eggs', 'cocoa', 'whey', 'baking powder', 'walnuts', 'chocolate chips'],
   prep: 0, cook: 25, minutes: 25, serves: 8,

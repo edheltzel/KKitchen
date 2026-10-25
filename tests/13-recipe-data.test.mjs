@@ -99,3 +99,7 @@ test('a wait (marinate, chill) is shown after the active time: "+ 2 h marinate" 
   assert.equal(cardTime({ ...plain, minutes: 385 }), '6 h 25 min');
   assert.equal(recipeMeta({ ...plain, prep: 25, cook: 360, serves: 8 }), 'Prep 25 min · Cook 6 h · Serves 8');
 });
+
+test('no example recipe sets glutenFree, so the recipe page label never shows on a fixture build', () => {
+  assert.ok(exampleRecipes.every((r) => r.glutenFree === undefined));
+});

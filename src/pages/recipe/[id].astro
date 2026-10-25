@@ -43,6 +43,7 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
       <div class="mt-3 md:mt-0">
         <h1 class="text-3xl font-extrabold leading-tight tracking-tight">{title}</h1>
         <p class="mt-1 font-mono text-[14px] text-kk-muted">{recipeMeta(recipe)}</p>
+        {recipe.glutenFree && <p data-role="recipe-label" class="mt-1 text-[13px] text-kk-muted">Gluten-free</p>}
         {tags.length > 0 && (
           <ul class="mt-2 flex flex-wrap gap-2" aria-label="Tags">
             {tags.map((tag) => <li class="kk-tag">{tag}</li>)}

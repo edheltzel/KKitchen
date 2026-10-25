@@ -127,3 +127,46 @@ test('home cards and recipe pages show honest times: the wait next to the minute
   assert.match(home, /data-minutes="60"/);
   assert.match(home, /data-minutes="385"/);
 });
+
+// The gluten-free wording is held until Ed or Kristina confirm each recipe. The only "gluten" left in the build is what we were told to keep:
+// the small label on two recipe pages, the two ingredient/step lines that name something to buy (listed for the captain) and the two untouched source links.
+const KEPT = {
+  'all-purpose gluten-free flour': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
+  'Combine the gluten-free flour, cornstarch': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
+  '>Gluten-free<': ['recipe/fried-chicken/index.html', 'recipe/high-protein-brownies/index.html'],
+  'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/': ['recipe/fried-chicken/index.html'],
+  'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/': ['recipe/high-protein-brownies/index.html'],
+};
+
+test('no gluten-free claim anywhere in the real build, except exactly the kept ingredient lines and source links', () => {
+  const textFiles = walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f));
+  assert.ok(textFiles.length > 10);
+  const seen = {};
+  for (const f of textFiles) {
+    const rel = f.slice(out.length + 1);
+    let s = readFileSync(f, 'utf8');
+    for (const k of Object.keys(KEPT)) {
+      if (s.includes(k)) (seen[k] ??= []).push(rel);
+      s = s.split(k).join('');
+    }
+    assert.ok(!/gluten|\bgf\b/i.test(s), `${rel} still says gluten: ${(s.match(/.{0,40}(gluten|\bgf\b).{0,40}/i) ?? [''])[0]}`);
+  }
+  for (const [k, where] of Object.entries(KEPT)) assert.deepEqual((seen[k] ?? []).sort(), where.slice().sort(), k);
+});
+
+test('the Gluten-free label is on the fried chicken and brownies recipe pages only: not the roast, not a card, a list, the week, a cooking page or the search text', () => {
+  const label = /<p[^>]*data-role="recipe-label"[^>]*>Gluten-free<\/p>/;
+  for (const id of ['fried-chicken', 'high-protein-brownies']) {
+    const html = page(`recipe/${id}/index.html`);
+    assert.equal((html.match(/data-role="recipe-label"/g) ?? []).length, 1, id);
+    assert.match(html, label, id);
+    assert.ok(html.indexOf('data-role="recipe-label"') > html.indexOf('<h1'), 'the label comes after the title');
+  }
+  assert.ok(!/gluten/i.test(page('recipe/slow-cooker-roast/index.html')), 'no gluten text on the roast page');
+  for (const rel of ['index.html', 'week/index.html', 'favorites/index.html', ...IDS.map((id) => `cook/${id}/index.html`)]) {
+    assert.ok(!/gluten-free/i.test(page(rel).replace(/(all-purpose gluten-free flour|Combine the gluten-free flour)/g, '')), `${rel} has no Gluten-free text`);
+  }
+  for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
+    assert.ok(!/verified|certified/i.test(readFileSync(f, 'utf8').replace(/<script[\s\S]*?<\/script>/g, '')), `${f.slice(out.length)} has no verified or certified wording`);
+  }
+});

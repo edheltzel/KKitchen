@@ -153,3 +153,9 @@ test('the one note we added is labelled "Added by us:" and every other note stay
   assert.match(labelled[0][1], /^Added by us: Frying 12 pieces, 3 or 4 at a time, at 15-18 minutes each can take longer than the 45 min cook time\.$/);
   assert.ok(!by('fried-chicken').notes[0].startsWith('Added by us'), 'the marinate note is the source\'s');
 });
+
+test('glutenFree is set on the fried chicken and the brownies only (the two whose source titles said so), as a plain true', () => {
+  assert.deepEqual(realNotes.filter((r) => r.glutenFree !== undefined).map((r) => [r.id, r.glutenFree]), [['fried-chicken', true], ['high-protein-brownies', true]]);
+  assert.equal(by('slow-cooker-roast').glutenFree, undefined);
+  assert.ok(realNotes.every((r) => r.tags.length === 0), 'still no tag on any recipe');
+});
