@@ -90,6 +90,15 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
       </section>
     </div>
 
+    {recipe.notes && recipe.notes.length > 0 && (
+      <section aria-labelledby="notes-title" class="mt-8">
+        <h2 id="notes-title" class="text-xl font-extrabold">Notes</h2>
+        <ul class="mt-2 list-disc space-y-2 pl-5 text-[17px] leading-snug">
+          {recipe.notes.map((note) => <li>{note}</li>)}
+        </ul>
+      </section>
+    )}
+
     <section aria-labelledby="ratings-title" class="mt-8">
       <h2 id="ratings-title" class="text-xl font-extrabold">Ratings</h2>
       <RatingBlock title={title} part="status" />

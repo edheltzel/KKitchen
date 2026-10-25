@@ -93,3 +93,17 @@ test('the real build stays under the same 102,400 byte CSS cap', () => {
   console.log(`  real build CSS: ${bytes} bytes of 102400`);
   assert.ok(bytes > 0 && bytes <= 102400, `${bytes}`);
 });
+
+test('each recipe page shows its notes under the steps, one line per note, and the marinate time is the first chicken note', () => {
+  const counts = { 'gluten-free-fried-chicken': 4, 'slow-cooker-roast': 4, 'high-protein-brownies': 3 };
+  for (const id of IDS) {
+    const html = page(`recipe/${id}/index.html`);
+    const section = html.match(/<section aria-labelledby="notes-title"[\s\S]*?<\/section>/);
+    assert.ok(section, `${id}: Notes section`);
+    assert.match(section[0], /<h2 id="notes-title"[^>]*>Notes<\/h2>/);
+    assert.equal((section[0].match(/<li/g) ?? []).length, counts[id], `${id}: one line per note`);
+    assert.ok(html.indexOf('id="steps"') < html.indexOf('id="notes-title"'), `${id}: notes come after the steps`);
+  }
+  assert.match(page('recipe/gluten-free-fried-chicken/index.html'), /<li[^>]*>Plus at least 2 hours to marinate, overnight is best\./);
+  assert.match(page('recipe/high-protein-brownies/index.html'), /<li[^>]*>Equipment: bowl, whisk/);
+});

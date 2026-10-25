@@ -144,3 +144,7 @@ test('the in-place Ed / Kristina row is hidden until needed, sits right after th
   assert.match(inline, /data-me="kristina"[^>]*>I'm Kristina</);
   assert.ok(html.indexOf('id="me-inline"') > html.indexOf('class="kk-actions"') && html.indexOf('id="me-inline"') < html.indexOf('id="ingredients-title"'));
 });
+
+test('a recipe with no notes has no Notes section (the examples have none)', () => {
+  for (const r of exampleRecipes) assert.ok(!page(r).includes('id="notes-title"'), r.id);
+});
