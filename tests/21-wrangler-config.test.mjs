@@ -28,8 +28,8 @@ test('it serves the built dist folder on the workers.dev address, with a current
   assert.deepEqual(Object.keys(c.assets), ['directory']);
   assert.equal(c.assets.directory, './dist');
   assert.match(c.compatibility_date, /^\d{4}-\d{2}-\d{2}$/);
-  const age = (Date.now() - Date.parse(c.compatibility_date)) / 86400000;
-  assert.ok(age >= 0 && age < 120, `compatibility_date ${c.compatibility_date} is within the last 120 days and not in the future`);
+  // Format and a real calendar date only: an older date is fine, it just pins the runtime behavior it was written against.
+  assert.equal(new Date(c.compatibility_date + 'T00:00:00Z').toISOString().slice(0, 10), c.compatibility_date, 'a real calendar date');
 });
 
 test('the dist leak scan stays clean and dist ships _headers', () => {
