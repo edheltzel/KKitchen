@@ -80,7 +80,9 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
         ))}
       </section>
       <section aria-labelledby="steps-title" class="mt-8 md:mt-0">
-        <h2 id="steps-title" class="text-xl font-extrabold">Steps</h2>
+        <div class="md:flex md:min-h-11 md:items-center">
+          <h2 id="steps-title" class="text-xl font-extrabold">Steps</h2>
+        </div>
         <ol id="steps" class="kk-steps mt-2">
           {recipe.steps.map((step) => <li>{step.text}</li>)}
         </ol>

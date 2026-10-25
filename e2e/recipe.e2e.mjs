@@ -134,6 +134,9 @@ try {
   await goto('/recipe/example-1/');
   const cols = await ev("(() => { const i = document.querySelector('#ingredients-title').getBoundingClientRect(); const s = document.querySelector('#steps-title').getBoundingClientRect(); return { iX: i.x, sX: s.x, iY: i.y, sY: s.y }; })()");
   check('desktop: ingredients on the left, steps on the right, side by side', cols.iX < cols.sX && Math.abs(cols.iY - cols.sY) < 20, JSON.stringify(cols));
+  const tops = await ev("[document.querySelector('#ingredients-title').getBoundingClientRect().top, document.querySelector('#steps-title').getBoundingClientRect().top]");
+  check('desktop: the Steps heading is level with the Ingredients heading (within 1px)', Math.abs(tops[0] - tops[1]) <= 1, JSON.stringify(tops));
+  check('desktop: the photo is not shortened (taller than 180px)', (await rect('.kk-hero')).h > 180, String((await rect('.kk-hero')).h));
   check('desktop: nothing scrolls sideways', await ev('document.documentElement.scrollWidth <= innerWidth'));
   await send('Emulation.setDeviceMetricsOverride', { width: PHONE_WIDTH, height: PHONE_HEIGHT, deviceScaleFactor: 2, mobile: true });
   await goto('/recipe/example-1/');
