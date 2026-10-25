@@ -16,11 +16,8 @@ import {
   type Options,
   type Searchable,
 } from './browse-state';
-import { PERSON_LABEL, PEOPLE, RATING_LABEL, isFamilyFavorite, ratingOf, type Person, type Rating } from './ratings';
-import { RATINGS_KEY, createIdentity, createLocalRatingsStore } from './ratings-store';
-import { createRatingsController } from './ratings-controller';
-import { phoneStorage } from './phone-storage';
-import { createUndoBar } from './undo-bar';
+import { mountRatings } from './ratings-ui';
+import { mountUndoSlot } from './undo-mount';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -32,9 +29,6 @@ const count = $('#recipe-count');
 const chipsRow = $('#chips');
 const empty = $('#empty');
 const emptyText = $('#empty-message');
-const meButtons = [...document.querySelectorAll<HTMLButtonElement>('button[data-me]')];
-const meHint = $('#me-hint');
-const unavailableBar = $('#ratings-unavailable');
 const whoNote = $('#who-note');
 const whoNoteText = whoNote.textContent ?? '';
 
@@ -58,23 +52,14 @@ const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')
     minutes: Number(el.dataset.minutes),
     diet: list(el.dataset.diet),
   };
-  return {
-    el,
-    data,
-    badge: el.querySelector<HTMLElement>('[data-role="family-badge"]')!,
-    buttons: [...el.querySelectorAll<HTMLButtonElement>('button[data-rating]')],
-    lines: PEOPLE.map((person) => ({ person, el: el.querySelector<HTMLElement>(`[data-person="${person}"]`)! })),
-  };
+  return { el, data };
 });
 
-// Ratings live in a local stand-in store (this phone's localStorage). The future shared store plugs in
-// behind the same RatingsStore shape. Blocked storage reads as empty and refuses saves, which shows as
-// "Ratings unavailable" rather than silently losing a tap.
-const ratingsStorage = phoneStorage();
-const undoBar = createUndoBar({ bar: $('#undo-bar'), stack: $('#bottom-stack'), expire: () => controller.dismissUndo() });
-const controller = createRatingsController({
-  store: createLocalRatingsStore({ storage: ratingsStorage }),
-  identity: createIdentity(ratingsStorage),
+// The ratings buttons, picker, banner and Undo offer are drawn by ratings-ui.ts (shared with the recipe page).
+const { controller } = mountRatings({
+  root: $('#recipe-grid'),
+  cards: cards.map((c) => c.el),
+  slot: mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') }),
 });
 
 let state: BrowseState = parseState(location.search, options);
@@ -138,42 +123,7 @@ function render(): void {
   filtersCount.textContent = String(active);
   filtersCount.hidden = active === 0;
   filtersButton.setAttribute('aria-label', active > 0 ? `Filters, ${active} active` : 'Filters');
-  renderRatings(view);
-}
-
-// Draws what the controller says: statuses, pressed buttons, badges, picker, banner and Undo bar.
-// Everything here is a fixed label or a rating value from a fixed list, set through textContent.
-function renderRatings(view: ReturnType<typeof controller.view>): void {
-  const { ratings, me, unavailable } = view;
-  for (const card of cards) {
-    const id = card.data.id!;
-    for (const line of card.lines) {
-      const value = ratings ? ratingOf(ratings, id, line.person) : null;
-      line.el.textContent = `${PERSON_LABEL[line.person]}: ${unavailable ? 'unavailable' : value ? RATING_LABEL[value] : 'not rated yet'}`;
-    }
-    for (const button of card.buttons) {
-      const mine = me && ratings ? ratingOf(ratings, id, me) : null;
-      button.setAttribute('aria-pressed', String(mine === button.dataset.rating));
-      button.disabled = unavailable; // with nobody picked a tap leads to the picker instead
-    }
-    card.badge.hidden = !(ratings && isFamilyFavorite(ratings, id));
-  }
-  for (const button of meButtons) button.setAttribute('aria-pressed', String(button.dataset.me === me));
-  meHint.hidden = me !== null;
-  if (me !== null) meHint.dataset.nudge = 'off';
-  unavailableBar.hidden = !unavailable;
-  whoNote.textContent = unavailable ? 'Ratings unavailable: this filter is paused until they load.' : whoNoteText;
-  undoBar.show(view.undo);
-}
-
-// A rating tap with nobody picked: take them to the picker and point at the hint. Nothing is saved.
-// The card they tapped is remembered, so picking a person takes them back to it.
-let tappedCard: HTMLElement | null = null;
-function nudgePicker(card: HTMLElement): void {
-  tappedCard = card;
-  meHint.dataset.nudge = 'on';
-  $('#me-picker').scrollIntoView({ block: 'center' });
-  meButtons[0]?.focus({ preventScroll: true });
+  whoNote.textContent = view.unavailable ? 'Ratings unavailable: this filter is paused until they load.' : whoNoteText;
 }
 
 // replaceState everywhere: a tap or keystroke should not add a Back step, so Back leaves Recipes.
@@ -201,27 +151,7 @@ chipsRow.addEventListener('click', (event) => {
 });
 $('#clear-all').addEventListener('click', () => commit(emptyState()));
 
-$('#recipe-grid').addEventListener('click', (event) => {
-  const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-rating]');
-  const card = button?.closest<HTMLElement>('article');
-  const id = card?.dataset.id;
-  if (!button || !card || !id) return;
-  if (controller.view().me === null) return nudgePicker(card);
-  void controller.tap(id, button.dataset.rating as Rating);
-});
-for (const button of meButtons) {
-  button.addEventListener('click', () => {
-    controller.setMe(button.dataset.me as Person);
-    if (tappedCard?.isConnected && !tappedCard.hidden) tappedCard.scrollIntoView({ block: 'center' }); // back to where they were
-    tappedCard = null;
-  });
-}
-$('#ratings-retry').addEventListener('click', () => void controller.retry());
-$('#undo-button').addEventListener('click', () => void controller.undo());
 controller.subscribe(render);
-// Another tab, or coming back to the app, may have changed the ratings.
-addEventListener('storage', (event) => event.key === RATINGS_KEY && void controller.refresh());
-document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && void controller.refresh());
 
 // Normalise a hand-edited address once so every reload and shared link looks the same.
 history.replaceState(history.state, '', location.pathname + serializeState(state, options));
