@@ -1,0 +1,13 @@
+---
+// Plan status and the Plan button. plan-ui.ts opens the day picker (PlanSheet.astro) from it.
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="kk-plan">
+  <p data-role="plan-status" hidden class="kk-plan-status"></p>
+  <button type="button" class="kk-plan-btn" data-role="plan" aria-label={`Plan ${title} for a day`}>Plan</button>
+</div>

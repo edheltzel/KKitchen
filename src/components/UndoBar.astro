@@ -1,0 +1,8 @@
+---
+// The shared Undo bar. Put it in the Base layout's replaces-tabs slot; mountUndoSlot() wires it.
+---
+
+<div id="undo-bar" role="status" hidden class="kk-undo-bar flex items-center justify-between gap-3">
+  <p id="undo-text" class="text-[15px] font-bold">Family favorite removed</p>
+  <button type="button" id="undo-button" class="btn btn-primary min-h-11 rounded-full px-5">Undo</button>
+</div>

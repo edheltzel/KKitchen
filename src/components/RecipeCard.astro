@@ -1,5 +1,6 @@
 ---
-import { PERSON_LABEL, PEOPLE, RATINGS, RATING_LABEL } from '../scripts/ratings';
+import RatingBlock from './RatingBlock.astro';
+import PlanBlock from './PlanBlock.astro';
 import { confirmedTags, exampleTitle, type ExampleRecipe } from '../data/examples';
 
 interface Props {
@@ -28,19 +29,7 @@ const tags = confirmedTags(recipe);
   <div class="card-body gap-1 p-3">
     <h2 class="card-title text-[15px] leading-tight">{exampleTitle(recipe)}</h2>
     <p class="font-mono text-[13px] text-kk-muted">{recipe.minutes} min{tags.length > 0 && ` · ${tags.join(', ')}`}</p>
-    <div class="kk-rate" role="group" aria-label={`Ratings for ${exampleTitle(recipe)}`}>
-      <div class="kk-rate-status">
-        {PEOPLE.map((person) => <p data-person={person}>{PERSON_LABEL[person]}: not rated yet</p>)}
-      </div>
-      <div class="kk-rate-buttons">
-        {RATINGS.map((rating) => (
-          <button type="button" class="kk-rate-btn" data-rating={rating} aria-pressed="false">{RATING_LABEL[rating]}</button>
-        ))}
-      </div>
-    </div>
-    <div class="kk-plan">
-      <p data-role="plan-status" hidden class="kk-plan-status"></p>
-      <button type="button" class="kk-plan-btn" data-role="plan" aria-label={`Plan ${exampleTitle(recipe)} for a day`}>Plan</button>
-    </div>
+    <RatingBlock title={exampleTitle(recipe)} />
+    <PlanBlock title={exampleTitle(recipe)} />
   </div>
 </article>
