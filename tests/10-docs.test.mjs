@@ -147,3 +147,12 @@ test('real-iphone checklist: VoiceOver may read the step twice, and a cmd-click 
   assert.match(cmd, /desktop only/i);
   assert.match(cmd, /screen lock|wake lock/i);
 });
+
+test('README explains the fixture switch, the approval, the held gluten-free tag and the unshown credit', () => {
+  const doc = read('README.md');
+  assert.match(doc, /test fixture[^\n]*KK_DATA=fixture[^\n]*npm test/i);
+  assert.match(doc, /no `approved: true` marker[^\n]*treated as approved/i);
+  assert.match(doc, /gluten-free tag is held until the captain confirms/i);
+  assert.match(doc, /`author` is stored only/i);
+  assert.match(doc, /week plan offers every recipe/i);
+});
