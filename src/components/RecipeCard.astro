@@ -1,20 +1,27 @@
 ---
-import { exampleTitle, type ExampleRecipe } from '../data/examples';
+import { confirmedTags, exampleTitle, type ExampleRecipe } from '../data/examples';
 
 interface Props {
   recipe: ExampleRecipe;
 }
 
 const { recipe } = Astro.props;
+const tags = confirmedTags(recipe);
 ---
 
-<article class="card kk-card overflow-hidden rounded-2xl border border-base-300 bg-kk-card shadow-sm" data-example>
+<article class="card kk-card overflow-hidden rounded-2xl border border-base-300 bg-kk-card shadow-sm" data-example
+  data-name={recipe.name}
+  data-ingredients={recipe.ingredients.join('|')}
+  data-meal={recipe.meal}
+  data-minutes={recipe.minutes}
+  data-diet={tags.join('|')}
+>
   <div class="kk-tile relative aspect-[4/3]" aria-hidden="true">
     <span class="kk-tile-letter">{recipe.name.charAt(0)}</span>
   </div>
   <span class="badge absolute right-2 top-2 border-0 bg-base-content font-bold text-base-100">Example</span>
   <div class="card-body gap-1 p-3">
     <h2 class="card-title text-[15px] leading-tight">{exampleTitle(recipe)}</h2>
-    <p class="font-mono text-[13px] text-kk-muted">{recipe.minutes} min</p>
+    <p class="font-mono text-[13px] text-kk-muted">{recipe.minutes} min{tags.length > 0 && ` · ${tags.join(', ')}`}</p>
   </div>
 </article>

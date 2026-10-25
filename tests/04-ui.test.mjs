@@ -35,9 +35,9 @@ test('search input: 16px font, hint text, Filters control labelled', () => {
   assert.match(input, /aria-label="Search recipes"/);
   assert.match(input, /text-\[16px\]/);
   assert.match(css, /text-\\\[16px\\\][^}]*font-size:\s*16px/);
-  const filters = home.match(/<button[^>]*>\s*(?:<svg[\s\S]*?<\/svg>)?\s*Filters\s*<\/button>/)?.[0];
+  const filters = home.match(/<button[^>]*id=\"filters-button\"[^>]*>\s*<svg[\s\S]*?<\/svg>\s*Filters\s*<span/)?.[0];
   assert.ok(filters, 'Filters button exists with visible label');
-  assert.match(filters, /aria-disabled="true"/, 'inert until branch 2');
+  assert.ok(!/aria-disabled/.test(filters), 'Filters works now (branch 2)');
   assert.match(filters, /\bh-11\b/, '44px tall');
 });
 

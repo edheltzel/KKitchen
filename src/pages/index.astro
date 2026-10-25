@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import SearchBar from '../components/SearchBar.astro';
 import RecipeCard from '../components/RecipeCard.astro';
+import FilterTray from '../components/FilterTray.astro';
 import { exampleRecipes } from '../data/examples';
 
 const count = exampleRecipes.length;
@@ -9,10 +10,16 @@ const count = exampleRecipes.length;
 
 <Base active="recipes">
   <h1 class="text-3xl font-extrabold tracking-tight">Kris's Kitchen</h1>
-  <p class="mt-1 text-[14px] font-semibold text-kk-accent" data-recipe-count>{count} recipes</p>
+  <p id="recipe-count" aria-live="polite" class="mt-1 text-[14px] font-semibold text-kk-accent">{count} recipes</p>
   <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>
-  <div class="mt-4 grid grid-cols-2 gap-3">
+  <div id="chips" class="mt-3 flex flex-wrap gap-2" hidden></div>
+  <div id="empty" hidden class="mt-6 rounded-2xl border border-base-300 bg-kk-card p-5 text-center">
+    <p id="empty-message" class="text-[16px] font-semibold"></p>
+    <button type="button" id="clear-all" class="btn btn-primary mt-4 min-h-11 rounded-full px-6">Clear</button>
+  </div>
+  <div id="recipe-grid" class="mt-4 grid grid-cols-2 gap-3">
     {exampleRecipes.map((recipe) => <RecipeCard recipe={recipe} />)}
   </div>
+  <FilterTray />
   <SearchBar slot="search" />
 </Base>

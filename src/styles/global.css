@@ -174,3 +174,24 @@
   line-height: 1;
   color: var(--kk-tile-ink);
 }
+
+/* Filter chips: toggles in the tray and removable chips above the grid. 44px tall tap targets. */
+.kk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-base-300);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.kk-chip[aria-pressed='true'],
+.kk-chip-on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
