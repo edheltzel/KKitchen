@@ -1,0 +1,8 @@
+{
+  "name": "Kris's Kitchen",
+  "short_name": "Kris's",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6EF",
+  "theme_color": "#B8421F"
+}
