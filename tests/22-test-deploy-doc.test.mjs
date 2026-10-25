@@ -36,11 +36,12 @@ test('test-deploy doc has the verify steps, delete step, rollback and the scoped
   assert.match(d, /curl -sI .*\| grep -i x-robots-tag/);
   assert.match(d, /<meta name="robots" content="noindex">/);
   // The verify steps match a real build: three real recipe folders, and no example recipe text in dist.
-  assert.match(d, /`ls dist\/recipe`[^\n]*exactly[^\n]*gluten-free-fried-chicken[^\n]*slow-cooker-roast[^\n]*high-protein-brownies/);
+  assert.match(d, /`ls dist\/recipe`[^\n]*exactly[^\n]*fried-chicken[^\n]*high-protein-brownies[^\n]*slow-cooker-roast/);
+  assert.ok(!/gluten-free-fried-chicken/.test(d), 'the folder is fried-chicken: the doc never names the old gluten-free folder');
   assert.match(d, /grep -ril "example recipe" dist` prints nothing/);
   assert.ok(!/example-1/.test(d), 'no verify step points at an example recipe page');
   assert.ok(!/Draft-only|saffron|Hidden Draft Note|Nut-free/.test(d), 'no fixture-string greps');
-  assert.match(d, /\/recipe\/gluten-free-fried-chicken\//, 'noindex is checked on a real recipe page');
+  assert.match(d, /\/recipe\/fried-chicken\//, 'noindex is checked on a real recipe page');
   assert.ok(d.includes(`cd /Users/ed && wrangler delete ${name()} -c /Users/ed/Developer/KKitchen/wrangler.jsonc`), 'delete step with the real name, run from /Users/ed');
   assert.match(d, /rollback/i);
   assert.ok(!/git checkout/.test(d), 'rollback never switches the working tree or branch');

@@ -33,10 +33,10 @@ cd /Users/ed && wrangler deploy -c /Users/ed/Developer/KKitchen/wrangler.jsonc
 Set `URL` to the printed address.
 
 1. Random address: the host starts with `k` plus 20 hex characters and has no site name in it.
-2. Noindex header on every path: `curl -sI "$URL/" | grep -i x-robots-tag` shows `noindex, nofollow`. Repeat for `$URL/week/` and `$URL/recipe/gluten-free-fried-chicken/`.
-3. Noindex tag: `curl -s "$URL/" | grep -o '<meta name="robots" content="noindex">'` prints the tag (also on `/week/`, `/favorites/`, `/recipe/gluten-free-fried-chicken/` and `/cook/gluten-free-fried-chicken/`).
-4. Check dist before deploy: `ls dist/recipe` shows exactly the three real folders (`gluten-free-fried-chicken`, `slow-cooker-roast`, `high-protein-brownies`), and `grep -ril "example recipe" dist` prints nothing.
-5. Check the live pages: `for p in / /week/ /favorites/ /recipe/gluten-free-fried-chicken/ /cook/gluten-free-fried-chicken/; do curl -s "$URL$p"; done | grep -i "example recipe"` prints nothing.
+2. Noindex header on every path: `curl -sI "$URL/" | grep -i x-robots-tag` shows `noindex, nofollow`. Repeat for `$URL/week/` and `$URL/recipe/fried-chicken/`.
+3. Noindex tag: `curl -s "$URL/" | grep -o '<meta name="robots" content="noindex">'` prints the tag (also on `/week/`, `/favorites/`, `/recipe/fried-chicken/` and `/cook/fried-chicken/`).
+4. Check dist before deploy: `ls dist/recipe` shows exactly the three real folders (`fried-chicken`, `high-protein-brownies`, `slow-cooker-roast`), and `grep -ril "example recipe" dist` prints nothing.
+5. Check the live pages: `for p in / /week/ /favorites/ /recipe/fried-chicken/ /cook/fried-chicken/; do curl -s "$URL$p"; done | grep -i "example recipe"` prints nothing.
 6. Noindex on a built asset and on a 404 path (the one `/*` rule should cover both):
    `curl -sI "$URL/_astro/<file>.css" | grep -i x-robots-tag` (pick any file name from `ls dist/_astro`), and
    `curl -sI "$URL/not-a-page-x1/" | grep -i x-robots-tag` (the status line should be 404, and the header should still be there).
