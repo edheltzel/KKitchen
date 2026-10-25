@@ -154,8 +154,8 @@ test('the one note we added is labelled "Added by us:" and every other note stay
   assert.ok(!by('fried-chicken').notes[0].startsWith('Added by us'), 'the marinate note is the source\'s');
 });
 
-test('glutenFree is set on the fried chicken and the brownies only (the two whose source titles said so), as a plain true', () => {
-  assert.deepEqual(realNotes.filter((r) => r.glutenFree !== undefined).map((r) => [r.id, r.glutenFree]), [['fried-chicken', true], ['high-protein-brownies', true]]);
-  assert.equal(by('slow-cooker-roast').glutenFree, undefined);
+test('glutenFreePerSource is set on the fried chicken and the brownies only (the two whose source titles said so), as a plain true', () => {
+  assert.deepEqual(realNotes.filter((r) => r.glutenFreePerSource !== undefined).map((r) => [r.id, r.glutenFreePerSource]), [['fried-chicken', true], ['high-protein-brownies', true]]);
+  assert.equal(by('slow-cooker-roast').glutenFreePerSource, undefined);
   assert.ok(realNotes.every((r) => r.tags.length === 0), 'still no tag on any recipe');
 });

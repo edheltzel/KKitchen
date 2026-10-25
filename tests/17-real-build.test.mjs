@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, statSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { root, decode } from './helpers.mjs';
+import { root, decode, theme, contrast } from './helpers.mjs';
 
 // `npm test` builds dist with KK_DATA=fixture (the old example recipes, for the other tests). This file builds the site the way
 // `npm run build` does, with no KK_DATA, into a temp folder, and proves that build holds only the three real recipes.
@@ -133,7 +133,7 @@ test('home cards and recipe pages show honest times: the wait next to the minute
 const KEPT = {
   'all-purpose gluten-free flour': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
   'Combine the gluten-free flour, cornstarch': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
-  '>Gluten-free<': ['recipe/fried-chicken/index.html', 'recipe/high-protein-brownies/index.html'],
+  '>Gluten-free per the original recipe<': ['recipe/fried-chicken/index.html', 'recipe/high-protein-brownies/index.html'],
   'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/': ['recipe/fried-chicken/index.html'],
   'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/': ['recipe/high-protein-brownies/index.html'],
 };
@@ -154,8 +154,8 @@ test('no gluten-free claim anywhere in the real build, except exactly the kept i
   for (const [k, where] of Object.entries(KEPT)) assert.deepEqual((seen[k] ?? []).sort(), where.slice().sort(), k);
 });
 
-test('the Gluten-free label is on the fried chicken and brownies recipe pages only: not the roast, not a card, a list, the week, a cooking page or the search text', () => {
-  const label = /<p[^>]*data-role="recipe-label"[^>]*>Gluten-free<\/p>/;
+test('the "Gluten-free per the original recipe" label is on the fried chicken and brownies recipe pages only: not the roast, not a card, a list, the week, a cooking page or the search text', () => {
+  const label = /<p[^>]*data-role="recipe-label"[^>]*>Gluten-free per the original recipe<\/p>/;
   for (const id of ['fried-chicken', 'high-protein-brownies']) {
     const html = page(`recipe/${id}/index.html`);
     assert.equal((html.match(/data-role="recipe-label"/g) ?? []).length, 1, id);
@@ -163,10 +163,27 @@ test('the Gluten-free label is on the fried chicken and brownies recipe pages on
     assert.ok(html.indexOf('data-role="recipe-label"') > html.indexOf('<h1'), 'the label comes after the title');
   }
   assert.ok(!/gluten/i.test(page('recipe/slow-cooker-roast/index.html')), 'no gluten text on the roast page');
+  for (const id of ['fried-chicken', 'high-protein-brownies']) assert.ok(!page(`recipe/${id}/index.html`).includes('>Gluten-free<'), `${id}: no bare Gluten-free label, it always says per the original recipe`);
   for (const rel of ['index.html', 'week/index.html', 'favorites/index.html', ...IDS.map((id) => `cook/${id}/index.html`)]) {
     assert.ok(!/gluten-free/i.test(page(rel).replace(/(all-purpose gluten-free flour|Combine the gluten-free flour)/g, '')), `${rel} has no Gluten-free text`);
   }
   for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
     assert.ok(!/verified|certified/i.test(readFileSync(f, 'utf8').replace(/<script[\s\S]*?<\/script>/g, '')), `${f.slice(out.length)} has no verified or certified wording`);
+  }
+});
+
+test('the label is plain small muted text that wraps and is never cut off, and the muted color reads at 4.5:1 in both themes', () => {
+  for (const id of ['fried-chicken', 'high-protein-brownies']) {
+    const tag = page(`recipe/${id}/index.html`).match(/<p[^>]*data-role="recipe-label"[^>]*>/)[0];
+    const cls = tag.match(/class="([^"]*)"/)[1].split(/\s+/).sort();
+    assert.deepEqual(cls, ['mt-1', 'text-[13px]', 'text-kk-muted'], `${id}: existing classes only`);
+    assert.ok(!/truncate|line-clamp|ellipsis|nowrap|overflow/.test(tag), `${id}: nothing that cuts the text off`);
+  }
+  const css = readFileSync(join(root, 'src/styles/global.css'), 'utf8');
+  assert.ok(!/\.kk-recipe-label|\[data-role=.recipe-label.\]/.test(css), 'no style rule that could clamp or hide the label');
+  for (const [name, t] of [['kk-light', theme('kk-light')], ['kk-dark', theme('kk-dark')]]) {
+    const ratio = contrast(t['--kk-muted'], t['--color-base-100']);
+    console.log(`  label contrast ${ratio.toFixed(2)}:1  ${name} ${t['--kk-muted']} on ${t['--color-base-100']}`);
+    assert.ok(ratio >= 4.5, `${name}: muted text on the page color is ${ratio.toFixed(2)}`);
   }
 });

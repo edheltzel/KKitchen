@@ -44,8 +44,8 @@ export interface ExampleRecipe {
   cook: number;
   /** Hands-off time that is not in `minutes` (a marinate), as short text like "2 h marinate". Shown beside the minutes; the time filter ignores it. */
   wait?: string;
-  /** Set only on a recipe whose source says it is gluten-free. Shows one small plain label on the recipe page; no tag, filter or card badge. */
-  glutenFree?: true;
+  /** Set only on a recipe whose source says it is gluten-free. Shows one small plain label on the recipe page ("Gluten-free per the original recipe"); no tag, filter or card badge. */
+  glutenFreePerSource?: true;
   serves: number;
   groups: readonly IngredientGroup[];
   steps: readonly Step[];

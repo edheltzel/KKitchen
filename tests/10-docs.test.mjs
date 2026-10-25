@@ -169,7 +169,8 @@ test('publishing: the README says to rebuild with a plain npm run build after th
 
 test('README says where the gluten-free label shows: one small label on the recipe page of two recipes, no tag, filter or card badge', () => {
   const doc = read('README.md');
-  assert.match(doc, /`glutenFree: true`/);
+  assert.match(doc, /`glutenFreePerSource: true`/);
   assert.match(doc, /one small label on the recipe page/);
+  assert.match(doc, /Gluten-free per the original recipe/);
   assert.match(doc, /not in the title/);
 });
