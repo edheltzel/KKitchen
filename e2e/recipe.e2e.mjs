@@ -52,7 +52,7 @@ try {
   // --- ticks: tick, reload, still ticked --------------------------------------------------------------------------
   await tick('garlic');
   await tick('tomato');
-  check('ticking shows ticked rows and saves under one key for this recipe only', JSON.stringify(await ticked()) === '["tomato","garlic"]' || (await ticked()).sort().join() === 'garlic,tomato');
+  check('ticking shows ticked rows and saves under one key for this recipe only', (await ticked()).sort().join() === 'garlic,tomato', JSON.stringify(await ticked()));
   const saved = await ticksSaved();
   check('saved as { v: 1, ticks: { "example-1": [...] } }', saved.v === 1 && Object.keys(saved.ticks).join() === 'example-1' && saved.ticks['example-1'].slice().sort().join() === 'garlic,tomato', JSON.stringify(saved));
   await reload();
