@@ -35,6 +35,9 @@
   --kk-accent-text: #A63A1A;
   --kk-muted: #6B5B4F;
   --kk-shadow: rgb(43 29 16 / 0.16);
+  --kk-banner: #2A2521;
+  --kk-banner-text: #FAF6EF;
+  --kk-banner-accent: #F08A57;
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -77,6 +80,9 @@
   --kk-accent-text: #F08A57;
   --kk-muted: #A89A8C;
   --kk-shadow: rgb(0 0 0 / 0.6);
+  --kk-banner: #2A2521;
+  --kk-banner-text: #FAF6EF;
+  --kk-banner-accent: #F08A57;
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
