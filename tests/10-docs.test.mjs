@@ -48,3 +48,28 @@ test('week store notes describe what Retry does for a half-finished move, truthf
   assert.match(doc, /Retry finishes the move[^\n]*skips any that already landed[^\n]*clears the old day/i);
   assert.match(doc, /atomic move/i);
 });
+
+test('Branch 7 notes: store errors come in two kinds, retry and rejected, for ratings and the week plan', () => {
+  for (const file of ['docs/ratings-store-notes.md', 'docs/week-store-notes.md']) {
+    const doc = read(file);
+    assert.match(doc, /Branch 7[^\n]*two kinds of store error[^\n]*"retry"[^\n]*"rejected"/i, file);
+    assert.match(doc, /"rejected"[^\n]*(drop|dropped)[^\n]*(message|says)[^\n]*never[^\n]*front of the failed list/i, file);
+  }
+  assert.match(read('docs/ratings-store-notes.md'), /ratings/i);
+  assert.match(read('docs/week-store-notes.md'), /week/i);
+});
+
+test('week store notes list what to do for the real store phase', () => {
+  const doc = read('docs/week-store-notes.md');
+  assert.match(doc, /Plan sheet shows "Free" for every day until the first read answers[^\n]*loading state like ratings/i);
+  assert.match(doc, /replacing a dinner has no Undo[^\n]*"Replaced X" note/i);
+  assert.match(doc, /does not reload when the week rolls over[^\n]*past Sunday night[^\n]*last week's days/i);
+  assert.match(doc, /recipe is gone[^\n]*"a recipe"[^\n]*"A" tile/i);
+  assert.match(doc, /both banners show together above the search bar[^\n]*checked in `e2e\/plan\.e2e\.mjs`/i);
+});
+
+test('real-iphone checklist: a swipe must not open the change sheet, and the last card clears the bars', () => {
+  const doc = read('docs/real-iphone-checklist.md');
+  assert.match(doc, /a swipe must not also open the change sheet[^\n]*click-swallow timer[^\n]*Safari/i);
+  assert.match(doc, /last card clears the bars with the keyboard up and with the Undo bar showing/i);
+});
