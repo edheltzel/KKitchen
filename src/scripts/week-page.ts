@@ -91,13 +91,12 @@ function dinnerCell(day: WeekDay, recipeId: string, note: string | null, disable
   const remove = el('button', 'kk-week-remove', 'remove');
   remove.type = 'button';
   remove.disabled = disabled;
-  remove.setAttribute('aria-label', `Remove ${name} from ${day.long}`);
-  const label = document.createElement('span');
-  label.textContent = 'Remove';
-  remove.append(trashIcon(), label);
+  remove.setAttribute('aria-label', 'Remove');
+  remove.title = 'Remove'; // the hover title on desktop; the name stays the aria-label
+  remove.append(trashIcon());
   card.append(tile, words, remove);
   // The red area under the card: a swipe slides the card left to show it. Not in the tab order, because the outlined
-  // Remove button does the same job for keyboards and screen readers.
+  // Remove icon button does the same job for keyboards and screen readers.
   const reveal = el('button', 'kk-week-reveal', 'reveal');
   reveal.type = 'button';
   reveal.tabIndex = -1;

@@ -60,3 +60,20 @@ test('the page leaves room for whatever is stacked at the bottom (tab bar, Undo 
   assert.match(read('src/styles/global.css'), /\.kk-room\s*\{[^}]*padding-bottom:\s*calc\(var\(--kk-stack-height,/);
   assert.match(read('src/scripts/stack-room.ts'), /ResizeObserver[\s\S]*--kk-stack-height/);
 });
+
+test('the Remove button is an icon: named exactly Remove, a hidden svg, no visible word, a 44px round box', () => {
+  const script = read('src/scripts/week-page.ts');
+  const block = script.match(/const remove = el\('button'[\s\S]*?card\.append\(/)?.[0] ?? '';
+  assert.ok(block, 'the card Remove button is built in week-page.ts');
+  assert.match(block, /setAttribute\('aria-label', 'Remove'\)/);
+  assert.match(block, /remove\.title = 'Remove'/, 'a hover title, free of CSS');
+  assert.match(block, /remove\.append\(trashIcon\(\)\)/, 'only the icon goes inside the button');
+  assert.ok(!/textContent/.test(block), 'no visible word inside the button');
+  assert.match(script, /svg\.setAttribute\('aria-hidden', 'true'\)/);
+  const css = read('src/styles/global.css');
+  const rule = css.match(/^\.kk-week-remove\s*\{[^}]*\}/m)?.[0] ?? '';
+  assert.match(rule, /min-width:\s*2\.75rem/);
+  assert.match(rule, /min-height:\s*2\.75rem/);
+  assert.match(rule, /padding:\s*0;/, 'an icon-only button has no side padding that stretches it into a pill');
+  assert.match(css, /\.kk-week-remove:focus-visible[^{]*\{[^}]*outline:\s*2px solid/, 'a visible focus ring');
+});
