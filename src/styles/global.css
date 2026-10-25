@@ -394,8 +394,8 @@
   display: block;
   box-sizing: border-box;
   width: 100%;
-  min-height: 3.5rem;
-  border: 2px dashed var(--kk-muted);
+  min-height: 2.75rem;
+  border: 1.5px dashed var(--kk-muted);
   border-radius: 1rem;
   background: transparent;
   color: var(--kk-accent-text);

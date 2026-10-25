@@ -151,6 +151,13 @@ try {
   const bannerGap = await clearance('#bottom-stack');
   check('with the Week plan unavailable banner on top of the tab bar, Sunday and the hint still clear the whole bottom stack', (await visible('#week-unavailable')) && bannerGap.gapRow >= 8 && bannerGap.gapHint >= 0, JSON.stringify(bannerGap));
 
+  // 10. empty days are one compact row: at least 44px tall and clearly shorter than a day with a dinner
+  await goto('/week/');
+  await ev(`localStorage.setItem('kk:week', JSON.stringify({ v: 1, entries: { '${TUE}': { recipeId: 'example-3', at: Date.now() } } }))`);
+  await goto('/week/');
+  const filledH = (await rect(`${row(TUE)} [data-role="card"]`)).h, emptyH = (await rect(`${row(MON)} [data-role="add"]`)).h;
+  check('an empty day is at least 44px tall', emptyH >= 44, String(emptyH));
+  check('and clearly shorter than a day with a dinner (under 80% of it)', emptyH < filledH * 0.8, `${emptyH} vs ${filledH}`);
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {
