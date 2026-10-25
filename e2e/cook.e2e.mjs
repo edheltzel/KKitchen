@@ -80,6 +80,7 @@ try {
   check('the shared Undo bar offers to bring them back, and the screen-stays-on pill is gone (the lock is released)', (await visible('#undo-bar')) && (await text('#undo-text')) === 'Ingredient checks cleared' && !(await visible('#wake-status')) && (await ev('window.__wake.active')) === 0);
   check('Undo is at least 44px tall and there is still no tab bar', (await rect('#undo-button')).h >= 44 && !(await visible('nav[aria-label="Main"]')));
   await click('#undo-button');
+  check('after Undo the Done screen no longer says the checks are cleared', !(await visible('.kk-done-note')) && !(await ev("document.querySelector('#screen-done').innerText")).includes('are cleared'), await ev("document.querySelector('.kk-done-note').hidden + ' ' + document.querySelector('.kk-done-note').textContent"));
   check('Undo puts back the ticks that were on the recipe, saved', (await saved()).ticks['example-1'].slice().sort().join() === 'garlic,spaghetti,tomato' && !(await visible('#undo-bar')));
 
   // --- ratings on Done are the shared controls -------------------------------------------------------------------------

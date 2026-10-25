@@ -96,6 +96,8 @@ function renderTicks(): void {
   const ready = gatherBoxes.filter((box) => box.checked).length;
   $('#ready-count').textContent = `${ready} of ${gatherBoxes.length} ready · tap a row`;
   $('#ticks-unavailable').hidden = !unavailable;
+  // Done says the checks are cleared only while that is true: Undo (or a tick) brings them back and the line goes away.
+  $('.kk-done-note').hidden = unavailable || checked.size > 0;
 }
 
 function render(): void {
