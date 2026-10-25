@@ -337,6 +337,7 @@ try {
   check('while unavailable, filters still work', (await countText()) === '2 recipes', await countText());
   await click(chip('who', 'favorite'));
   check('while unavailable, the rating filter is paused instead of hiding everything', (await countText()) === '2 recipes' && (await text('#who-note')).includes('unavailable'), `${await countText()} ${await text('#who-note')}`);
+  check('while unavailable, the Who liked it chip in the chips row shows as paused (in words, not only colour)', (await ev("(() => { const c = document.querySelector('#chips button[data-group=\"who\"]'); return !!c && c.dataset.paused === 'true' && c.textContent.trim() === 'Family favorites, paused' && c.getAttribute('aria-label') === 'Remove filter: Family favorites (paused until ratings load)' && c.classList.contains('kk-chip-paused'); })()")) && (await ev("(() => { const c = document.querySelector('#chips button[data-group=\"meal\"]'); return !!c && !c.dataset.paused && !c.textContent.includes('paused'); })()")));
   await click(chip('who', 'favorite'));
   await click(chip('meal', 'breakfast'));
   await click('#ratings-retry');
@@ -345,6 +346,9 @@ try {
   await click('#ratings-retry');
   check('Retry after the problem clears: banner gone, the failed tap is saved and shown', !(await visible('#ratings-unavailable')) && (await pressed(rb('example-2', 'loved'))) === 'true' && (await status('example-2', 'ed')) === 'Ed: Loved it' && (await saved())['example-2'].ed.value === 'loved', `${await status('example-2', 'ed')}`);
   check('who note is back to normal', !(await text('#who-note')).includes('unavailable'));
+  await click(chip('who', 'favorite'));
+  check('after Retry the Who liked it chip is no longer paused', (await ev("(() => { const c = document.querySelector('#chips button[data-group=\"who\"]'); return !!c && !c.dataset.paused && c.textContent.trim() === 'Family favorites' && !c.classList.contains('kk-chip-paused'); })()")));
+  await click(chip('who', 'favorite'));
 
   // failure: load fails
   await send('Page.enable');

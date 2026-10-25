@@ -223,6 +223,14 @@
   color: var(--color-primary-content);
 }
 
+/* A Who liked it chip while ratings are unavailable: the filter is paused, so it is dashed and says so in words. */
+.kk-chip-paused {
+  border-style: dashed;
+  border-color: var(--color-base-content);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+}
+
 /* Ratings (branch 3a): compact row on each card, derived Family favorite badge, notices. Tokens only. */
 .kk-rate {
   display: flex;

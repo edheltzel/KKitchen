@@ -52,3 +52,11 @@ test('rating styles: 44px targets, tokens only (no hard-coded colours), pressed 
   assert.match(css, /\.kk-rate-btn:focus-visible/);
   assert.match(css, /\.kk-rate-btn:disabled/);
 });
+
+test('a paused Who liked it chip is dashed and uses tokens only, so it reads as paused in both themes', () => {
+  const paused = rule('.kk-chip-paused {');
+  assert.match(paused, /border-style:\s*dashed/);
+  assert.match(paused, /background(-color)?:\s*var\(--kk-card\)|background(-color)?:\s*transparent/);
+  assert.match(paused, /color:\s*var\(--color-base-content\)/);
+  assert.ok(!/#[0-9a-f]{3,8}\b|rgb\(/i.test(paused), 'no hard-coded colours');
+});

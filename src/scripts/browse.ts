@@ -130,8 +130,13 @@ function render(): void {
       chip.className = 'kk-chip kk-chip-on';
       chip.dataset.group = group;
       chip.dataset.value = value;
-      chip.setAttribute('aria-label', `Remove filter: ${label}`);
-      chip.textContent = label;
+      const paused = group === 'who' && view.unavailable; // ratings cannot be read, so this filter is not applied
+      if (paused) {
+        chip.classList.add('kk-chip-paused');
+        chip.dataset.paused = 'true';
+      }
+      chip.setAttribute('aria-label', paused ? `Remove filter: ${label} (paused until ratings load)` : `Remove filter: ${label}`);
+      chip.textContent = paused ? `${label}, paused` : label;
       chip.insertAdjacentHTML(
         'beforeend',
         '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>',
