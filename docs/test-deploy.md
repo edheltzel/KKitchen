@@ -52,7 +52,7 @@ Set `URL` to the printed address.
 wrangler delete k9b86a4baf5538442773d
 ```
 
-Then `curl -sI "$URL/"` should no longer serve the site. Delete the setup token as well (see below).
+Then `curl -sI "$URL/"` should no longer serve the site.
 
 ## Rollback
 
@@ -78,8 +78,8 @@ cd "$SRC" && npm ci && rm -rf dist && npm test && wrangler deploy
 - Set `CLOUDFLARE_ACCOUNT_ID` in the same shell as the token (the id is not secret, but keep it out of the repo). Without it wrangler may try to look the account up, which needs an account read permission that a Workers-edit-only token does not have.
 - If wrangler still asks for more than Workers edit, stop and tell Atlas. Do not widen the token quietly.
 - Before first use, confirm in the token's permission list that there is no D1, KV or DNS permission, no zone access and no account-wide admin. If any is there, do not use the token.
-- A Workers-edit token covers all 8 existing Workers on the account and cannot be limited to one. It can change or delete any of them, so keep it short-lived (set a short expiry when creating it) and use it only for the session.
-- Delete the setup token after the first session. Make a new scoped token for any later session.
+- A Workers-edit token covers all 8 existing Workers on the account and cannot be limited to one. It can change or delete any of them, so keep it short-lived if it is ever made new, and use it only for this site.
+- The token is an existing account token. Do not delete the token after a session; just keep it out of files, logs and command output.
 - Nothing in this repo contains a token, an account id or a zone id.
 
 ## Is this test site still needed?

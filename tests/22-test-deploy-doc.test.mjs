@@ -33,7 +33,8 @@ test('test-deploy doc has the verify steps, delete step, rollback and the scoped
   assert.ok(!/git checkout/.test(d), 'rollback never switches the working tree or branch');
   assert.match(d, /Workers.*edit/i);
   assert.match(d, /no D1, KV or DNS/i);
-  assert.match(d, /delete the setup token/i);
+  assert.ok(!/setup token/i.test(d), 'this is an existing account token: the doc must not tell anyone to delete it');
+  assert.match(d, /do not delete the token/i);
 });
 
 test('test-deploy doc carries the review line verbatim', () => {
