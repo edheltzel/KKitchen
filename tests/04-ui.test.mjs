@@ -35,7 +35,10 @@ test('search input: 16px font, hint text, Filters control labelled', () => {
   assert.match(input, /aria-label="Search recipes"/);
   assert.match(input, /text-\[16px\]/);
   assert.match(css, /text-\\\[16px\\\][^}]*font-size:\s*16px/);
-  assert.match(home, />\s*Filters\s*<\/button>/);
+  const filters = home.match(/<button[^>]*>\s*(?:<svg[\s\S]*?<\/svg>)?\s*Filters\s*<\/button>/)?.[0];
+  assert.ok(filters, 'Filters button exists with visible label');
+  assert.match(filters, /aria-disabled="true"/, 'inert until branch 2');
+  assert.match(filters, /\bh-11\b/, '44px tall');
 });
 
 test('safe-area padding is present for the bottom bar', () => {
