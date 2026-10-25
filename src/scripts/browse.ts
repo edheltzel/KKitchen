@@ -179,7 +179,10 @@ function renderRatings(view: ReturnType<typeof controller.view>): void {
 }
 
 // A rating tap with nobody picked: take them to the picker and point at the hint. Nothing is saved.
-function nudgePicker(): void {
+// The card they tapped is remembered, so picking a person takes them back to it.
+let tappedCard: HTMLElement | null = null;
+function nudgePicker(card: HTMLElement): void {
+  tappedCard = card;
   meHint.dataset.nudge = 'on';
   $('#me-picker').scrollIntoView({ block: 'center' });
   meButtons[0]?.focus({ preventScroll: true });
@@ -224,12 +227,19 @@ $('#clear-all').addEventListener('click', () => commit(emptyState()));
 
 $('#recipe-grid').addEventListener('click', (event) => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-rating]');
-  const id = button?.closest<HTMLElement>('article')?.dataset.id;
-  if (!button || !id) return;
-  if (controller.view().me === null) return nudgePicker();
+  const card = button?.closest<HTMLElement>('article');
+  const id = card?.dataset.id;
+  if (!button || !card || !id) return;
+  if (controller.view().me === null) return nudgePicker(card);
   void controller.tap(id, button.dataset.rating as Rating);
 });
-for (const button of meButtons) button.addEventListener('click', () => controller.setMe(button.dataset.me as Person));
+for (const button of meButtons) {
+  button.addEventListener('click', () => {
+    controller.setMe(button.dataset.me as Person);
+    if (tappedCard?.isConnected && !tappedCard.hidden) tappedCard.scrollIntoView({ block: 'center' }); // back to where they were
+    tappedCard = null;
+  });
+}
 $('#ratings-retry').addEventListener('click', () => void controller.retry());
 $('#undo-button').addEventListener('click', () => void controller.undo());
 controller.subscribe(render);

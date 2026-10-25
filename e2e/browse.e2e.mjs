@@ -225,8 +225,12 @@ try {
   await sleep(300);
   check('ratings: a tap with nobody picked saves nothing and picks nobody', (await saved()) === null && (await ev("localStorage.getItem('kk:me')")) === null && (await pressed(rb('example-6', 'loved'))) === 'false');
   check('ratings: a tap with nobody picked scrolls to the picker and highlights the hint', (await pickerInView()) && (await visible('#me-hint')) && (await ev("document.querySelector('#me-hint').dataset.nudge")) === 'on', `y=${await ev('scrollY')}`);
-  await ev('window.scrollTo(0, 0)');
+  const cardInView = (id) => ev(`(() => { const r = document.querySelector('article[data-id="${id}"]').getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight - 100 && r.bottom > 100; })()`);
+  check('(setup) the tapped card is out of view while the picker is showing', !(await cardInView('example-6')));
   await click('[data-me="ed"]');
+  await sleep(200);
+  check('after picking someone the page returns to the card that was tapped, and still nothing is saved', (await cardInView('example-6')) && (await saved()) === null && (await pressed(rb('example-6', 'loved'))) === 'false', `y=${await ev('scrollY')}`);
+  await ev('window.scrollTo(0, 0)');
   check('picker: "I\'m Ed" is pressed, remembered on the phone, hint gone, buttons enabled', (await pressed('[data-me="ed"]')) === 'true' && (await ev("document.querySelector('#me-hint').dataset.nudge")) !== 'on' && (await ev("localStorage.getItem('kk:me')")) === 'ed' && !(await visible('#me-hint')) && (await ev("[...document.querySelectorAll('.kk-rate-btn')].every((b) => !b.disabled)")));
   await ev('window.__len = history.length');
   await click(rb('example-1', 'loved'));
