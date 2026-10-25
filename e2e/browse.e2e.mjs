@@ -204,6 +204,133 @@ try {
   await waitFor("location.pathname === '/'");
   await sleep(400);
   check('Back from another tab restores state and scroll', (await loc()) === stateUrl && Math.abs((await ev('scrollY')) - 60) <= 2, `${await loc()} y=${await ev('scrollY')}`);
+
+  // 6. ratings (branch 3a): picker, taps, derived Family favorite, Undo, persistence, filter, failure
+  const rb = (cardId, rating) => `article[data-id="${cardId}"] [data-rating="${rating}"]`;
+  const pressed = (sel) => ev(`document.querySelector(${JSON.stringify(sel)}).getAttribute('aria-pressed')`);
+  const badge = (cardId) => visible(`article[data-id="${cardId}"] [data-role="family-badge"]`);
+  const status = (cardId, person) => text(`article[data-id="${cardId}"] [data-person="${person}"]`);
+  const saved = () => ev("JSON.parse(localStorage.getItem('kk:ratings') ?? 'null')?.entries ?? null");
+  const countText = () => text('#recipe-count');
+
+  await goto('/');
+  await ev('localStorage.clear()');
+  await goto('/');
+  check('ratings: nobody picked yet, so rating buttons are disabled and the hint shows', (await visible('#me-hint')) && (await ev("[...document.querySelectorAll('.kk-rate-btn')].every((b) => b.disabled)")));
+  await click(rb('example-1', 'loved'));
+  check('ratings: a tap with nobody picked saves nothing', (await saved()) === null);
+  await click('[data-me="ed"]');
+  check('picker: "I\'m Ed" is pressed, remembered on the phone, hint gone, buttons enabled', (await pressed('[data-me="ed"]')) === 'true' && (await ev("localStorage.getItem('kk:me')")) === 'ed' && !(await visible('#me-hint')) && (await ev("[...document.querySelectorAll('.kk-rate-btn')].every((b) => !b.disabled)")));
+  await ev('window.__len = history.length');
+  await click(rb('example-1', 'loved'));
+  check('Ed taps Loved it: pressed, status line says so, no favorite yet', (await pressed(rb('example-1', 'loved'))) === 'true' && (await status('example-1', 'ed')) === 'Ed: Loved it' && (await status('example-1', 'kristina')) === 'Kristina: not rated yet' && !(await badge('example-1')), `${await status('example-1', 'ed')}`);
+  check('Family favorite badge is NOT shown with only one Loved it', !(await badge('example-1')));
+  await click('[data-me="kristina"]');
+  check('picker is changeable: "I\'m Kristina" now pressed, Ed\'s Loved it not shown as hers', (await pressed('[data-me="kristina"]')) === 'true' && (await pressed('[data-me="ed"]')) === 'false' && (await pressed(rb('example-1', 'loved'))) === 'false');
+  await click(rb('example-1', 'not-for-us'));
+  check('Kristina taps Not for us: no favorite', (await pressed(rb('example-1', 'not-for-us'))) === 'true' && !(await badge('example-1')) && (await status('example-1', 'kristina')) === 'Kristina: Not for us');
+  await click(rb('example-1', 'loved'));
+  check('Kristina switches to Loved it: both loved, so the Family favorite badge appears', (await badge('example-1')) && (await text('article[data-id="example-1"] [data-role="family-badge"]')).includes('Family favorite') && !(await visible('#undo-bar')), await text('article[data-id="example-1"] [data-role="family-badge"]'));
+  const entries = await saved();
+  check('saved: both entries stored, nothing stored for the favorite', entries?.['example-1']?.ed?.value === 'loved' && entries['example-1'].kristina?.value === 'loved' && !/favorite/i.test(await ev("localStorage.getItem('kk:ratings')")));
+  check('rating taps add no history entries (replaceState rules still hold)', await ev('history.length === window.__len'));
+
+  await ev('location.reload()');
+  await sleep(600);
+  await waitFor("document.readyState === 'complete'");
+  await sleep(300);
+  check('persistence: after reload the picker, both ratings and the Family favorite are still there', (await pressed('[data-me="kristina"]')) === 'true' && (await pressed(rb('example-1', 'loved'))) === 'true' && (await status('example-1', 'ed')) === 'Ed: Loved it' && (await badge('example-1')));
+
+  await click(rb('example-1', 'loved')); // same button again = clear
+  check('tapping Loved it again clears it and the favorite goes away', (await pressed(rb('example-1', 'loved'))) === 'false' && (await status('example-1', 'kristina')) === 'Kristina: not rated yet' && !(await badge('example-1')));
+  check('removing a Family favorite shows the Undo bar', (await visible('#undo-bar')) && (await text('#undo-text')) === 'Family favorite removed' && (await ev("document.querySelector('#undo-bar').getAttribute('role')")) === 'status');
+  await click('#undo-button');
+  check('Undo puts the rating back, the badge returns, the bar goes, and it is saved', (await pressed(rb('example-1', 'loved'))) === 'true' && (await badge('example-1')) && !(await visible('#undo-bar')) && (await saved())['example-1'].kristina.value === 'loved');
+  await click(rb('example-1', 'not-for-us'));
+  check('switching away from Loved it also removes the favorite and offers Undo', !(await badge('example-1')) && (await visible('#undo-bar')));
+  await click('#undo-button');
+  check('Undo after a switch restores Loved it', (await badge('example-1')) && (await pressed(rb('example-1', 'loved'))) === 'true');
+  await click(rb('example-4', 'loved'));
+  check('an ordinary rating that removes no favorite shows no Undo bar', !(await visible('#undo-bar')) && !(await badge('example-4')));
+
+  await click('[data-me="ed"]');
+  await click(rb('example-3', 'loved'));
+  check('rating row fits at 390px: no sideways scroll, 44px buttons, text not clipped', await ev(`(() => {
+    const bs = [...document.querySelectorAll('.kk-rate-btn')];
+    const ok = bs.every((b) => { const r = b.getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5 && b.scrollWidth <= b.clientWidth; });
+    const lines = [...document.querySelectorAll('.kk-rate-status p')].every((p) => p.scrollWidth <= p.clientWidth + 1);
+    return bs.length === 12 && ok && lines && document.documentElement.scrollWidth <= innerWidth;
+  })()`));
+  check('picker chips are >= 44px', await ev("[...document.querySelectorAll('[data-me]')].every((b) => { const r = b.getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5; })"));
+
+  // filter: example-1 is a Family favorite, example-3 Ed loved, example-4 Kristina loved
+  await click('#filters-button');
+  await sleep(400);
+  await click(chip('who', 'favorite'));
+  check('filter "Family favorites" shows only the recipe both loved', (await countText()) === '1 recipe' && JSON.stringify(await visibleCards()) === '["Weeknight Pasta"]' && (await loc()) === '/?who=favorite', `${await countText()} ${await loc()}`);
+  await click(chip('who', 'ed'));
+  check('filter Family favorites + Ed loved it = any of them (2)', (await countText()) === '2 recipes' && (await loc()) === '/?who=favorite%2Ced', `${await countText()} ${await loc()}`);
+  await click(chip('who', 'favorite'));
+  await click(chip('who', 'ed'));
+  await click(chip('who', 'kristina'));
+  check('filter "Kristina loved it" shows hers (example-1 and example-4)', (await countText()) === '2 recipes' && (await text('#chips button')) === 'Kristina loved it', `${await countText()}`);
+  await click(chip('who', 'kristina'));
+  await click(chip('who', 'untried'));
+  check('filter "Not tried yet" shows recipes nobody rated (3 of 6)', (await countText()) === '3 recipes', await countText());
+  await click(chip('meal', 'lunch'));
+  check('rating group is AND-ed with other groups (untried + lunch = 1)', (await countText()) === '1 recipe' && (await loc()) === '/?meal=lunch&who=untried', `${await countText()} ${await loc()}`);
+  await click('#filter-tray form:not(.modal-backdrop) button');
+  await goto('/?who=bogus,kristina&q=');
+  check('address: unknown rating values are dropped and the address is tidied', (await loc()) === '/?who=kristina' && (await countText()) === '2 recipes', await loc());
+  await ev('location.reload()');
+  await sleep(600);
+  await waitFor("document.readyState === 'complete'");
+  await sleep(300);
+  check('a shared "who" link still filters after the ratings load', (await countText()) === '2 recipes' && (await text('#filters-count')) === '1');
+  check('only one session entry is kept (no rating data in it)', await ev("JSON.stringify(Object.keys(sessionStorage)) === '[\"kk:recipes\"]'"));
+
+  // failure: save fails -> "Ratings unavailable" + Retry, browsing and search keep working, Retry saves the lost tap
+  await goto('/');
+  await ev("window.__realSet = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:ratings') throw new Error('full'); return window.__realSet.call(this, k, v); }");
+  await click(rb('example-2', 'loved'));
+  check('failed save: "Ratings unavailable" with a Retry button (role=alert)', (await visible('#ratings-unavailable')) && (await text('#ratings-unavailable p')) === 'Ratings unavailable' && (await text('#ratings-retry')) === 'Retry' && (await ev("document.querySelector('#ratings-unavailable').getAttribute('role')")) === 'alert');
+  check('Retry button is >= 44px', await ev("(() => { const r = document.querySelector('#ratings-retry').getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5; })()"));
+  check('while unavailable the rating buttons are disabled and the cards say so', (await ev("[...document.querySelectorAll('.kk-rate-btn')].every((b) => b.disabled)")) && (await status('example-2', 'ed')) === 'Ed: unavailable');
+  await type('tomato');
+  check('while unavailable, search still works', (await countText()) === '2 recipes' && JSON.stringify(await visibleCards()) === '["Weeknight Pasta","Tomato Soup"]', await countText());
+  await clearInput();
+  await click(chip('meal', 'breakfast'));
+  check('while unavailable, filters still work', (await countText()) === '2 recipes', await countText());
+  await click(chip('who', 'favorite'));
+  check('while unavailable, the rating filter is paused instead of hiding everything', (await countText()) === '2 recipes' && (await text('#who-note')).includes('unavailable'), `${await countText()} ${await text('#who-note')}`);
+  await click(chip('who', 'favorite'));
+  await click(chip('meal', 'breakfast'));
+  await click('#ratings-retry');
+  check('Retry while still failing keeps the banner', await visible('#ratings-unavailable'));
+  await ev('Storage.prototype.setItem = window.__realSet');
+  await click('#ratings-retry');
+  check('Retry after the problem clears: banner gone, the failed tap is saved and shown', !(await visible('#ratings-unavailable')) && (await pressed(rb('example-2', 'loved'))) === 'true' && (await status('example-2', 'ed')) === 'Ed: Loved it' && (await saved())['example-2'].ed.value === 'loved', `${await status('example-2', 'ed')}`);
+  check('who note is back to normal', !(await text('#who-note')).includes('unavailable'));
+
+  // failure: load fails
+  await send('Page.enable');
+  const script = await send('Page.addScriptToEvaluateOnNewDocument', { source: "window.__breakRatings = true; const g = Storage.prototype.getItem; Storage.prototype.getItem = function (k) { if (window.__breakRatings && k === 'kk:ratings') throw new Error('blocked'); return g.call(this, k); };" });
+  await goto('/');
+  check('failed load: "Ratings unavailable" with Retry, and the page still browses', (await visible('#ratings-unavailable')) && (await countText()) === '6 recipes');
+  await type('rolled');
+  check('failed load: search works', JSON.stringify(await visibleCards()) === '["Overnight Oats"]');
+  await clearInput();
+  await ev('window.__breakRatings = false');
+  await click('#ratings-retry');
+  check('Retry after a failed load shows the saved ratings', !(await visible('#ratings-unavailable')) && (await status('example-2', 'ed')) === 'Ed: Loved it' && (await badge('example-1')));
+  await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: script.result.identifier });
+
+  // a garbled stored value falls back to empty (no error banner)
+  await ev("localStorage.setItem('kk:ratings', '{{{ not json')");
+  await goto('/');
+  check('garbled ratings value: treated as empty, no banner, no crash', !(await visible('#ratings-unavailable')) && (await status('example-1', 'ed')) === 'Ed: not rated yet' && !(await badge('example-1')));
+  await click(rb('example-6', 'loved'));
+  check('rating still works after a garbled value (it is overwritten)', (await saved())['example-6'].ed.value === 'loved');
 } catch (e) {
   results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {
