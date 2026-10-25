@@ -49,12 +49,21 @@ Then `curl -sI "$URL/"` should no longer serve the site. Delete the setup token 
 
 ## Rollback
 
-There is no history on the server to restore, so rolling back means redeploying an older build:
+There is no history on the server to restore, so rolling back means rebuilding and redeploying an older commit. This never touches the working tree or the branch: the old commit is unpacked with `git archive` into a temp dir outside `~/Developer`.
 
 1. `git log --oneline` and pick the last good commit that was deployed from this branch. It must contain `wrangler.jsonc` and `public/_headers`, so it cannot be older than the commit that added them.
-2. `git checkout <good-commit>` (a detached checkout is fine; make no changes there).
-3. `rm -rf dist && npm test && wrangler deploy`
-4. Run the verify steps again, then `git checkout kk-05-deploy-test` to come back.
+2. Unpack, rebuild and redeploy from the temp dir:
+
+```
+SRC=$(mktemp -d /private/tmp/kk-rollback.XXXXXX)
+git -C /Users/ed/Developer/KKitchen archive <good-commit> | tar -x -C "$SRC"
+cd "$SRC" && npm ci && rm -rf dist && npm test && wrangler deploy
+```
+
+3. Run the verify steps again, then clean up: `cd /Users/ed/Developer/KKitchen && rm -rf "$SRC"`.
+
+- Fallback: if a redeploy will not go through or the site must come down now, delete it with `wrangler delete k9b86a4baf5538442773d`.
+- `wrangler rollback` is unchecked for asset Workers (not tried, not relied on here). Do not count on it.
 
 ## Token
 

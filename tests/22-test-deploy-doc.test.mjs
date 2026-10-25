@@ -30,7 +30,7 @@ test('test-deploy doc has the verify steps, delete step, rollback and the scoped
   assert.match(d, /Hidden Draft Note/);
   assert.ok(d.includes(`wrangler delete ${name()}`), 'delete step with the real name');
   assert.match(d, /rollback/i);
-  assert.match(d, /git checkout/);
+  assert.ok(!/git checkout/.test(d), 'rollback never switches the working tree or branch');
   assert.match(d, /Workers.*edit/i);
   assert.match(d, /no D1, KV or DNS/i);
   assert.match(d, /delete the setup token/i);
@@ -67,4 +67,19 @@ test('test-deploy doc warns the Workers-edit token covers all 8 existing Workers
   assert.match(pre, /workers_list/);
   assert.match(pre, /read-only/i);
   assert.ok(d.indexOf('## Before the first deploy') < d.indexOf('## Deploy'), 'the check comes before the deploy section');
+});
+
+test('test-deploy doc rolls back from a git archive in a temp dir outside ~/Developer, keeps wrangler delete as the fallback, and does not claim wrangler rollback works', () => {
+  const d = doc();
+  const rb = d.slice(d.search(/## Rollback/), d.search(/## Token/));
+  assert.match(rb, /git -C \/Users\/ed\/Developer\/KKitchen archive <good-commit> \| tar -x -C "\$SRC"/);
+  assert.match(rb, /SRC=\$\(mktemp -d \/private\/tmp\/kk-rollback\.XXXXXX\)/);
+  assert.match(rb, /rm -rf dist && npm test && wrangler deploy/);
+  assert.match(rb, /rm -rf "\$SRC"/);
+  assert.ok(!/tar -x -C [^\n]*Developer/.test(rb) && !/mktemp[^\n]*Developer/.test(rb), 'the temp dir is not under ~/Developer');
+  assert.match(rb, /never touches the working tree or the branch/i);
+  assert.ok(rb.includes(`wrangler delete ${name()}`), 'delete as the fallback');
+  assert.match(rb, /fallback/i);
+  assert.match(rb, /wrangler rollback[^\n]*unchecked/i);
+  assert.ok(!/wrangler rollback[^\n]*(works|will restore|restores)/i.test(rb), 'no claim that wrangler rollback works');
 });
