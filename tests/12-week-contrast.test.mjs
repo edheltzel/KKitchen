@@ -10,7 +10,7 @@ for (const name of ['kk-light', 'kk-dark']) {
   test(`${name}: Week and Plan text >= 4.5:1, outlines >= 3:1`, () => {
     const t = theme(name);
     const text = [
-      ['Remove / Plan button text (accent) on the card', t['--kk-accent-text'], t['--kk-card']],
+      ['Plan button text (accent) on the card', t['--kk-accent-text'], t['--kk-card']],
       ['"Moved from" / "Replaced" note and plan status (accent) on the card', t['--kk-accent-text'], t['--kk-card']],
       ['dinner name on the card', t['--color-base-content'], t['--kk-card']],
       ['today label (accent) on the page', t['--kk-accent-text'], t['--color-base-100']],
@@ -26,7 +26,7 @@ for (const name of ['kk-light', 'kk-dark']) {
       assert.ok(r >= 4.5, `${label} = ${r.toFixed(2)}`);
     }
     const outlines = [
-      ['Remove / Plan outline (accent) against the card', t['--kk-accent-text'], t['--kk-card']],
+      ['Remove icon and Plan outline (accent) against the card', t['--kk-accent-text'], t['--kk-card']],
       ['dashed Add a dinner border (muted) against the page', t['--kk-muted'], t['--color-base-100']],
       ['red Remove area against the card it slides out from', t['--color-primary'], t['--kk-card']],
     ];
