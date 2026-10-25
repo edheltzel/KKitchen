@@ -48,7 +48,7 @@ const friedChicken: ExampleRecipe = {
   ],
   notes: [
     'Plus at least 2 hours to marinate, overnight is best. That time is not in the 60 min.',
-    'Frying 12 pieces, 3 or 4 at a time, at 15-18 minutes each takes longer than the 45 min cook time.',
+    'Frying 12 pieces, 3 or 4 at a time, at 15-18 minutes each can take longer than the 45 min cook time.',
     'Use a thermometer to keep the oil at 350°F. It will dip when the chicken goes in, so let it climb back to 350°F before the next batch.',
     'Let the breaded chicken sit on a baking sheet for 5 minutes before frying.',
     'Leftovers: cool completely, store airtight in the fridge up to 3 days. Reheat in the microwave, or on a baking sheet at 350°F for 15-20 minutes.',

@@ -133,7 +133,7 @@ test('fried chicken: the wait is 2 h marinate, "at least" stays in the notes, an
   const r = by('gluten-free-fried-chicken');
   assert.equal(r.wait, '2 h marinate');
   assert.match(r.notes[0], /at least 2 hours to marinate, overnight is best/);
-  assert.ok(r.notes.some((n) => /12 pieces/.test(n) && /3 or 4 at a time/.test(n) && /15-18 minutes/.test(n) && /longer than the 45 min/.test(n)));
+  assert.ok(r.notes.some((n) => /12 pieces/.test(n) && /3 or 4 at a time/.test(n) && /15-18 minutes/.test(n) && /can take longer than the 45 min/.test(n) && !/takes longer/.test(n)));
   assert.deepEqual([r.prep, r.cook, r.minutes], [15, 45, 60], 'the figures stay as the note has them');
 });
 
