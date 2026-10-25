@@ -55,15 +55,17 @@ try {
     const r = (s) => document.querySelector(s).getBoundingClientRect();
     const hero = r('.kk-hero');
     const loved = r('.kk-rate-btn[data-rating="loved"]'), nfu = r('.kk-rate-btn[data-rating="not-for-us"]'), plan = r('[data-role="plan"]');
+    const start = r('#start-cooking'), startBg = getComputedStyle(document.querySelector('#start-cooking')).backgroundColor;
     const first = r('.kk-tick'), stack = r('#bottom-stack'), title = r('h1');
     const planStyle = getComputedStyle(document.querySelector('[data-role="plan"]'));
     return { heroH: hero.height, heroW: hero.width, fit: getComputedStyle(document.querySelector('.kk-hero')).aspectRatio, y: [loved.y, nfu.y, plan.y], h: [loved.height, nfu.height, plan.height], w: [loved.width, nfu.width, plan.width],
-      firstTop: first.top, firstBottom: first.bottom, stackTop: stack.top, titleBottom: title.bottom, lovedTop: loved.top, planBg: planStyle.backgroundColor, planBorder: planStyle.borderTopWidth };
+      start: { top: start.top, bottom: start.bottom, h: start.height, w: start.width }, startBg, firstTop: first.top, firstBottom: first.bottom, stackTop: stack.top, titleBottom: title.bottom, lovedTop: loved.top, planBg: planStyle.backgroundColor, planBorder: planStyle.borderTopWidth };
   })()`);
   check('the photo strip is about 140px tall on the phone and as wide as the page', lay.heroH >= 132 && lay.heroH <= 148 && lay.heroW > 340, JSON.stringify([lay.heroH, lay.heroW]));
   check('Loved it, Not for us and Plan sit on one row', Math.abs(lay.y[0] - lay.y[1]) < 2 && Math.abs(lay.y[0] - lay.y[2]) < 2, JSON.stringify(lay.y));
   check('each is at least 44px tall and about a third of the width (95 to 130px)', lay.h.every((v) => v >= 43.5) && lay.w.every((v) => v >= 95 && v <= 130), JSON.stringify([lay.h, lay.w]));
   check('Plan is in the outline style (clear fill, border)', lay.planBg === 'rgba(0, 0, 0, 0)' && parseFloat(lay.planBorder) >= 1, JSON.stringify([lay.planBg, lay.planBorder]));
+  check('Start cooking is a big tomato button right under the title block, before the rating row (44px or more, full width)', lay.start.h >= 44 && lay.start.w > 340 && lay.start.top >= lay.titleBottom && lay.start.bottom <= lay.lovedTop && lay.startBg === 'rgb(184, 66, 31)', JSON.stringify([lay.start, lay.startBg]));
   check('the row comes right after the title block, before the ingredients', lay.lovedTop > lay.titleBottom && lay.lovedTop < lay.firstTop);
   check('at 390x844 the first ingredient row is fully visible above the tab bar', lay.firstTop >= 0 && lay.firstBottom <= lay.stackTop, JSON.stringify([lay.firstTop, lay.firstBottom, lay.stackTop]));
   const below = await ev(`(() => { const y = (s) => document.querySelector(s).getBoundingClientRect().top; const lastStep = [...document.querySelectorAll('#steps li')].pop().getBoundingClientRect().bottom;

@@ -80,7 +80,10 @@ test('the page reuses the rating buttons, the Ed/Kristina picker, the plan butto
     for (const id of ['ratings-unavailable', 'ratings-retry', 'week-unavailable', 'week-retry', 'ticks-unavailable', 'ticks-retry', 'undo-bar', 'undo-text', 'undo-button', 'plan-live']) {
       assert.match(html, new RegExp(`id="${id}"`), `${r.id}: #${id}`);
     }
-    assert.ok(!/Start cooking/.test(html), 'Start cooking comes with the cooking branch');
+    const start = html.match(/<a [^>]*id="start-cooking"[^>]*>[\s\S]*?<\/a>/);
+    assert.ok(start, `${r.id}: Start cooking link`);
+    assert.match(start[0], new RegExp(`href="/cook/${r.id}/"`));
+    assert.match(start[0], /Start cooking/);
   }
 });
 
@@ -116,7 +119,7 @@ test('nothing under dist/recipe (any file, any depth) mentions the unapproved no
   }
 });
 
-test('page order: title, meta, tags, ONE row of the three actions, then ingredients and steps, then the who-and-status block and the source link', () => {
+test('page order: title, meta, tags, the big Start cooking button, ONE row of the three actions, then ingredients and steps, then the who-and-status block and the source link', () => {
   for (const r of exampleRecipes) {
     const html = page(r);
     const at = (needle) => {
@@ -124,7 +127,7 @@ test('page order: title, meta, tags, ONE row of the three actions, then ingredie
       assert.ok(i >= 0, `${r.id}: ${needle}`);
       return i;
     };
-    const order = [at('<h1'), at('class="kk-actions"'), at('id="ingredients-title"'), at('id="steps-title"'), at('id="ratings-title"'), at('data-person="ed"'), at('id="me-picker"')];
+    const order = [at('<h1'), at('id="start-cooking"'), at('class="kk-actions"'), at('id="ingredients-title"'), at('id="steps-title"'), at('id="ratings-title"'), at('data-person="ed"'), at('id="me-picker"')];
     assert.deepEqual(order, [...order].sort((a, b) => a - b), `${r.id}: order ${order}`);
     if (r.source) assert.ok(at('class="kk-source"') > at('id="me-picker"'), `${r.id}: source link last`);
     const actions = html.match(/<div class="kk-actions"[\s\S]*?<\/div>/)[0];

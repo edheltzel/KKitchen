@@ -48,6 +48,7 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
             {tags.map((tag) => <li class="kk-tag">{tag}</li>)}
           </ul>
         )}
+        <a id="start-cooking" href={`/cook/${recipe.id}/`} class="btn btn-primary kk-start-cooking">Start cooking <span aria-hidden="true">→</span></a>
         <div class="kk-actions" role="group" aria-label={`Rate or plan ${title}`}>
           <RatingBlock title={title} part="buttons" />
           <PlanBlock title={title} part="button" />
