@@ -327,7 +327,7 @@ try {
   await goto('/');
   await ev("window.__realSet = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:ratings') throw new Error('full'); return window.__realSet.call(this, k, v); }");
   await click(rb('example-2', 'loved'));
-  check('failed save: "Ratings unavailable" with a Retry button (role=alert)', (await visible('#ratings-unavailable')) && (await text('#ratings-unavailable p')) === 'Ratings unavailable' && (await text('#ratings-retry')) === 'Retry' && (await ev("document.querySelector('#ratings-unavailable').getAttribute('role')")) === 'alert');
+  check('failed save: "Ratings unavailable" with a Retry button (role=alert)', (await visible('#ratings-unavailable')) && (await text('#ratings-unavailable p')) === 'Ratings unavailable. Your last tap will save when you tap Retry.' && (await text('#ratings-retry')) === 'Retry' && (await ev("document.querySelector('#ratings-unavailable').getAttribute('role')")) === 'alert');
   check('Retry button is >= 44px', await ev("(() => { const r = document.querySelector('#ratings-retry').getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5; })()"));
   check('while unavailable the rating buttons are disabled and the cards say so', (await ev("[...document.querySelectorAll('.kk-rate-btn')].every((b) => b.disabled)")) && (await status('example-2', 'ed')) === 'Ed: unavailable');
   await type('tomato');
