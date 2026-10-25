@@ -9,6 +9,7 @@ import {
   emptyMessage,
   createSession,
 } from '../src/scripts/browse-state.ts';
+import { exampleRecipes, confirmedTags } from '../src/data/examples.ts';
 
 const OPTIONS = {
   meal: ['breakfast', 'lunch', 'dinner'],
@@ -71,6 +72,13 @@ test('filters are AND across groups; meal is any-of, time is loosest-wins', () =
   assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['15'], diet: [] }), []);
   assert.deepEqual(names({ q: '', meal: [], time: ['15', '30'], diet: ['Meatless'] }), ['Weeknight Pasta', 'Tomato Soup']);
   assert.deepEqual(names({ q: 'tomato', meal: ['dinner'], time: [], diet: [] }), ['Weeknight Pasta']);
+});
+
+test('a 30-minute recipe (Tomato Soup) appears under the "30 min or less" chip', () => {
+  const searchable = exampleRecipes.map((r) => ({ name: r.name, ingredients: [...r.ingredients], meal: r.meal, minutes: r.minutes, diet: confirmedTags(r) }));
+  const shown = filterRecipes(searchable, { q: '', meal: [], time: ['30'], diet: [] }).map((r) => r.name);
+  assert.ok(shown.includes('Tomato Soup'));
+  assert.ok(!shown.includes('Sheet-Pan Vegetables'), '40 minutes is not 30 or less');
 });
 
 test('toggleValue adds and removes one filter value without touching the rest', () => {

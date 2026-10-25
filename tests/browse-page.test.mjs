@@ -72,3 +72,9 @@ test('tray copy: diet says "needs all", the general hint no longer claims any-of
   assert.ok(!/Pick several in one group to see any of them/.test(tray));
   assert.match(tray, /Meal and time: pick several to see any of them\./);
 });
+
+test('time chips read "N min or less" (tray labels also feed the chips row)', () => {
+  const labels = [...tray.matchAll(/<button[^>]*data-group="time"[^>]*>([^<]*)<\/button>/g)].map((m) => m[1].trim());
+  assert.deepEqual(labels, ['15 min or less', '30 min or less', '45 min or less']);
+  assert.ok(!/Under \d+ min/.test(home), 'old label is gone from the page');
+});
