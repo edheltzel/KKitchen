@@ -73,3 +73,10 @@ test('real-iphone checklist: a swipe must not open the change sheet, and the las
   assert.match(doc, /a swipe must not also open the change sheet[^\n]*click-swallow timer[^\n]*Safari/i);
   assert.match(doc, /last card clears the bars with the keyboard up and with the Undo bar showing/i);
 });
+
+test('Retry replays the saved plan, not a fresh one: the stale-old-day risk is written down for the real store', () => {
+  for (const file of ['docs/week-store-notes.md', 'docs/ratings-store-notes.md']) {
+    const doc = read(file);
+    assert.match(doc, /Retry replays the saved plan, not a fresh one\. If another phone changed the old day in between, the clear could erase that dinner\. For the real store, Retry re-checks the old day first, or the server owns the move \(one atomic move call\)\./, file);
+  }
+});

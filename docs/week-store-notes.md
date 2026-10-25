@@ -8,6 +8,7 @@ The Week plan sits behind `WeekPlanStore` (`load()` and `set(day, recipeId | nul
 - The server will check one dinner per day and valid recipe ids only, and will stamp the time itself, like ratings.
 - A garbled stored value reads as an empty plan. A failed save lands in the failed-operations list and waits for Retry.
 - **Branch 7, error kinds (week plan).** The store needs two kinds of store error: "retry" (the network or server is down, try again, keep the op in the failed list) and "rejected" (the server says the op is invalid): a "rejected" op is dropped with a visible message and is never left at the front of the failed list, where it would block every later tap forever.
+- **Branch 7, retry and moves.** Retry replays the saved plan, not a fresh one. If another phone changed the old day in between, the clear could erase that dinner. For the real store, Retry re-checks the old day first, or the server owns the move (one atomic move call).
 
 For the real store phase:
 
