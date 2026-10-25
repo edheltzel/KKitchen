@@ -1,0 +1,95 @@
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readdirSync, readFileSync, statSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { root, decode } from './helpers.mjs';
+
+// `npm test` builds dist with KK_DATA=fixture (the old example recipes, for the other tests). This file builds the site the way
+// `npm run build` does, with no KK_DATA, into a temp folder, and proves that build holds only the three real recipes.
+const IDS = ['gluten-free-fried-chicken', 'high-protein-brownies', 'slow-cooker-roast'];
+const TITLES = {
+  'gluten-free-fried-chicken': 'Gluten-Free Fried Chicken',
+  'slow-cooker-roast': 'Slow Cooker Roast',
+  'high-protein-brownies': 'High Protein Gluten Free Brownies That Actually Taste Good',
+};
+let out;
+const page = (rel) => decode(readFileSync(join(out, rel), 'utf8'));
+const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+
+before(() => {
+  out = mkdtempSync(join(tmpdir(), 'kk-real-'));
+  const env = { ...process.env };
+  delete env.KK_DATA;
+  execFileSync(join(root, 'node_modules/.bin/astro'), ['build', '--outDir', out], { cwd: root, env, stdio: 'pipe' });
+});
+after(() => rmSync(out, { recursive: true, force: true }));
+
+test('a build with no KK_DATA has one recipe page and one cooking page for each real recipe, and nothing else', () => {
+  assert.deepEqual(readdirSync(join(out, 'recipe')).sort(), IDS);
+  assert.deepEqual(readdirSync(join(out, 'cook')).sort(), IDS);
+});
+
+test('the home page lists the three real recipes by their note titles, with no Example badge and no placeholder line', () => {
+  const html = page('index.html');
+  assert.equal((html.match(/<article/g) ?? []).length, 3);
+  assert.match(html, />3 recipes</);
+  for (const id of IDS) assert.match(html, new RegExp(`data-id="${id}"`));
+  for (const t of Object.values(TITLES)) assert.ok(html.includes(`>${t}</a>`), t);
+  assert.ok(!/>Example</.test(html) && !/Example recipe/.test(html) && !/placeholder content/.test(html));
+  assert.ok(!/<img/i.test(html));
+});
+
+test('the week page offers the real titles with no placeholder line', () => {
+  const html = page('week/index.html');
+  for (const t of Object.values(TITLES)) assert.ok(html.includes(`>${t}</span>`), t);
+  assert.ok(!/placeholder content/.test(html) && !/Example/.test(html));
+});
+
+test('every recipe page and cooking page carries the real title and no Example badge, no image, no tags', () => {
+  for (const id of IDS) {
+    const recipe = page(`recipe/${id}/index.html`);
+    assert.ok(recipe.includes(`>${TITLES[id]}</h1>`), id);
+    assert.ok(!/>Example</.test(recipe) && !/<img/i.test(recipe));
+    assert.ok(!/aria-label="Tags"/.test(recipe), `${id}: no tag list`);
+    assert.match(recipe, /rel="noopener noreferrer" class="kk-source"/);
+    assert.ok(page(`cook/${id}/index.html`).includes(`Cooking ${TITLES[id]}`), id);
+  }
+});
+
+test('gluten-free is held: no diet filter group, no diet value on any card, only Dinner and Snack as meal choices', () => {
+  const home = page('index.html');
+  assert.ok(!/Diet tags/.test(home));
+  assert.ok(!/data-group="diet"/.test(home));
+  assert.deepEqual([...home.matchAll(/data-diet(?:="([^"]*)")?[ >]/g)].map((m) => m[1] ?? ''), ['', '', '']);
+  assert.deepEqual([...home.matchAll(/data-group="meal" data-value="([^"]*)"/g)].map((m) => m[1]), ['dinner', 'snack']);
+  assert.deepEqual([...home.matchAll(/data-group="time" data-value="([^"]*)"/g)].map((m) => m[1]), ['15', '30', '45']);
+});
+
+test('the author is stored, not shown: no page carries an author name', () => {
+  for (const f of walk(out).filter((f) => /\.(html|js|json)$/.test(f))) {
+    const s = readFileSync(f, 'utf8');
+    assert.ok(!/Linley Hanson|Instructables/.test(s), f);
+  }
+});
+
+test('leak scan: no example recipe, fixture-only text or vault path anywhere in the real build', () => {
+  const banned = [
+    'Weeknight Pasta', 'Tomato Soup', 'Sheet-Pan Vegetables', 'Overnight Oats', 'Banana Pancakes', 'Hidden Draft Note',
+    'saffron', 'Nut-free', 'Draft-only', 'Meatless', 'Example recipe', 'example-1', 'example.com',
+    'FieldNotes', 'iCloud', 'Mobile Documents', 'Obsidian', '/Users/',
+  ];
+  const files = walk(out);
+  assert.ok(files.length > 10);
+  for (const f of files.filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
+    const s = readFileSync(f, 'utf8');
+    for (const b of banned) assert.ok(!s.includes(b), `${f.slice(out.length)} contains ${b}`);
+  }
+});
+
+test('the real build stays under the same 102,400 byte CSS cap', () => {
+  const bytes = walk(out).filter((f) => f.endsWith('.css')).reduce((n, f) => n + statSync(f).size, 0);
+  console.log(`  real build CSS: ${bytes} bytes of 102400`);
+  assert.ok(bytes > 0 && bytes <= 102400, `${bytes}`);
+});

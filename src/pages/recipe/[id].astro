@@ -8,7 +8,7 @@ import PlanBlock from '../../components/PlanBlock.astro';
 import PlanSheet from '../../components/PlanSheet.astro';
 import UndoBar from '../../components/UndoBar.astro';
 import { jsonForScript } from '../../scripts/json-script';
-import { confirmedTags, exampleRecipes, exampleTitle, recipeMeta, type ExampleRecipe } from '../../data/examples';
+import { confirmedTags, exampleRecipes, exampleTitle, isFixture, recipeMeta, type ExampleRecipe } from '../../data/examples';
 
 export function getStaticPaths() {
   // Only approved recipes get a page: a note that is not approved has no route and no data in the build.
@@ -38,7 +38,7 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
           <span class="kk-tile-letter">{recipe.name.charAt(0)}</span>
         </div>
         <span data-role="family-badge" hidden class="kk-fav-badge">★ Family favorite</span>
-        <span class="badge absolute right-2 top-2 border-0 bg-base-content font-bold text-base-100">Example</span>
+        {isFixture && <span class="badge absolute right-2 top-2 border-0 bg-base-content font-bold text-base-100">Example</span>}
       </div>
       <div class="mt-3 md:mt-0">
         <h1 class="text-3xl font-extrabold leading-tight tracking-tight">{title}</h1>

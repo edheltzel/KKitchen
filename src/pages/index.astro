@@ -7,7 +7,7 @@ import PlanSheet from '../components/PlanSheet.astro';
 import Banners from '../components/Banners.astro';
 import MePicker from '../components/MePicker.astro';
 import UndoBar from '../components/UndoBar.astro';
-import { exampleRecipes } from '../data/examples';
+import { exampleRecipes, isFixture } from '../data/examples';
 
 const count = exampleRecipes.length;
 ---
@@ -15,7 +15,7 @@ const count = exampleRecipes.length;
 <Base active="recipes">
   <h1 class="text-3xl font-extrabold tracking-tight">Kris's Kitchen</h1>
   <p id="recipe-count" aria-live="polite" class="mt-1 text-[14px] font-semibold text-kk-accent">{count} recipes</p>
-  <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>
+  {isFixture && <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>}
   <MePicker />
   <div id="chips" class="mt-3 flex flex-wrap gap-2" hidden></div>
   <div id="empty" hidden class="mt-6 rounded-2xl border border-base-300 bg-kk-card p-5 text-center">

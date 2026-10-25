@@ -36,3 +36,8 @@ test('example data stays obviously fake and makes no gluten-free claim', () => {
   assert.ok(!/gluten|fried chicken|keto/i.test(blob));
   for (const r of exampleRecipes) assert.ok(r.name.length > 0);
 });
+
+test('npm test builds and runs on the example fixture, never on the real recipes', () => {
+  assert.equal(process.env.KK_DATA, 'fixture');
+  assert.ok(exampleRecipes.every((r) => /^example-\d+$/.test(r.id)));
+});

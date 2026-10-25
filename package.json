@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "astro build && node --test \"tests/*.test.mjs\"",
+    "test": "KK_DATA=fixture astro build && KK_DATA=fixture node --test \"tests/*.test.mjs\"",
     "e2e": "node e2e/browse.e2e.mjs && node e2e/week.e2e.mjs && node e2e/plan.e2e.mjs && node e2e/recipe.e2e.mjs && node e2e/cook.e2e.mjs && node e2e/cook-device.e2e.mjs"
   },
   "dependencies": {

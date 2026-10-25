@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { exampleRecipes, exampleTitle } from '../data/examples';
+import { exampleRecipes, exampleTitle, isFixture } from '../data/examples';
 
 const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 ---
@@ -10,7 +10,7 @@ const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     <h1 class="text-3xl font-extrabold tracking-tight">This week</h1>
     <p id="week-range" class="text-[13px] font-semibold text-kk-muted"></p>
   </header>
-  <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>
+  {isFixture && <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>}
   <ul id="week-list" class="kk-week mt-3">
     {labels.map((label, i) => (
       <li class="kk-week-row" data-slot={i}>

@@ -1,5 +1,7 @@
-// EXAMPLE DATA ONLY. These are obvious placeholders, not real family recipes.
+// EXAMPLE DATA ONLY. These are obvious placeholders, not real family recipes: a TEST FIXTURE.
 // Every title starts with EXAMPLE_PREFIX so nothing here can be mistaken for real content.
+// The site ships the real recipes (recipes.ts). Only a build run with KK_DATA=fixture (npm test) uses these examples.
+import { realNotes } from './recipes.ts';
 
 export const EXAMPLE_PREFIX = 'Example recipe: ';
 
@@ -57,7 +59,7 @@ export interface ExampleRecipe {
 const it = (id: string, text: string): Ingredient => ({ id, text });
 const step = (text: string, ...uses: string[]): Step => (uses.length > 0 ? { text, uses } : { text });
 
-const notes: readonly ExampleRecipe[] = [
+const fixtureNotes: readonly ExampleRecipe[] = [
   { id: 'example-1', name: 'Weeknight Pasta', minutes: 25, meal: 'dinner', approved: true,
     ingredients: ['spaghetti', 'tomato', 'garlic', 'olive oil'], tags: [{ label: 'Meatless', confirmed: true }],
     prep: 10, cook: 15, serves: 4, source: 'https://example.com/example-pasta',
@@ -139,10 +141,16 @@ const notes: readonly ExampleRecipe[] = [
     steps: [step('Draft only.')] },
 ];
 
+/** True only when KK_DATA=fixture is set (npm test). A plain build or `npm run build` has it false and ships the real recipes. */
+export const isFixture: boolean = process.env.KK_DATA === 'fixture';
+
+const notes: readonly ExampleRecipe[] = isFixture ? fixtureNotes : realNotes;
+
 export const allExampleNotes = notes;
 export const exampleRecipes: readonly ExampleRecipe[] = notes.filter((r) => r.approved === true);
 
-export const exampleTitle = (recipe: ExampleRecipe): string => `${EXAMPLE_PREFIX}${recipe.name}`;
+/** The fixture adds the Example prefix; a real recipe shows its own title as it is. */
+export const exampleTitle = (recipe: ExampleRecipe): string => (isFixture ? `${EXAMPLE_PREFIX}${recipe.name}` : recipe.name);
 
 export const confirmedTags = (recipe: ExampleRecipe): string[] =>
   recipe.tags.filter((t) => t.confirmed === true).map((t) => t.label);
