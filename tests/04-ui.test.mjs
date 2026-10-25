@@ -31,7 +31,7 @@ test('tab targets are at least 44px tall', () => {
 test('search input: 16px font, hint text, Filters control labelled', () => {
   const input = home.match(/<input[^>]*id="search-input"[^>]*>/)?.[0];
   assert.ok(input);
-  assert.match(input, /placeholder="Search names, ingredients"/);
+  assert.match(input, /placeholder="Search recipes"/);
   assert.match(input, /aria-label="Search recipes"/);
   assert.match(input, /text-\[16px\]/);
   assert.match(css, /text-\\\[16px\\\][^}]*font-size:\s*16px/);

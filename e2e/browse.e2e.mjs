@@ -78,6 +78,22 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
 
+  // 0. the whole placeholder fits at 390px with the count badge showing
+  await goto('/?meal=lunch&time=30&diet=Meatless');
+  const fit = await ev(`(() => {
+    const i = document.querySelector('#search-input');
+    const cs = getComputedStyle(i);
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:' + cs.font + ';letter-spacing:' + cs.letterSpacing;
+    probe.textContent = i.placeholder;
+    document.body.append(probe);
+    const need = probe.getBoundingClientRect().width;
+    probe.remove();
+    const room = i.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    return { placeholder: i.placeholder, need: Math.round(need), room: Math.round(room), badge: !document.querySelector('#filters-count').hidden, scrolls: document.documentElement.scrollWidth > innerWidth };
+  })()`);
+  check('placeholder "Search recipes" fits at 390px with the count badge', fit.placeholder === 'Search recipes' && fit.badge && fit.need <= fit.room && !fit.scrolls, JSON.stringify(fit));
+
   // 1. live search: names and ingredients, case-insensitive, no reload, replaceState (no new history entries)
   await goto('/');
   await ev('window.__marker = 1; window.__len = history.length');
