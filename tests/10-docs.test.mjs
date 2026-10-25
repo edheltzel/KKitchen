@@ -80,3 +80,21 @@ test('Retry replays the saved plan, not a fresh one: the stale-old-day risk is w
     assert.match(doc, /Retry replays the saved plan, not a fresh one\. If another phone changed the old day in between, the clear could erase that dinner\. For the real store, Retry re-checks the old day first, or the server owns the move \(one atomic move call\)\./, file);
   }
 });
+
+test('real-iphone checklist has the recipe page items', () => {
+  const doc = read('docs/real-iphone-checklist.md');
+  assert.match(doc, /Recipe page[^\n]*ticks survive closing the home-screen app[^\n]*reopen[^\n]*still ticked/i);
+  assert.match(doc, /Recipe page[^\n]*Safari and the home-screen app keep separate (tick )?storage[^\n]*tick again/i);
+  assert.match(doc, /Recipe page[^\n]*Back[^\n]*same filters and scroll/i);
+  assert.match(doc, /Recipe page[^\n]*Reset checks[^\n]*Undo/i);
+  assert.match(doc, /Recipe page[^\n]*tick rows[^\n]*thumb/i);
+});
+
+test('ticks store notes: ticks are per phone by design and never shared', () => {
+  const doc = read('docs/ticks-store-notes.md');
+  assert.match(doc, /per phone by design[^\n]*never shared/i);
+  assert.match(doc, /`kk:ticks`/);
+  assert.match(doc, /no timestamps/i);
+  assert.match(doc, /Do not (move|add) (them|ticks) to the (shared|real) store/i);
+  assert.ok(doc.split('\n').length < 30, 'stays short');
+});

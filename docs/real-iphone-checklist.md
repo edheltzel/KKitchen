@@ -14,3 +14,7 @@ Things headless Chrome cannot prove. Check these on a real iPhone (Safari and th
 - [ ] Week plan, Plan button and day picker on a recipe card: the sheet is thumb-friendly (every day at least 44pt), a taken day says it replaces, a recipe on another day says it moves, and "Moved from Tuesday" shows afterwards.
 - [ ] Week plan, a swipe must not also open the change sheet: swipe left on a dinner and let go; the change sheet stays closed (the click-swallow timer may behave differently in Safari than in Chrome).
 - [ ] Last card clears the bars with the keyboard up and with the Undo bar showing: scroll to the very bottom of Recipes and of Week in both states; the last card (and on Week, Sunday and the hint) is fully visible, with nothing covering it.
+- [ ] Recipe page, ticks survive closing the home-screen app: tick two ingredients, swipe the app away, reopen the same recipe, and both are still ticked. Reset checks clears them and "Checks cleared" offers Undo.
+- [ ] Recipe page, Safari and the home-screen app keep separate tick storage: ingredients ticked in Safari will not show in the installed app. Tick again after installing. Ticks stay on each phone, with the shared store too.
+- [ ] Recipe page, Back from a recipe returns to the same filters and scroll: filter and scroll the Recipes list, open a recipe, tap Back (and the Safari back swipe), and the list is where you left it.
+- [ ] Recipe page, tick rows are easy to hit with a thumb (the whole row is the target, at least 44pt) and the Plan and rating buttons behave like they do on the list.
