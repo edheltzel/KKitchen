@@ -11,7 +11,7 @@ const htmlFiles = (dir) =>
     return statSync(full).isDirectory() ? htmlFiles(full) : full.endsWith('.html') ? [full] : [];
   });
 
-test('dist/_headers exists and sends noindex, nosniff and no-referrer on every path', () => {
+test('dist/_headers exists and sends noindex, nosniff and a same-origin referrer policy on every path', () => {
   assert.ok(existsSync(join(dist, '_headers')), 'dist/_headers (copied from public/)');
   const lines = read('dist/_headers').split('\n').map((l) => l.trimEnd());
   const first = lines.findIndex((l) => l === '/*');
@@ -23,7 +23,9 @@ test('dist/_headers exists and sends noindex, nosniff and no-referrer on every p
   }
   assert.ok(rule.includes('X-Robots-Tag: noindex, nofollow'), rule.join(' | '));
   assert.ok(rule.includes('X-Content-Type-Options: nosniff'), rule.join(' | '));
-  assert.ok(rule.includes('Referrer-Policy: no-referrer'), rule.join(' | '));
+  // same-origin, not no-referrer: Back on the recipe page and Exit in cooking read document.referrer to decide whether to step back in history.
+  assert.ok(rule.includes('Referrer-Policy: same-origin'), rule.join(' | '));
+  assert.ok(!rule.some((l) => /no-referrer/i.test(l)), 'no-referrer would blank document.referrer on this site');
 });
 
 test('_headers has no redirects or other rules that could change what is served', () => {

@@ -125,8 +125,10 @@ try {
   await click('#start-cooking');
   await loaded();
   await click('#start');
+  const entriesOnCook = await ev('history.length');
   await click('#exit');
   await loaded();
+  check('Exit stepped back in history instead of adding an entry (needs document.referrer, so the Referrer-Policy matters)', (await ev('history.length')) === entriesOnCook, `${await ev('history.length')} vs ${entriesOnCook}`);
   check('opened from the recipe page, Exit goes back to it and Back from there does not return to cooking', (await ev('location.pathname')) === '/recipe/example-1/' && (await ev('location.hash')) === '');
 
   const sizes = () => ev(`(() => { const px = (q) => parseFloat(getComputedStyle(document.querySelector(q)).fontSize); return { text: px('#step-text'), row: px('#use-now .kk-tick span'), next: px('#next'), nextH: document.querySelector('#next').getBoundingClientRect().height }; })()`);
