@@ -296,3 +296,117 @@
   color: var(--color-base-content);
   box-shadow: 0 2px 8px var(--kk-shadow);
 }
+
+/* Week plan (branch 3b): a label per day over one card. Remove is outlined text; empty days are dashed. Tokens only. */
+.kk-week {
+  display: grid;
+  gap: 0.75rem;
+}
+.kk-week-day {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kk-muted);
+}
+.kk-week-row[data-today] .kk-week-day {
+  color: var(--kk-accent-text);
+}
+.kk-week-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  min-height: 4.25rem;
+  padding: 0.5rem 0.625rem 0.5rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--kk-card);
+  box-shadow: var(--kk-shadow);
+}
+.kk-week-tile {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.75rem;
+}
+.kk-week-letter {
+  font-size: 1.5rem;
+}
+.kk-week-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 2.75rem;
+  background: transparent;
+  text-align: left;
+}
+.kk-week-name {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.kk-week-note {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--kk-accent-text);
+}
+.kk-week-remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1.5px solid var(--kk-accent-text);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--kk-accent-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+.kk-week-remove:disabled,
+.kk-week-text:disabled,
+.kk-week-add:disabled {
+  opacity: 0.5;
+}
+.kk-week-add {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.5rem;
+  border: 2px dashed var(--kk-muted);
+  border-radius: 1rem;
+  background: transparent;
+  color: var(--kk-accent-text);
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.kk-week-add:focus-visible,
+.kk-week-remove:focus-visible,
+.kk-week-text:focus-visible,
+.kk-sheet-row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-sheet-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  text-align: left;
+}

@@ -19,6 +19,7 @@ import {
 import { PERSON_LABEL, PEOPLE, RATING_LABEL, isFamilyFavorite, ratingOf, type Person, type Rating } from './ratings';
 import { RATINGS_KEY, createIdentity, createLocalRatingsStore } from './ratings-store';
 import { createRatingsController } from './ratings-controller';
+import { phoneStorage } from './phone-storage';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -70,19 +71,6 @@ const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')
 // Ratings live in a local stand-in store (this phone's localStorage). The future shared store plugs in
 // behind the same RatingsStore shape. Blocked storage reads as empty and refuses saves, which shows as
 // "Ratings unavailable" rather than silently losing a tap.
-function phoneStorage(): Storage {
-  try {
-    return window.localStorage;
-  } catch {
-    return {
-      getItem: () => null,
-      setItem: () => {
-        throw new Error('storage blocked');
-      },
-      removeItem: () => {},
-    } as unknown as Storage;
-  }
-}
 const ratingsStorage = phoneStorage();
 const controller = createRatingsController({
   store: createLocalRatingsStore({ storage: ratingsStorage }),
