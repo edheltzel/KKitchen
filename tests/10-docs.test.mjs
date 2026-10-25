@@ -166,3 +166,10 @@ test('publishing: the README says to rebuild with a plain npm run build after th
     assert.ok(!/rm -rf dist && npm test\s*$/m.test(read(f)), `${f}: a deploy must not stop at npm test`);
   }
 });
+
+test('README says where the gluten-free label shows: one small label on the recipe page of two recipes, no tag, filter or card badge', () => {
+  const doc = read('README.md');
+  assert.match(doc, /`glutenFree: true`/);
+  assert.match(doc, /one small label on the recipe page/);
+  assert.match(doc, /not in the title/);
+});
