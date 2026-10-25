@@ -15,7 +15,13 @@ test('test-deploy doc says what is deployed and what stays on each phone', () =>
 
 test('test-deploy doc has the exact manual deploy command, with the Worker name from wrangler.jsonc, and says there is no automatic republish', () => {
   const d = doc();
-  assert.match(d, /rm -rf dist && npm test && wrangler deploy/);
+  // The commands as they were really run: build and test in the project, then wrangler from /Users/ed, where it finds the token in .env.
+  assert.match(d, /cd \/Users\/ed\/Developer\/KKitchen && rm -rf dist && npm test\n/);
+  assert.match(d, /cd \/Users\/ed && wrangler deploy -c \/Users\/ed\/Developer\/KKitchen\/wrangler\.jsonc/);
+  assert.match(d, /cd \/Users\/ed && wrangler deploy --dry-run -c \/Users\/ed\/Developer\/KKitchen\/wrangler\.jsonc/);
+  assert.ok(!/npm test && wrangler/.test(d) && !/KKitchen && wrangler/.test(d), 'no wrangler run from inside the project folder');
+  assert.match(d, /never print or open \/Users\/ed\/\.env/i);
+  assert.ok(!/Export the scoped token/i.test(d), 'the token is not a shell variable');
   assert.match(d, /manual only/i);
   assert.match(d, /no automatic republish/i);
   assert.ok(d.includes(name()), 'the Worker name appears so the delete step is copy-paste');
@@ -28,11 +34,14 @@ test('test-deploy doc has the verify steps, delete step, rollback and the scoped
   assert.match(d, /Draft-only/);
   assert.match(d, /saffron/);
   assert.match(d, /Hidden Draft Note/);
-  assert.ok(d.includes(`wrangler delete ${name()}`), 'delete step with the real name');
+  assert.ok(d.includes(`cd /Users/ed && wrangler delete ${name()} -c /Users/ed/Developer/KKitchen/wrangler.jsonc`), 'delete step with the real name, run from /Users/ed');
   assert.match(d, /rollback/i);
   assert.ok(!/git checkout/.test(d), 'rollback never switches the working tree or branch');
   assert.match(d, /Workers.*edit/i);
-  assert.match(d, /no D1, KV or DNS/i);
+  assert.ok(!/no D1, KV or DNS/i.test(d), 'the old "confirm no D1, KV or DNS first" gate is gone: the scope is not known');
+  assert.match(d, /scope is unknown/i);
+  assert.match(d, /captain okayed using it on Oct 25, 2026/i);
+  assert.match(d, /never print or open the token/i);
   assert.ok(!/setup token/i.test(d), 'this is an existing account token: the doc must not tell anyone to delete it');
   assert.match(d, /do not delete the token/i);
 });
@@ -75,11 +84,13 @@ test('test-deploy doc rolls back from a git archive in a temp dir outside ~/Deve
   const rb = d.slice(d.search(/## Rollback/), d.search(/## Token/));
   assert.match(rb, /git -C \/Users\/ed\/Developer\/KKitchen archive <good-commit> \| tar -x -C "\$SRC"/);
   assert.match(rb, /SRC=\$\(mktemp -d \/private\/tmp\/kk-rollback\.XXXXXX\)/);
-  assert.match(rb, /rm -rf dist && npm test && wrangler deploy/);
+  assert.match(rb, /cd "\$SRC" && npm ci && rm -rf dist && npm test\n/);
+  assert.match(rb, /cd \/Users\/ed && wrangler deploy -c "\$SRC\/wrangler\.jsonc"/);
+  assert.ok(!/npm test && wrangler/.test(rb) && !/\$SRC" && wrangler/.test(rb));
   assert.match(rb, /rm -rf "\$SRC"/);
   assert.ok(!/tar -x -C [^\n]*Developer/.test(rb) && !/mktemp[^\n]*Developer/.test(rb), 'the temp dir is not under ~/Developer');
   assert.match(rb, /never touches the working tree or the branch/i);
-  assert.ok(rb.includes(`wrangler delete ${name()}`), 'delete as the fallback');
+  assert.ok(rb.includes(`cd /Users/ed && wrangler delete ${name()} -c /Users/ed/Developer/KKitchen/wrangler.jsonc`), 'delete as the fallback');
   assert.match(rb, /fallback/i);
   assert.match(rb, /wrangler rollback[^\n]*unchecked/i);
   assert.ok(!/wrangler rollback[^\n]*(works|will restore|restores)/i.test(rb), 'no claim that wrangler rollback works');

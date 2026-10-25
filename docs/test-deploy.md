@@ -16,17 +16,17 @@ Confirm the random name is free, so the deploy cannot overwrite an existing Work
 
 ## Deploy (repeatable, manual only, no automatic republish)
 
-Export the scoped token in the shell for this session only (never write it into a file in the repo), then:
+Wrangler reads the Cloudflare token from the captain's `.env` file in the folder it is started in, so every wrangler command is run from `/Users/ed` and pointed at the project with `-c`. Build and test in the project first, then deploy from `/Users/ed`:
 
 ```
-cd /Users/ed/Developer/KKitchen
-rm -rf dist && npm test && wrangler deploy
+cd /Users/ed/Developer/KKitchen && rm -rf dist && npm test
+cd /Users/ed && wrangler deploy -c /Users/ed/Developer/KKitchen/wrangler.jsonc
 ```
 
 - Run it by hand each time. No CI, no watcher, no hook and no schedule publishes this: manual only, and there is no automatic republish.
 - `npm test` builds `dist` and runs every check, including the leak scan and the headers and config tests, so a failing test stops the deploy.
-- Offline rehearsal that needs no login: `wrangler deploy --dry-run`. Last saved output: `~/.agents/Grokbot/kk-proof/kk-05-dry-run.txt`.
-- Wrangler 4.151.0 is what was used on BigMac. It is not a project dependency. Never run `wrangler login`; the token is passed in the environment.
+- Offline rehearsal that needs no login: `cd /Users/ed && wrangler deploy --dry-run -c /Users/ed/Developer/KKitchen/wrangler.jsonc`. It should say the assets directory is the project's `dist`. Last saved output: `~/.agents/Grokbot/kk-proof/kk-05-dry-run.txt`.
+- Wrangler 4.151.0 is what was used on BigMac. It is not a project dependency. Never run `wrangler login`. The token comes from `/Users/ed/.env`: never print or open /Users/ed/.env, and never copy the token into the repo, a log or any output.
 
 ## Verify (after the first deploy and after each redeploy)
 
@@ -49,7 +49,7 @@ Set `URL` to the printed address.
 ## Delete
 
 ```
-wrangler delete k9b86a4baf5538442773d
+cd /Users/ed && wrangler delete k9b86a4baf5538442773d -c /Users/ed/Developer/KKitchen/wrangler.jsonc
 ```
 
 Then `curl -sI "$URL/"` should no longer serve the site.
@@ -64,22 +64,22 @@ There is no history on the server to restore, so rolling back means rebuilding a
 ```
 SRC=$(mktemp -d /private/tmp/kk-rollback.XXXXXX)
 git -C /Users/ed/Developer/KKitchen archive <good-commit> | tar -x -C "$SRC"
-cd "$SRC" && npm ci && rm -rf dist && npm test && wrangler deploy
+cd "$SRC" && npm ci && rm -rf dist && npm test
+cd /Users/ed && wrangler deploy -c "$SRC/wrangler.jsonc"
 ```
 
 3. Run the verify steps again, then clean up: `cd /Users/ed/Developer/KKitchen && rm -rf "$SRC"`.
 
-- Fallback: if a redeploy will not go through or the site must come down now, delete it with `wrangler delete k9b86a4baf5538442773d`.
+- Fallback: if a redeploy will not go through or the site must come down now, delete it with `cd /Users/ed && wrangler delete k9b86a4baf5538442773d -c /Users/ed/Developer/KKitchen/wrangler.jsonc`.
 - `wrangler rollback` is unchecked for asset Workers (not tried, not relied on here). Do not count on it.
 
 ## Token
 
-- Use a scoped API token with Workers edit only (Workers Scripts: Edit, and nothing else on the one account).
-- Set `CLOUDFLARE_ACCOUNT_ID` in the same shell as the token (the id is not secret, but keep it out of the repo). Without it wrangler may try to look the account up, which needs an account read permission that a Workers-edit-only token does not have.
-- If wrangler still asks for more than Workers edit, stop and tell Atlas. Do not widen the token quietly.
-- Before first use, confirm in the token's permission list that there is no D1, KV or DNS permission, no zone access and no account-wide admin. If any is there, do not use the token.
-- A Workers-edit token covers all 8 existing Workers on the account and cannot be limited to one. It can change or delete any of them, so keep it short-lived if it is ever made new, and use it only for this site.
-- The token is an existing account token. Do not delete the token after a session; just keep it out of files, logs and command output.
+- The deploy needs Workers edit. The token in use is an existing account token, and its scope is unknown. The captain okayed using it on Oct 25, 2026.
+- If wrangler needs the account id, set `CLOUDFLARE_ACCOUNT_ID=<id>` inline for that one command only (the first deploy did not need it). Without it wrangler may try to look the account up, which needs an account read permission that a Workers-edit-only token may lack. Never put the id in the repo.
+- If wrangler asks for more access than a Workers deploy, stop and tell Atlas. Do not widen the token quietly.
+- A Workers-edit token covers all 8 existing Workers on the account and cannot be limited to one. It can change or delete any of them, so use it only for this site and keep it short-lived if it is ever made new.
+- The token is an existing account token. Do not delete the token after a session; never print or open the token, and keep it out of files, logs and command output.
 - Nothing in this repo contains a token, an account id or a zone id.
 
 ## Is this test site still needed?
