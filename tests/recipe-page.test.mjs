@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { allExampleNotes, exampleRecipes, exampleTitle, flatItems, recipeMeta, confirmedTags } from '../src/data/examples.ts';
-import { root, read, decode } from './helpers.mjs';
+import { readFileSync } from 'node:fs';
+import { root, read, decode, distFiles } from './helpers.mjs';
 
 const page = (r) => decode(read(`dist/recipe/${r.id}/index.html`));
 
@@ -100,4 +101,17 @@ test('cards on the home page link to their recipe page, once each, from the titl
 
 test('the page works without any name, id or title being invented: ids come from the data', () => {
   for (const r of exampleRecipes) assert.match(r.id, /^example-\d+$/);
+});
+
+test('nothing under dist/recipe (any file, any depth) mentions the unapproved note or its tag, ingredient or step', () => {
+  const files = distFiles(join(root, 'dist/recipe'));
+  assert.ok(files.length >= exampleRecipes.length, `scanned ${files.length} files`);
+  for (const file of files) {
+    const buf = readFileSync(file);
+    if (buf.includes(0)) continue;
+    const text = buf.toString('utf8').toLowerCase();
+    for (const secret of ['Hidden Draft Note', 'Draft-only', 'saffron', 'Draft only.', 'example-7']) {
+      assert.ok(!text.includes(secret.toLowerCase()), `${file}: ${secret}`);
+    }
+  }
 });
