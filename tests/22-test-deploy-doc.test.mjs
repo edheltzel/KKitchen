@@ -95,7 +95,8 @@ test('test-deploy doc verifies the noindex header on a built asset and a 404 pat
   assert.match(v, /find dist -mindepth 1 \| wc -l/);
   assert.match(v, /uploaded/i);
   assert.match(v, /folders/i, 'wrangler counts folders as well as files in "Read N files"');
-  assert.match(v, /49/, 'the dry run read 49 entries');
-  assert.match(v, /32 files/, 'dist has 32 files today');
+  // No counts written into the doc: they go stale as dist changes. The reader compares with the two find commands.
+  assert.ok(!/\b\d+ (files|entries|folders)\b/i.test(v), 'no pinned file counts in the verify section');
+  assert.ok(!/\b49\b|\b32\b|\b17\b/.test(v), 'no pinned dist numbers in the verify section');
   assert.match(v, /tell Atlas/i);
 });

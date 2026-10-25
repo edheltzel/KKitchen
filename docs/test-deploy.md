@@ -40,9 +40,9 @@ Set `URL` to the printed address.
 6. Noindex on a built asset and on a 404 path (the one `/*` rule should cover both):
    `curl -sI "$URL/_astro/<file>.css" | grep -i x-robots-tag` (pick any file name from `ls dist/_astro`), and
    `curl -sI "$URL/not-a-page-x1/" | grep -i x-robots-tag` (the status line should be 404, and the header should still be there).
-7. File count: compare what wrangler reports with `dist`.
-   - Before deploying, `wrangler deploy --dry-run` prints "Read N files". Wrangler counts folders as well as files there: with `find dist -mindepth 1 | wc -l` the number is the same (49 on 2026-10-25, which is 32 files plus 17 folders).
-   - On the real deploy, the uploaded count is of files: `find dist -type f | wc -l` (32 files today). Wrangler may treat `_headers` as configuration and not upload it, so one fewer is plausible; the site still has to show the header (steps 2 and 6).
+7. File count: compare what wrangler reports with `dist`. Work the numbers out fresh each time; do not rely on a number written down earlier.
+   - Before deploying, `wrangler deploy --dry-run` prints "Read N files". Wrangler counts folders as well as files there, so N should equal `find dist -mindepth 1 | wc -l`.
+   - On the real deploy, the uploaded count is of files, so compare it with `find dist -type f | wc -l`. Wrangler may treat `_headers` as configuration and not upload it, so one fewer is plausible; the site still has to show the header (steps 2 and 6).
    - Any other number means something extra or missing in `dist`: do not carry on, tell Atlas.
 8. Open it on a phone, add a rating, close the page, and reopen: the rating is still there on that phone only.
 
