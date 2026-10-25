@@ -32,10 +32,10 @@ const count = exampleRecipes.length;
       <p class="text-[15px] font-bold">Ratings unavailable</p>
       <button type="button" id="ratings-retry" class="btn btn-primary min-h-11 rounded-full px-5">Retry</button>
     </div>
-    <div id="undo-bar" role="status" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
-      <p id="undo-text" class="text-[15px] font-bold">Family favorite removed</p>
-      <button type="button" id="undo-button" class="btn btn-primary min-h-11 rounded-full px-5">Undo</button>
-    </div>
+  </div>
+  <div id="undo-bar" slot="replaces-tabs" role="status" hidden class="kk-undo-bar flex items-center justify-between gap-3">
+    <p id="undo-text" class="text-[15px] font-bold">Family favorite removed</p>
+    <button type="button" id="undo-button" class="btn btn-primary min-h-11 rounded-full px-5">Undo</button>
   </div>
   <SearchBar slot="search" />
 </Base>

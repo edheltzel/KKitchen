@@ -39,10 +39,22 @@ test('"I\'m Ed / I\'m Kristina" picker: two toggles, exact labels, nothing chose
   assert.match(home, /id="me-hint"[^>]*>[^<]*who you are/);
 });
 
-test('"Ratings unavailable" banner with Retry, and the Undo bar, sit in the bottom stack and start hidden', () => {
+test('"Ratings unavailable" banner with Retry sits above the search bar and starts hidden', () => {
   assert.match(stack, /<div[^>]*id="ratings-unavailable"[^>]*role="alert"[^>]*hidden[^>]*>[\s\S]*Ratings unavailable[\s\S]*<button[^>]*id="ratings-retry"[^>]*>\s*Retry\s*<\/button>/);
-  assert.match(stack, /<div[^>]*id="undo-bar"[^>]*role="status"[^>]*hidden[^>]*>[\s\S]*<button[^>]*id="undo-button"[^>]*>\s*Undo\s*<\/button>/);
-  assert.ok(stack.indexOf('id="ratings-unavailable"') < stack.indexOf('id="search-form"'), 'notices sit above the search bar');
+  assert.ok(stack.indexOf('id="ratings-unavailable"') < stack.indexOf('id="search-form"'), 'banner sits above the search bar');
+});
+
+test('Undo bar takes the tab bar\'s place: right where the nav is, role=status, hidden to start, Undo button', () => {
+  const bar = stack.match(/<div[^>]*id="undo-bar"[\s\S]*?<\/div>/)?.[0] ?? '';
+  assert.match(bar, /role="status"/);
+  assert.match(bar, /\bhidden\b/);
+  assert.match(bar, /class="[^"]*\bkk-undo-bar\b/);
+  assert.ok(!/kk-notice/.test(bar), 'it is a bar, not a floating notice');
+  assert.match(bar, /<button[^>]*id="undo-button"[^>]*>\s*Undo\s*<\/button>/);
+  const at = stack.indexOf('id="undo-bar"');
+  assert.ok(at > stack.indexOf('id="search-form"'), 'below the search bar');
+  assert.ok(at < stack.indexOf('<nav'), 'immediately before the tab bar, in its slot');
+  assert.ok(!stack.slice(stack.indexOf('id="ratings-unavailable"'), stack.indexOf('id="search-form"')).includes('undo-bar'), 'not stacked above search any more');
 });
 
 test('tray has a "Who liked it" group: Family favorites, Ed loved it, Kristina loved it, Not tried yet', () => {

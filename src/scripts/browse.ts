@@ -34,6 +34,7 @@ const meButtons = [...document.querySelectorAll<HTMLButtonElement>('button[data-
 const meHint = $('#me-hint');
 const unavailableBar = $('#ratings-unavailable');
 const undoBar = $('#undo-bar');
+const bottomStack = $('#bottom-stack');
 const whoNote = $('#who-note');
 const whoNoteText = whoNote.textContent ?? '';
 
@@ -168,18 +169,19 @@ function renderRatings(view: ReturnType<typeof controller.view>): void {
   meHint.hidden = me !== null;
   unavailableBar.hidden = !unavailable;
   whoNote.textContent = unavailable ? 'Ratings unavailable: this filter is paused until they load.' : whoNoteText;
-  showUndo(view.undo !== null);
+  showUndo(view.undo);
 }
 
 // The Undo offer stays for a while, then goes away on its own.
 let undoTimer = 0;
-let undoShown = false;
-function showUndo(on: boolean): void {
-  undoBar.hidden = !on;
-  if (on === undoShown) return;
-  undoShown = on;
+let shownUndo: object | null = null;
+function showUndo(undo: object | null): void {
+  undoBar.hidden = undo === null;
+  bottomStack.dataset.undo = undo ? 'on' : 'off'; // CSS swaps the tab bar for the Undo bar
+  if (undo === shownUndo) return;
+  shownUndo = undo;
   clearTimeout(undoTimer);
-  if (on) undoTimer = window.setTimeout(() => controller.dismissUndo(), 10000);
+  if (undo) undoTimer = window.setTimeout(() => controller.dismissUndo(), 10000);
 }
 
 // replaceState everywhere: a tap or keystroke should not add a Back step, so Back leaves Recipes.

@@ -47,9 +47,9 @@ try {
   let id = 0;
   const pending = new Map();
   ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
-  const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+  const send = (method, params = {}, ms = 20000) => new Promise((r, rej) => { const i = ++id; pending.set(i, r); setTimeout(() => { if (pending.has(i)) { pending.delete(i); rej(new Error('no answer from Chrome: ' + method)); } }, ms); ws.send(JSON.stringify({ id: i, method, params })); });
   const ev = async (expression) => {
-    const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+    const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, 4000);
     if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.text + ' ' + (r.result.exceptionDetails.exception?.description ?? ''));
     return r.result.result.value;
   };
@@ -241,15 +241,42 @@ try {
   await sleep(300);
   check('persistence: after reload the picker, both ratings and the Family favorite are still there', (await pressed('[data-me="kristina"]')) === 'true' && (await pressed(rb('example-1', 'loved'))) === 'true' && (await status('example-1', 'ed')) === 'Ed: Loved it' && (await badge('example-1')));
 
+  const rect = (sel) => ev(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return { top: r.top, bottom: r.bottom, height: r.height }; })()`);
+  const dockBefore = await rect('nav[aria-label="Main"]');
+  check('tab bar is showing before any Undo bar', (await visible('nav[aria-label="Main"]')) && dockBefore.height > 60 && Math.abs(dockBefore.bottom - 844) < 1, JSON.stringify(dockBefore));
   await click(rb('example-1', 'loved')); // same button again = clear
   check('tapping Loved it again clears it and the favorite goes away', (await pressed(rb('example-1', 'loved'))) === 'false' && (await status('example-1', 'kristina')) === 'Kristina: not rated yet' && !(await badge('example-1')));
   check('removing a Family favorite shows the Undo bar', (await visible('#undo-bar')) && (await text('#undo-text')) === 'Family favorite removed' && (await ev("document.querySelector('#undo-bar').getAttribute('role')")) === 'status');
+  const bar = await rect('#undo-bar');
+  check('Undo bar REPLACES the tab bar: tab bar not visible and out of the accessibility tree', !(await visible('nav[aria-label="Main"]')) && (await ev("getComputedStyle(document.querySelector('nav[aria-label=\"Main\"]')).display")) === 'none', JSON.stringify(bar));
+  check('Undo bar sits exactly where the tab bar was: same bottom edge, same height, flush with the screen bottom', Math.abs(bar.bottom - dockBefore.bottom) < 0.5 && Math.abs(bar.height - dockBefore.height) < 0.5, `${JSON.stringify(bar)} vs ${JSON.stringify(dockBefore)}`);
+  check('Undo target is at least 44pt and inside the bar', (await ev("(() => { const r = document.querySelector('#undo-button').getBoundingClientRect(); const b = document.querySelector('#undo-bar').getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5 && r.top >= b.top && r.bottom <= b.bottom && r.right <= innerWidth; })()")));
+  check('nothing else stacks above the search bar while Undo shows (the bottom card is not covered by a second bar)', !(await visible('#ratings-unavailable')) && (await ev("document.querySelector('#search-form').getBoundingClientRect().bottom <= document.querySelector('#undo-bar').getBoundingClientRect().top + 0.5")));
   await click('#undo-button');
   check('Undo puts the rating back, the badge returns, the bar goes, and it is saved', (await pressed(rb('example-1', 'loved'))) === 'true' && (await badge('example-1')) && !(await visible('#undo-bar')) && (await saved())['example-1'].kristina.value === 'loved');
+  check('after Undo the tab bar is back, same place', (await visible('nav[aria-label="Main"]')) && Math.abs((await rect('nav[aria-label="Main"]')).bottom - dockBefore.bottom) < 0.5);
   await click(rb('example-1', 'not-for-us'));
   check('switching away from Loved it also removes the favorite and offers Undo', !(await badge('example-1')) && (await visible('#undo-bar')));
   await click('#undo-button');
   check('Undo after a switch restores Loved it', (await badge('example-1')) && (await pressed(rb('example-1', 'loved'))) === 'true');
+  // a new unrelated rating dismisses the offer and brings the tab bar back; so does the 10 second timeout
+  await click(rb('example-1', 'loved'));
+  check('(setup) Undo bar showing again', await visible('#undo-bar'));
+  await click(rb('example-5', 'loved'));
+  check('another rating dismisses the Undo bar and the tab bar returns', !(await visible('#undo-bar')) && (await visible('nav[aria-label="Main"]')));
+  await click(rb('example-5', 'loved'));
+  await click('[data-me="kristina"]');
+  await click(rb('example-1', 'loved'));
+  // The offer lasts 10 s. Waiting that long would outlive this Chrome (it quits after about 30 s here), so the page's
+  // 10 s timer is recorded and shortened: the check is that the page asks for 10000 ms and that firing it restores the tab bar.
+  await ev("window.__delays = []; window.__realTimeout = window.setTimeout; window.setTimeout = (fn, ms, ...a) => { window.__delays.push(ms); return window.__realTimeout(fn, ms === 10000 ? 400 : ms, ...a); }");
+  await click(rb('example-1', 'loved'));
+  check('(setup) Undo bar showing for the timeout check', await visible('#undo-bar') && !(await visible('nav[aria-label="Main"]')));
+  check('the Undo offer asks for a 10 second timer', await ev('window.__delays.includes(10000)'));
+  await waitFor("document.querySelector('#undo-bar').hidden");
+  await ev('window.setTimeout = window.__realTimeout');
+  check('Undo bar times out by itself and the tab bar is restored', !(await visible('#undo-bar')) && (await visible('nav[aria-label="Main"]')) && (await ev("document.querySelector('nav[aria-label=\"Main\"]').getBoundingClientRect().bottom")) === dockBefore.bottom);
+  await click(rb('example-1', 'loved')); // put Kristina's Loved it back (adding one offers no Undo)
   await click(rb('example-4', 'loved'));
   check('an ordinary rating that removes no favorite shows no Undo bar', !(await visible('#undo-bar')) && !(await badge('example-4')));
 
