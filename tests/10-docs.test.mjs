@@ -112,5 +112,5 @@ test('real-iphone checklist: tapping just outside each button on a card opens th
 
 test('ratings notes record that a tap with nobody picked opens the picker and is not applied', () => {
   const doc = read('docs/ratings-store-notes.md');
-  assert.match(doc, /nobody picked[^\n]*in place[^\n]*not (applied|saved)[^\n]*tap again/i);
+  assert.match(doc, /nobody picked[^\n]*in place[^\n]*not (applied|saved)[^\n]*taps again/i);
 });
