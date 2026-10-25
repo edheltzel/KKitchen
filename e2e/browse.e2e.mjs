@@ -133,7 +133,7 @@ try {
   await click(chip('meal', 'lunch'));
   check('OR within a group (dinner + lunch = 4)', (await text('#recipe-count')) === '4 recipes', await text('#recipe-count'));
   await click(chip('time', '30'));
-  check('AND across groups (lunch/dinner and under 30 min = 3)', (await text('#recipe-count')) === '3 recipes', await text('#recipe-count'));
+  check('AND across groups (lunch/dinner and 30 min or less = 3)', (await text('#recipe-count')) === '3 recipes', await text('#recipe-count'));
   check('URL carries each group as its own param', (await loc()) === '/?meal=lunch%2Cdinner&time=30', await loc());
   check('every tray target is >= 44px (and the tray really has targets)', opened && await ev("(() => { const bs = [...document.querySelectorAll('#filter-tray button')].filter((b) => b.getBoundingClientRect().width > 0); return bs.length >= 9 && bs.every((b) => { const r = b.getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5; }); })()"));
   await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 195, y: 60, button: 'left', clickCount: 1 });
