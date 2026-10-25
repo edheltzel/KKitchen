@@ -110,7 +110,7 @@ export interface StorageLike {
 const ENTRY_KEY = 'kk:recipes';
 
 // Only "/" or "/?query" is ever accepted, so a poisoned value cannot redirect off-site.
-const isRecipesUrl = (url: string): boolean => /^\/(\?[^\s\\]*)?$/.test(url);
+export const isRecipesUrl = (url: string): boolean => /^\/(\?[^\s\\]*)?$/.test(url);
 
 type Entry = { url: string; y: number };
 
