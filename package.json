@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test --test-concurrency=1 tests/01-build.test.mjs tests/02-contrast.test.mjs tests/03-names.test.mjs tests/04-ui.test.mjs"
+    "test": "astro build && node --test \"tests/*.test.mjs\""
   },
   "dependencies": {
     "@tailwindcss/vite": "4.3.3",

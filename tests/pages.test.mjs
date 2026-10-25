@@ -1,17 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { root, read, decode } from './helpers.mjs';
 
-test('npm run build passes', () => {
-  execSync('npm run build', { cwd: root, stdio: 'pipe', env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' } });
-  assert.ok(existsSync(join(root, 'dist/index.html')));
-});
-
+// `npm test` builds once before running; these tests only read dist/.
 for (const page of ['index.html', 'week/index.html', 'favorites/index.html']) {
-  test(`dist/${page} has noindex, manifest link, viewport-fit=cover, both theme-colors`, () => {
+  test(`build produced dist/${page} with noindex, manifest link, viewport-fit=cover, both theme-colors`, () => {
+    assert.ok(existsSync(join(root, 'dist', page)), 'run the build first');
     const html = decode(read(`dist/${page}`));
     assert.match(html, /<meta name="robots" content="noindex"/);
     assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
@@ -21,3 +17,7 @@ for (const page of ['index.html', 'week/index.html', 'favorites/index.html']) {
     assert.match(html, /<meta name="apple-mobile-web-app-title" content="Kris's"/);
   });
 }
+
+test('manifest is copied to dist', () => {
+  assert.ok(existsSync(join(root, 'dist/manifest.webmanifest')));
+});
