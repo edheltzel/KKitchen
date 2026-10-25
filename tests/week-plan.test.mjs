@@ -118,3 +118,16 @@ test('planning on a day outside this week, or an invalid recipe id, is refused',
   assert.throws(() => planChange({}, days, '2026-01-01', 'r1'), /day/i);
   assert.throws(() => planChange({}, days, tue, 'bad id!'), /recipe/i);
 });
+
+import { noteText } from '../src/scripts/week-plan.ts';
+
+test('noteText says it in words: "Moved from Tuesday", "Replaced Tomato Soup", nothing for a plain plan', () => {
+  const week = weekDays(new Date(2026, 9, 29));
+  const long = (key) => week.find((d) => d.key === key).long;
+  const name = (id) => ({ r1: 'Weeknight Pasta', r2: 'Tomato Soup' })[id] ?? 'A recipe';
+  assert.equal(noteText({ kind: 'moved', day: wed, from: tue }, long, name), 'Moved from Tuesday');
+  assert.equal(noteText({ kind: 'moved', day: wed, from: tue, replaced: 'r2' }, long, name), 'Moved from Tuesday. Replaced Tomato Soup.');
+  assert.equal(noteText({ kind: 'replaced', day: wed, replaced: 'r1' }, long, name), 'Replaced Weeknight Pasta');
+  assert.equal(noteText({ kind: 'planned', day: wed }, long, name), null);
+  assert.equal(noteText(null, long, name), null);
+});

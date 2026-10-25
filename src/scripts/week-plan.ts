@@ -121,3 +121,15 @@ export function planChange(plan: Plan, days: readonly string[], day: string, rec
   }
   return { writes, note: here === null ? { kind: 'planned', day } : { kind: 'replaced', day, replaced: here } };
 }
+
+/** The visible words for what a change did. A plain plan needs none. */
+export function noteText(
+  note: PlanNote | null,
+  dayLong: (day: string) => string,
+  recipeName: (recipeId: string) => string,
+): string | null {
+  if (!note || note.kind === 'planned') return null;
+  if (note.kind === 'replaced') return `Replaced ${recipeName(note.replaced)}`;
+  const moved = `Moved from ${dayLong(note.from)}`;
+  return note.replaced ? `${moved}. Replaced ${recipeName(note.replaced)}.` : moved;
+}
