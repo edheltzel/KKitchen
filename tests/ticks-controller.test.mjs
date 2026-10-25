@@ -163,3 +163,14 @@ test('storage that cannot even be read at start: empty, unavailable, and Retry l
   assert.equal(controller.view().unavailable, false);
   assert.deepEqual(checked(), ['tomato'], 'what was saved is not lost');
 });
+
+test('storage blocked: Undo after a new tick keeps the new tick (on-screen merge, not only the saved merge)', () => {
+  const storage = fakeStorage();
+  storage.fail = true;
+  const { controller, slot, checked } = make({ storage });
+  controller.toggle('garlic');
+  controller.reset();
+  controller.toggle('tomato');
+  slot.press();
+  assert.deepEqual(checked(), ['garlic', 'tomato']);
+});
