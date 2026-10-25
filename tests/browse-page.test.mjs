@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { read, decode } from './helpers.mjs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
+import { read, decode, distFiles, root } from './helpers.mjs';
 
 const home = decode(read('dist/index.html'));
 const tray = home.match(/<dialog[\s\S]*?<\/dialog>/)?.[0] ?? '';
@@ -16,11 +19,33 @@ test('every card carries its search data (name, ingredients, meal, minutes, diet
   assert.match(home, /data-ingredients="[^"]*tomato[^"]*"/);
 });
 
-test('unapproved notes and unconfirmed tags never reach the built page', () => {
-  for (const secret of ['Hidden Draft', 'saffron', 'Nut-free', 'Draft-only']) {
-    assert.ok(!home.includes(secret), `${secret} must not be in dist/index.html`);
+const SECRETS = ['saffron', 'Hidden Draft', 'Nut-free'];
+
+// Case-insensitive scan of every text file under a folder (binary files, detected by a NUL byte, are skipped).
+function leaks(dir) {
+  const found = [];
+  for (const file of distFiles(dir)) {
+    const buf = readFileSync(file);
+    if (buf.includes(0)) continue;
+    const text = buf.toString('utf8').toLowerCase();
+    for (const secret of SECRETS) if (text.includes(secret.toLowerCase())) found.push(`${relative(dir, file)}: ${secret}`);
   }
+  return found;
+}
+
+test('unapproved notes and unconfirmed tags never reach ANY file in dist', () => {
+  assert.ok(distFiles(join(root, 'dist')).length >= 5, 'dist has files to scan');
+  assert.deepEqual(leaks(join(root, 'dist')), []);
   assert.ok(home.includes('Meatless'), 'confirmed tag still shows');
+});
+
+test('the leak scan itself catches a planted secret in a nested file', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'kk-leak-'));
+  mkdirSync(join(dir, 'a', 'b'), { recursive: true });
+  writeFileSync(join(dir, 'a', 'b', 'x.js'), 'var s = "SaFFron";');
+  writeFileSync(join(dir, 'y.css'), '.x::after{content:"nut-FREE"}');
+  assert.equal(leaks(dir).length, 2);
+  rmSync(dir, { recursive: true, force: true });
 });
 
 test('one live count element, announced politely', () => {
