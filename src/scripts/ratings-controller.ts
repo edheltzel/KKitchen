@@ -29,28 +29,57 @@ export function createRatingsController({ store, identity }: { store: RatingsSto
   let unavailable = false;
   let me: Person | null = identity.get();
   let undo: UndoInfo | null = null;
-  // The operation that last failed, so Retry repeats exactly it (a lost tap is not silently dropped).
-  let pending: (() => Promise<void>) | null = null;
+  // Operations that failed, in tap order. While this list is not empty nothing new runs: later taps wait
+  // behind it, and Retry replays the whole list in order, so no tap is lost or applied out of order.
+  interface Op {
+    kind: 'load' | 'write';
+    run: () => Promise<void>;
+  }
+  let failed: Op[] = [];
   let chain: Promise<void> = Promise.resolve();
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((fn) => fn());
 
-  const attempt = async (op: () => Promise<void>): Promise<void> => {
-    try {
-      await op();
-      pending = null;
-      unavailable = false;
-    } catch {
-      pending = op;
-      unavailable = true;
+  const fail = (ops: Op[]): void => {
+    failed = ops;
+    unavailable = true;
+    undo = null; // an Undo offer next to "Ratings unavailable" would be stale, and Retry is what matters then
+  };
+  const attempt = async (op: Op): Promise<void> => {
+    if (unavailable) {
+      if (op.kind === 'write') failed.push(op); // wait behind the failed ones
+    } else {
+      try {
+        await op.run();
+      } catch {
+        fail([op]);
+      }
     }
     emit();
   };
   // One at a time, in tap order, so quick taps never race each other.
-  const enqueue = (op: () => Promise<void>): Promise<void> => (chain = chain.then(() => attempt(op)));
+  const enqueue = (op: Op): Promise<void> => (chain = chain.then(() => attempt(op)));
 
-  const loadOp = async () => {
-    data = await store.load();
+  const loadOp: Op = {
+    kind: 'load',
+    run: async () => {
+      data = await store.load();
+    },
+  };
+  const replay = async (): Promise<void> => {
+    const todo = failed.length ? [...failed] : [loadOp];
+    for (let i = 0; i < todo.length; i++) {
+      try {
+        await todo[i].run();
+      } catch {
+        fail(todo.slice(i)); // the one that failed again and everything behind it, still in order
+        emit();
+        return;
+      }
+    }
+    failed = [];
+    unavailable = false;
+    emit();
   };
 
   return {
@@ -62,32 +91,34 @@ export function createRatingsController({ store, identity }: { store: RatingsSto
     init: () => enqueue(loadOp),
     /** Reload from the store (page shown again, another tab changed it). Does not paper over a failure. */
     refresh: () => (unavailable ? Promise.resolve() : enqueue(loadOp)),
-    retry: () => enqueue(pending ?? loadOp),
+    retry: () => (chain = chain.then(replay)),
     setMe(person: Person): void {
       identity.set(person);
       me = person;
       undo = null;
       emit();
     },
-    /** Tap a rating button: the same rating again clears it. Needs a chosen person and a working store. */
+    /** Tap a rating button: the same rating again clears it. Needs a chosen person. While the store is failing the tap waits for Retry. */
     tap(id: string, rating: Rating): Promise<void> {
       const person = me;
-      if (!person || unavailable) return Promise.resolve();
-      return enqueue(async () => {
+      if (!person) return Promise.resolve();
+      const run = async () => {
         const before = await store.load();
         const current = ratingOf(before, id, person);
         const after = await store.set(id, person, current === rating ? null : rating);
         data = after;
         undo = removedFamilyFavorite(before, after, id) ? { id, person, previous: current } : null;
-      });
+      };
+      return enqueue({ kind: 'write', run });
     },
     undo(): Promise<void> {
       const offer = undo;
       if (!offer) return Promise.resolve();
-      return enqueue(async () => {
+      const run = async () => {
         data = await store.set(offer.id, offer.person, offer.previous);
         undo = null;
-      });
+      };
+      return enqueue({ kind: 'write', run });
     },
     dismissUndo(): void {
       undo = null;
