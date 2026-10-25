@@ -61,6 +61,25 @@ try {
   await click('#week-retry');
   await sleep(200);
   check('Retry saves the waiting change and the banner goes', !(await visible('#week-unavailable')) && (await saved()).entries['2026-10-31'].recipeId === 'example-4' && (await status('example-4')) === 'On Sat', await status('example-4'));
+
+  // both banners at once (storage blocked for ratings and the week plan): the stack must not cover the last card
+  await click('[data-me="ed"]');
+  await ev("window.__rfail = true; const set4 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (window.__rfail && k === 'kk:ratings') throw new Error('full'); return set4.call(this, k, v); }; window.__fail = true;");
+  await plan('example-5', 4);
+  await click(`${card('example-2')} .kk-rate-btn`);
+  await sleep(200);
+  check('both the Week plan and the Ratings banner show together', (await visible('#week-unavailable')) && (await visible('#ratings-unavailable')));
+  await ev('scrollTo(0, document.documentElement.scrollHeight)');
+  await sleep(150);
+  const stackTop = (await rect('#bottom-stack')).y;
+  const lastCard = await ev("(() => { const c = [...document.querySelectorAll('#recipe-grid > *')].filter((e) => e.getBoundingClientRect().height > 0); const r = c[c.length - 1].getBoundingClientRect(); return { bottom: r.bottom }; })()");
+  check('scrolled to the bottom, the last card ends above the two banners and the bars', lastCard.bottom <= stackTop, `${lastCard.bottom} vs ${stackTop}`);
+  check('the two banners together do not take over the screen (stack under 40% of the height)', (await rect('#bottom-stack')).h < 844 * 0.4, String((await rect('#bottom-stack')).h));
+  await ev('window.__rfail = false; window.__fail = false');
+  await click('#week-retry');
+  await click('#ratings-retry');
+  await sleep(250);
+  check('Retry on both clears both banners', !(await visible('#week-unavailable')) && !(await visible('#ratings-unavailable')));
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {
