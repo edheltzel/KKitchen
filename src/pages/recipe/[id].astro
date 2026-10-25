@@ -7,6 +7,7 @@ import RatingBlock from '../../components/RatingBlock.astro';
 import PlanBlock from '../../components/PlanBlock.astro';
 import PlanSheet from '../../components/PlanSheet.astro';
 import UndoBar from '../../components/UndoBar.astro';
+import { jsonForScript } from '../../scripts/json-script';
 import { confirmedTags, exampleRecipes, exampleTitle, recipeMeta, type ExampleRecipe } from '../../data/examples';
 
 export function getStaticPaths() {
@@ -88,7 +89,7 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
   </article>
   <PlanSheet />
   <p id="plan-live" class="sr-only" aria-live="polite"></p>
-  <script id="catalog" type="application/json" set:html={JSON.stringify(catalog)} />
+  <script id="catalog" type="application/json" set:html={jsonForScript(catalog)} />
   <Banners slot="above"><TicksBanner /></Banners>
   <UndoBar slot="replaces-tabs" />
 </Base>
