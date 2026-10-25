@@ -76,3 +76,9 @@ test('a step may mark the ingredients it uses (ids of that recipe, no repeats); 
   assert.ok(exampleRecipes.some((r) => !recipesWithMarks.has(r.id)), 'one whole recipe has no marks: its steps show no "Use now"');
   assert.ok(exampleRecipes.some((r) => r.steps.some((s) => s.uses) && r.steps.some((s) => !s.uses)), 'one recipe marks only some of its steps');
 });
+
+test('the meta line leaves the prep out when the note gives no prep time, so it never claims "Prep 0 min"', () => {
+  const base = exampleRecipes[0];
+  assert.equal(recipeMeta({ ...base, prep: 0, cook: 25, serves: 8 }), 'Cook 25 min · Serves 8');
+  assert.equal(recipeMeta({ ...base, prep: 0, cook: 0, serves: 2 }), 'No cooking · Serves 2');
+});

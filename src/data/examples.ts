@@ -37,7 +37,7 @@ export interface ExampleRecipe {
   meal: Meal;
   /** Search keywords only. What the page shows is `groups`. */
   ingredients: readonly string[];
-  /** prep + cook = minutes (the total shown on the card). */
+  /** prep + cook = minutes (the total shown on the card). A prep of 0 means the note gives none, and the meta line then leaves it out. */
   prep: number;
   cook: number;
   serves: number;
@@ -45,6 +45,10 @@ export interface ExampleRecipe {
   steps: readonly Step[];
   /** Link to the original recipe. Only a recipe that has one shows the link. */
   source?: string;
+  /** Who wrote the original. Kept in the data only: no page shows it yet. */
+  author?: string;
+  /** Short plain lines shown under the steps on the recipe page (tips, wait time, equipment). Omitted means no Notes section. */
+  notes?: readonly string[];
   tags: readonly DietTag[];
   /** A note without approved: true never reaches the grid, the search or the counts. */
   approved: boolean;
@@ -157,4 +161,8 @@ export const flatItems = (recipe: ExampleRecipe): Ingredient[] => recipe.groups.
 
 /** "Prep 10 min · Cook 15 min · Serves 4" */
 export const recipeMeta = (recipe: ExampleRecipe): string =>
-  [`Prep ${recipe.prep} min`, recipe.cook > 0 ? `Cook ${recipe.cook} min` : 'No cooking', `Serves ${recipe.serves}`].join(' · ');
+  [
+    ...(recipe.prep > 0 ? [`Prep ${recipe.prep} min`] : []),
+    recipe.cook > 0 ? `Cook ${recipe.cook} min` : 'No cooking',
+    `Serves ${recipe.serves}`,
+  ].join(' · ');
