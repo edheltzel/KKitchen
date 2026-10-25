@@ -41,3 +41,10 @@ test('week store notes say what the server will check', () => {
   assert.match(doc, /move[^\n]*two (writes|steps)[^\n]*new day first/i);
   assert.ok(doc.split('\n').length < 40, 'stays short');
 });
+
+test('week store notes describe what Retry does for a half-finished move, truthfully', () => {
+  const doc = read('docs/week-store-notes.md');
+  assert.doesNotMatch(doc, /repeats the whole move safely/i);
+  assert.match(doc, /Retry finishes the move[^\n]*skips any that already landed[^\n]*clears the old day/i);
+  assert.match(doc, /atomic move/i);
+});

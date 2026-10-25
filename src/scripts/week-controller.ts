@@ -3,7 +3,7 @@
 // node:test can check all of it. The failed-operations list and Retry are the shared op-queue.
 
 import { createOpQueue, type Op } from './op-queue.ts';
-import { dinnerOn, planChange, type Plan, type PlanNote } from './week-plan.ts';
+import { dinnerOn, planChange, type Plan, type PlanChange, type PlanNote } from './week-plan.ts';
 import type { WeekPlanStore } from './week-store.ts';
 
 export interface WeekUndo {
@@ -48,17 +48,27 @@ export function createWeekController({ store, days }: { store: WeekPlanStore; da
     retry: () => queue.retry(loadOp),
     /** Plan a dinner: a replace if the day has one, a move if the recipe is on another day. While the store is failing it waits for Retry. */
     plan(day: string, recipeId: string): Promise<void> {
+      // What this tap meant to write, kept for Retry. A move is two writes; if the second failed, the dinner
+      // is already on the new day, so re-planning from the saved plan alone would find nothing left to do and
+      // never clear the old day. Retry replays the same writes, skipping the ones that already landed.
+      let meant: PlanChange | null = null;
       const run = async () => {
         const before = await store.load();
-        const change = planChange(before, days, day, recipeId);
-        if (change.writes.length === 0) {
+        meant ??= planChange(before, days, day, recipeId);
+        const { writes, note: made } = meant;
+        const todo = writes.filter((write) => dinnerOn(before, write.day) !== write.recipeId);
+        if (todo.length === 0) {
           data = before;
+          if (writes.length > 0) {
+            note = made; // everything had already landed: the move is done, say so
+            undo = null;
+          }
           return;
         }
         let after = before;
-        for (const write of change.writes) after = await store.set(write.day, write.recipeId);
+        for (const write of todo) after = await store.set(write.day, write.recipeId);
         data = after;
-        note = change.note;
+        note = made;
         undo = null;
       };
       return queue.enqueue({ kind: 'write', run });

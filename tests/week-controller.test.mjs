@@ -205,6 +205,74 @@ test('a failed move is retried as a whole: the new day is set and the old day cl
   assert.equal(dinner(controller, TUE), null);
 });
 
+/** A phone whose store lets `allow` saves through, then fails every save after that (a move cut off halfway). */
+function halfFailingPhone() {
+  const backing = fakeStorage();
+  const inner = createLocalWeekStore({ storage: backing, now });
+  const state = { allow: Infinity, saves: 0 };
+  const store = {
+    load: () => inner.load(),
+    set: (day, id) => {
+      if (state.saves >= state.allow) return Promise.reject(new Error('cut off'));
+      state.saves++;
+      return inner.set(day, id);
+    },
+  };
+  const controller = createWeekController({ store, days });
+  const heal = () => (state.allow = Infinity);
+  return { controller, state, heal, inner };
+}
+
+test('a move cut off halfway (new day saved, old day not) is finished by Retry: old day cleared, banner gone', async () => {
+  const { controller, state, heal, inner } = halfFailingPhone();
+  await controller.init();
+  await controller.plan(TUE, 'r1');
+  state.allow = state.saves + 1; // the first save of the move lands, the second fails
+  await controller.plan(THU, 'r1');
+  assert.equal(controller.view().unavailable, true);
+  const half = await inner.load();
+  assert.equal(dinnerOn(half, THU), 'r1', 'the new day was saved');
+  assert.equal(dinnerOn(half, TUE), 'r1', 'the old day still holds it: a duplicate, not a loss');
+  heal();
+  const savesBefore = state.saves;
+  await controller.retry();
+  assert.equal(state.saves - savesBefore, 1, 'Retry writes only what is missing (the clear), not the day that already landed');
+  assert.equal(controller.view().unavailable, false);
+  assert.equal(dinner(controller, TUE), null, 'the old day is cleared');
+  assert.equal(dinner(controller, THU), 'r1');
+  assert.equal(dinnerOn(await inner.load(), TUE), null, 'and that is what was saved');
+  assert.deepEqual(controller.view().note, { kind: 'moved', day: THU, from: TUE });
+});
+
+test('a move whose Retry is cut off again still finishes on the next Retry', async () => {
+  const { controller, state, heal, inner } = halfFailingPhone();
+  await controller.init();
+  await controller.plan(TUE, 'r1');
+  state.allow = state.saves + 1;
+  await controller.plan(THU, 'r1');
+  await controller.retry(); // still failing: nothing may be forgotten
+  assert.equal(controller.view().unavailable, true);
+  heal();
+  await controller.retry();
+  assert.equal(controller.view().unavailable, false);
+  assert.equal(dinnerOn(await inner.load(), TUE), null);
+  assert.equal(dinnerOn(await inner.load(), THU), 'r1');
+});
+
+test('a move onto a day with a dinner, cut off halfway, still says what it replaced after Retry', async () => {
+  const { controller, state, heal } = halfFailingPhone();
+  await controller.init();
+  await controller.plan(TUE, 'r1');
+  await controller.plan(THU, 'r2');
+  state.allow = state.saves + 1;
+  await controller.plan(THU, 'r1');
+  heal();
+  await controller.retry();
+  assert.equal(dinner(controller, TUE), null);
+  assert.equal(dinner(controller, THU), 'r1');
+  assert.deepEqual(controller.view().note, { kind: 'moved', day: THU, from: TUE, replaced: 'r2' });
+});
+
 test('a failed first load is retried; nothing else is saved while it is unavailable', async () => {
   const { controller, failures } = phone();
   failures.load = true;
