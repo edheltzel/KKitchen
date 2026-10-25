@@ -61,6 +61,19 @@ try {
   check('step 4 marks nothing, so Use now is hidden, and the main button says Finish', !(await visible('#use-now-wrap')) && (await text('#next')).startsWith('Finish') && (await text('#step-text')) === 'Toss with the drained spaghetti and serve.');
   check('moving through steps added no history entries (replaceState)', (await ev('history.length')) === historyBefore, `${await ev('history.length')} vs ${historyBefore}`);
   await ev("document.querySelector('#screen-step input')?.blur()");
+  const tapAt = async (x, y) => {
+    await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
+    await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
+    await sleep(250);
+  };
+  const lastCol = await rect('#cook');
+  const lastY = Math.round((await rect('#step-text')).y + 10);
+  await tapAt(Math.round(lastCol.x + lastCol.w * 0.9), lastY);
+  check('on the last step a tap on the right stays put: no Done, the ticks stay, no Undo bar', (await shown()) === 'step' && (await hash()) === '#step-4' && (await saved()).ticks['example-1'].slice().sort().join() === 'garlic,spaghetti,tomato' && !(await visible('#undo-bar')), `${await hash()} ${await shown()}`);
+  await tapAt(Math.round(lastCol.x + lastCol.w * 0.1), lastY);
+  check('on the last step a tap on the left still goes back', (await hash()) === '#step-3', await hash());
+  await click('#next');
+  check('(back on the last step)', (await hash()) === '#step-4');
   await click('#next');
   check('Finish opens Done: "Dinner\'s ready", every segment done, heading focused', (await shown()) === 'done' && (await hash()) === '#done' && (await text('#done-title')) === "Dinner's ready" && (await ev("document.activeElement.id")) === 'done-title' && (await ev("[...document.querySelectorAll('#cook-progress li')].every((l) => l.dataset.state === 'done')")));
   check('Done says the ingredient checks are cleared, and that is true: nothing is saved for example-1', (await ev("document.querySelector('.kk-done-note').textContent")).includes('Ingredient checks are cleared for next time') && (await saved())?.ticks?.['example-1'] === undefined && (await ticked()) === '', JSON.stringify(await saved()));

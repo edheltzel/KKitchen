@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tapDecision, BACK_FRACTION } from '../src/scripts/tap-zones.ts';
 import { exitAction } from '../src/scripts/cook-exit.ts';
 
-const tap = (over = {}) => tapDecision({ x: 300, width: 390, onInteractive: false, selectionText: '', ...over });
+const tap = (over = {}) => tapDecision({ x: 300, width: 390, onInteractive: false, selectionText: '', canForward: true, ...over });
 
 test('a tap on the right side goes forward, on the left side goes back', () => {
   assert.equal(tap({ x: 300 }), 'next');
@@ -16,7 +16,16 @@ test('the left zone is the left 35%: just inside goes back, the boundary and pas
   assert.equal(BACK_FRACTION, 0.35);
   assert.equal(tap({ x: 136 }), 'back'); // 136 / 390 = 0.3487
   assert.equal(tap({ x: 137 }), 'next'); // 137 / 390 = 0.3513
-  assert.equal(tapDecision({ x: 35, width: 100, onInteractive: false, selectionText: '' }), 'next', 'exactly 35% is already forward');
+  assert.equal(tapDecision({ x: 35, width: 100, onInteractive: false, selectionText: '', canForward: true }), 'next', 'exactly 35% is already forward');
+});
+
+test('on the last step the forward zone is off (only the Finish button opens Done); the back zone still works', () => {
+  assert.equal(tap({ x: 300, canForward: false }), 'none');
+  assert.equal(tap({ x: 389, canForward: false }), 'none');
+  assert.equal(tap({ x: 137, canForward: false }), 'none');
+  assert.equal(tap({ x: 10, canForward: false }), 'back');
+  assert.equal(tap({ x: 136, canForward: false }), 'back');
+  assert.equal(tap({ x: 300, canForward: true }), 'next');
 });
 
 test('taps on buttons, links, inputs, labels and anything marked are never a zone tap', () => {

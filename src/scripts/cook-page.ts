@@ -155,6 +155,7 @@ document.addEventListener('click', (event) => {
     width: rect.width,
     onInteractive: target?.closest(INTERACTIVE) != null,
     selectionText: String(window.getSelection() ?? ''),
+    canForward: state.index + 1 < total,
   });
   if (action === 'next') go(next(state, total));
   else if (action === 'back') go(back(state, total));
