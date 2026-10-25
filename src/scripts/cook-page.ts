@@ -61,7 +61,6 @@ $('#wake-dismiss').addEventListener('click', () => {
 
 // --- where we are -----------------------------------------------------------------------------------------------------
 let state: CookState = parse(location.hash, total);
-let doneHandled = state.phase === 'done'; // arriving on #done (a reload) must not clear checks again
 const screens = { gather: $('#screen-gather'), step: $('#screen-step'), done: $('#screen-done') };
 const segEls = [...document.querySelectorAll<HTMLElement>('.kk-seg')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -116,7 +115,6 @@ function render(): void {
     renderUseNow(step.uses);
     $('#next').firstChild!.textContent = state.index + 1 < total ? 'Next step ' : 'Finish ';
   }
-  $('#start').firstChild!.textContent = 'Start step 1 ';
   renderTicks();
 }
 
@@ -134,10 +132,8 @@ function go(target: CookState): void {
   focusHeading();
   if (state.phase === 'done') {
     void wake.release();
-    if (!doneHandled || before.phase !== 'done') {
-      doneHandled = true;
-      ticks.reset({ text: 'Ingredient checks cleared' });
-    }
+    // Only arriving from a step clears the checks: a reload on #done (or a hashchange) renders without calling go().
+    if (before.phase !== 'done') ticks.reset({ text: 'Ingredient checks cleared' });
   } else {
     void wake.acquire();
   }
