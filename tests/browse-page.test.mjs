@@ -19,7 +19,7 @@ test('every card carries its search data (name, ingredients, meal, minutes, diet
   assert.match(home, /data-ingredients="[^"]*tomato[^"]*"/);
 });
 
-const SECRETS = ['saffron', 'Hidden Draft', 'Nut-free'];
+const SECRETS = ['saffron', 'Hidden Draft', 'Nut-free', 'Draft-only'];
 
 // Case-insensitive scan of every text file under a folder (binary files, detected by a NUL byte, are skipped).
 function leaks(dir) {
@@ -44,7 +44,8 @@ test('the leak scan itself catches a planted secret in a nested file', () => {
   mkdirSync(join(dir, 'a', 'b'), { recursive: true });
   writeFileSync(join(dir, 'a', 'b', 'x.js'), 'var s = "SaFFron";');
   writeFileSync(join(dir, 'y.css'), '.x::after{content:"nut-FREE"}');
-  assert.equal(leaks(dir).length, 2);
+  writeFileSync(join(dir, 'a', 'z.html'), '<span>DRAFT-only</span><p>hidden draft</p>');
+  assert.deepEqual(leaks(dir).map((f) => f.split(': ')[1]).sort(), ['Draft-only', 'Hidden Draft', 'Nut-free', 'saffron']);
   rmSync(dir, { recursive: true, force: true });
 });
 
