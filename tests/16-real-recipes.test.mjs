@@ -145,3 +145,11 @@ test('only the fried chicken has a wait, and the roast reads in hours', () => {
   assert.match(roast.notes[0], /6 to 8 hours on HIGH/);
   assert.equal(cardTime(by('high-protein-brownies')), '25 min');
 });
+
+test('the one note we added is labelled "Added by us:" and every other note stays in the source words', () => {
+  const labelled = realNotes.flatMap((r) => (r.notes ?? []).filter((n) => n.startsWith('Added by us: ')).map((n) => [r.id, n]));
+  assert.equal(labelled.length, 1);
+  assert.equal(labelled[0][0], 'gluten-free-fried-chicken');
+  assert.match(labelled[0][1], /^Added by us: Frying 12 pieces, 3 or 4 at a time, at 15-18 minutes each can take longer than the 45 min cook time\.$/);
+  assert.ok(!by('gluten-free-fried-chicken').notes[0].startsWith('Added by us'), 'the marinate note is the source\'s');
+});
