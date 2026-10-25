@@ -12,6 +12,12 @@ const count = exampleRecipes.length;
   <h1 class="text-3xl font-extrabold tracking-tight">Kris's Kitchen</h1>
   <p id="recipe-count" aria-live="polite" class="mt-1 text-[14px] font-semibold text-kk-accent">{count} recipes</p>
   <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>
+  <fieldset class="mt-3 flex flex-wrap items-center gap-2 border-0 p-0">
+    <legend class="sr-only">Which person is this phone?</legend>
+    <button type="button" class="kk-chip" aria-pressed="false" data-me="ed">I'm Ed</button>
+    <button type="button" class="kk-chip" aria-pressed="false" data-me="kristina">I'm Kristina</button>
+    <p id="me-hint" class="text-[13px] text-kk-muted">Pick who you are to start rating.</p>
+  </fieldset>
   <div id="chips" class="mt-3 flex flex-wrap gap-2" hidden></div>
   <div id="empty" hidden class="mt-6 rounded-2xl border border-base-300 bg-kk-card p-5 text-center">
     <p id="empty-message" class="text-[16px] font-semibold"></p>
@@ -21,6 +27,16 @@ const count = exampleRecipes.length;
     {exampleRecipes.map((recipe) => <RecipeCard recipe={recipe} />)}
   </div>
   <FilterTray />
+  <div slot="above" class="px-4">
+    <div id="ratings-unavailable" role="alert" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
+      <p class="text-[15px] font-bold">Ratings unavailable</p>
+      <button type="button" id="ratings-retry" class="btn btn-primary min-h-11 rounded-full px-5">Retry</button>
+    </div>
+    <div id="undo-bar" role="status" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
+      <p id="undo-text" class="text-[15px] font-bold">Family favorite removed</p>
+      <button type="button" id="undo-button" class="btn btn-primary min-h-11 rounded-full px-5">Undo</button>
+    </div>
+  </div>
   <SearchBar slot="search" />
 </Base>
 

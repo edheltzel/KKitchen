@@ -21,6 +21,14 @@ export type Ratings = Record<string, Partial<Record<Person, Entry>>>;
 /** The values of the "Who liked it" filter group. */
 export type Liked = 'favorite' | 'ed' | 'kristina' | 'untried';
 
+/** The "Who liked it" filter chips, in tray order. `favorite` is derived, never saved. */
+export const LIKED_OPTIONS: readonly { value: Liked; label: string }[] = [
+  { value: 'favorite', label: 'Family favorites' },
+  { value: 'ed', label: 'Ed loved it' },
+  { value: 'kristina', label: 'Kristina loved it' },
+  { value: 'untried', label: 'Not tried yet' },
+];
+
 const has = (obj: object, key: string): boolean => Object.prototype.hasOwnProperty.call(obj, key);
 
 export const isValidId = (id: unknown): id is string => typeof id === 'string' && /^[A-Za-z0-9][\w-]{0,63}$/.test(id);

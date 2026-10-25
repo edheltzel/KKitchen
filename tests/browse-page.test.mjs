@@ -81,7 +81,6 @@ test('tray offers only meal, time and confirmed diet options, each target >= 44p
     assert.match(c[0], /aria-pressed="false"/);
     assert.match(c[0], /class="kk-chip"/);
   }
-  assert.ok(!/rating/i.test(tray), 'no rating group yet (branch 3a)');
   assert.ok(!/gluten/i.test(home));
 });
 

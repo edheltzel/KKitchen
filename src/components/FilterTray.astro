@@ -1,5 +1,6 @@
 ---
 import { filterOptions } from '../data/examples';
+import { LIKED_OPTIONS } from '../scripts/ratings';
 
 const options = filterOptions();
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -8,6 +9,7 @@ const groups = [
   { id: 'meal', title: 'Meal type', items: options.meal.map((v) => ({ value: v, label: cap(v) })) },
   { id: 'time', title: 'Time', items: options.time.map((v) => ({ value: v, label: `${v} min or less` })) },
   { id: 'diet', title: 'Diet tags', note: 'Diet tags: a recipe needs all you pick.', items: options.diet.map((v) => ({ value: v, label: v })) },
+  { id: 'who', title: 'Who liked it', noteId: 'who-note', note: 'Pick several to see any of them.', items: LIKED_OPTIONS.map((o) => ({ value: o.value, label: o.label })) },
 ].filter((g) => g.items.length > 0);
 ---
 
@@ -21,7 +23,7 @@ const groups = [
     {groups.map((g) => (
       <fieldset class="mx-5 mt-3 border-t border-base-300 pt-3">
         <legend class="pr-2 text-[13px] font-bold uppercase tracking-wide text-kk-muted">{g.title}</legend>
-        {g.note && <p class="mb-2 text-[13px] text-kk-muted">{g.note}</p>}
+        {g.note && <p id={g.noteId} class="mb-2 text-[13px] text-kk-muted">{g.note}</p>}
         <div class="flex flex-wrap gap-2">
           {g.items.map((i) => (
             <button type="button" class="kk-chip" aria-pressed="false" data-group={g.id} data-value={i.value}>{i.label}</button>

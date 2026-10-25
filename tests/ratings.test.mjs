@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  LIKED_OPTIONS,
   PEOPLE,
   PERSON_LABEL,
   RATING_LABEL,
@@ -93,4 +94,13 @@ test('sanitizeRatings drops anything malformed instead of trusting it', () => {
   Object.defineProperty(dirty, '__proto__', { value: { ed: e('loved', 1) }, enumerable: true }); // an own key, as JSON.parse makes
   assert.deepEqual(sanitizeRatings(dirty), { ok: { ed: e('loved', 1) }, q: { kristina: e(null, 2) } });
   for (const junk of [null, 5, 'x', [], undefined]) assert.deepEqual(sanitizeRatings(junk), {});
+});
+
+test('"Who liked it" options: exact labels, in tray order', () => {
+  assert.deepEqual(LIKED_OPTIONS, [
+    { value: 'favorite', label: 'Family favorites' },
+    { value: 'ed', label: 'Ed loved it' },
+    { value: 'kristina', label: 'Kristina loved it' },
+    { value: 'untried', label: 'Not tried yet' },
+  ]);
 });
