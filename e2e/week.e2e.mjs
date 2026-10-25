@@ -55,6 +55,39 @@ try {
   // 5. planned dinners survive closing and reopening; the notes do not
   await goto('/week/');
   check('after a reload Thursday still has its dinner and the note is gone', (await name(THU)) === 'Weeknight Pasta' && !(await ev(`!!document.querySelector('${row(THU)} [data-role="note"]')`)));
+  // 6. swipe: half way reveals a red Remove, a long swipe stretches to "Release to remove", a tap on Remove removes once
+  const card = `${row(THU)} [data-role="card"]`, reveal = `${row(THU)} [data-role="reveal"]`;
+  const swipeY = async () => { const r = await rect(card); return r.y + r.h / 2; };
+  const left = async () => (await rect(card)).x;
+  const base = await left();
+  const primary = await ev("(() => { const p = document.createElement('i'); p.style.background = 'var(--color-primary)'; document.body.append(p); const c = getComputedStyle(p).backgroundColor; p.remove(); return c; })()");
+  let y = await swipeY();
+  await h.drag(300, y, 300, y + 90);
+  check('a vertical drag does not open anything', Math.abs((await left()) - base) < 2 && (await rect(reveal)).w < 2);
+  await h.drag(340, y, 255, y); // 85px to the left, then let go
+  const open = await left();
+  check('a half swipe slides the card left and the red Remove shows', base - open >= 70 && (await rect(reveal)).w >= 70 && (await text(reveal)) === 'Remove', `${base - open}px, "${await text(reveal)}"`);
+  check('the revealed area is the primary red, with a Remove target at least 44px tall', (await ev(`getComputedStyle(document.querySelector('${reveal}')).backgroundColor`)) === primary && (await rect(reveal)).h >= 44);
+  check('letting go there keeps it open and removes nothing', (await name(THU)) === 'Weeknight Pasta' && (await saved()).entries[THU].recipeId === 'example-1');
+  await h.drag(255, y, 330, y); // a nudge to the right closes it
+  y = await swipeY();
+  const w = (await rect(`${row(THU)} .kk-week-swipe`)).w;
+  const release = await h.drag(340, y, 340 - w * 0.75, y, { steps: 10, hold: true });
+  check('a long swipe stretches the red area to "Release to remove"', (await text(reveal)) === 'Release to remove' && (await rect(reveal)).w > w * 0.55, `"${await text(reveal)}" ${(await rect(reveal)).w}`);
+  check('nothing is removed until the finger lifts', (await name(THU)) === 'Weeknight Pasta');
+  await release();
+  check('lifting a long swipe removes the dinner', (await visible(`${row(THU)} [data-role="add"]`)) && !(await ev(`!!document.querySelector('${row(THU)} [data-role="name"]')`)));
+  check('and Thursday is kept as a timestamped empty entry', (await saved()).entries[THU].recipeId === null);
+  await addFor(THU, 'example-1');
+  y = await swipeY();
+  await h.drag(340, y, 255, y);
+  await click(reveal);
+  check('tapping the red Remove removes it', !(await ev(`!!document.querySelector('${row(THU)} [data-role="name"]')`)));
+  await addFor(THU, 'example-1');
+  await ev("window.__writes = 0; const set = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:week') window.__writes++; return set.call(this, k, v); };");
+  await ev(`(() => { const b = document.querySelector('${row(THU)} [data-role="remove"]'); b.click(); b.click(); b.click(); })()`);
+  await sleep(300);
+  check('three quick taps on Remove remove it once (one save)', (await ev('window.__writes')) === 1, String(await ev('window.__writes')));
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {

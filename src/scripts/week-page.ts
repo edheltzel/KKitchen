@@ -91,7 +91,20 @@ function dinnerCell(day: WeekDay, recipeId: string, note: string | null, disable
   label.textContent = 'Remove';
   remove.append(trashIcon(), label);
   card.append(tile, words, remove);
-  return card;
+  // The red area under the card: a swipe slides the card left to show it. Not in the tab order, because the outlined
+  // Remove button does the same job for keyboards and screen readers.
+  const reveal = el('button', 'kk-week-reveal', 'reveal');
+  reveal.type = 'button';
+  reveal.tabIndex = -1;
+  reveal.setAttribute('aria-hidden', 'true');
+  reveal.disabled = disabled;
+  const revealText = el('span', 'kk-week-reveal-text', 'reveal-text');
+  revealText.textContent = 'Remove';
+  reveal.append(trashIcon(), revealText);
+  const swipe = el('div', 'kk-week-swipe');
+  swipe.dataset.state = 'closed';
+  swipe.append(reveal, card);
+  return swipe;
 }
 
 function emptyCell(day: WeekDay, disabled: boolean): HTMLElement {
@@ -134,11 +147,83 @@ function openSheet(day: WeekDay): void {
 
 $('#week-list').addEventListener('click', (event) => {
   const target = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-role]');
-  if (!target || target.disabled) return;
+  if (swallowClick || !target || target.disabled) return;
   const day = dayOf(target.closest<HTMLElement>('li[data-day]')!.dataset.day!);
   if (target.dataset.role === 'add' || target.dataset.role === 'change') openSheet(day);
-  if (target.dataset.role === 'remove') void controller.remove(day.key);
+  if (target.dataset.role === 'remove' || target.dataset.role === 'reveal') removeDinner(day.key);
 });
+
+// One tap, one removal: a second tap while the first is saving does nothing (the controller also refuses an empty day).
+const removing = new Set<string>();
+function removeDinner(day: string): void {
+  if (removing.has(day)) return;
+  removing.add(day);
+  void controller.remove(day).finally(() => removing.delete(day));
+}
+
+// Swipe left on a dinner: past about 40px it can rest open on the red Remove; a long swipe (more than half
+// the row) says "Release to remove" and removes when the finger lifts. A mostly-vertical drag is just scrolling.
+const REVEAL = 96;
+const LONG = 0.55;
+let openSwipe: HTMLElement | null = null;
+let drag: { swipe: HTMLElement; x: number; y: number; start: number; mode: 'unknown' | 'swipe' | 'scroll'; offset: number; width: number } | null = null;
+let swallowClick = false;
+
+function setOffset(swipe: HTMLElement, offset: number, width: number): void {
+  const card = swipe.querySelector<HTMLElement>('.kk-week-card')!;
+  const reveal = swipe.querySelector<HTMLElement>('.kk-week-reveal')!;
+  card.style.transform = offset === 0 ? '' : `translateX(${offset}px)`;
+  reveal.style.width = `${-offset}px`;
+  const long = -offset > width * LONG;
+  reveal.dataset.long = long ? 'on' : 'off';
+  reveal.querySelector('[data-role="reveal-text"]')!.textContent = long ? 'Release to remove' : 'Remove';
+}
+function settle(swipe: HTMLElement, state: 'open' | 'closed'): void {
+  swipe.dataset.state = state;
+  setOffset(swipe, state === 'open' ? -REVEAL : 0, swipe.getBoundingClientRect().width);
+  if (state === 'open') openSwipe = swipe;
+  else if (openSwipe === swipe) openSwipe = null;
+}
+
+const list = $('#week-list');
+list.addEventListener('pointerdown', (event) => {
+  const target = event.target as HTMLElement;
+  const swipe = target.closest<HTMLElement>('.kk-week-swipe');
+  if (openSwipe && openSwipe !== swipe) settle(openSwipe, 'closed');
+  if (!swipe || target.closest('[data-role="reveal"]') || !event.isPrimary) return;
+  drag = { swipe, x: event.clientX, y: event.clientY, start: swipe.dataset.state === 'open' ? -REVEAL : 0, mode: 'unknown', offset: 0, width: swipe.getBoundingClientRect().width };
+});
+list.addEventListener('pointermove', (event) => {
+  if (!drag) return;
+  const dx = event.clientX - drag.x;
+  const dy = event.clientY - drag.y;
+  if (drag.mode === 'unknown') {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    drag.mode = Math.abs(dx) > Math.abs(dy) ? 'swipe' : 'scroll';
+    if (drag.mode === 'swipe') {
+      drag.swipe.dataset.state = 'dragging';
+      drag.swipe.setPointerCapture?.(event.pointerId);
+    }
+  }
+  if (drag.mode !== 'swipe') return;
+  drag.offset = Math.min(0, Math.max(-drag.width, drag.start + dx));
+  setOffset(drag.swipe, drag.offset, drag.width);
+});
+function endDrag(event: PointerEvent): void {
+  const current = drag;
+  drag = null;
+  if (!current || current.mode !== 'swipe') return;
+  swallowClick = true;
+  setTimeout(() => (swallowClick = false), 0);
+  const day = current.swipe.closest<HTMLElement>('li[data-day]')!.dataset.day!;
+  if (event.type === 'pointercancel') return settle(current.swipe, 'closed');
+  if (-current.offset > current.width * LONG) {
+    settle(current.swipe, 'closed');
+    removeDinner(day);
+  } else settle(current.swipe, -current.offset > REVEAL / 2 ? 'open' : 'closed');
+}
+list.addEventListener('pointerup', endDrag);
+list.addEventListener('pointercancel', endDrag);
 
 sheet.addEventListener('click', (event) => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-id]');
