@@ -95,11 +95,12 @@ export interface StorageLike {
   removeItem(key: string): void;
 }
 
-const URL_KEY = 'kk:recipes-url';
-const SCROLL_PREFIX = 'kk:scroll:';
+const ENTRY_KEY = 'kk:recipes';
 
 // Only "/" or "/?query" is ever accepted, so a poisoned value cannot redirect off-site.
 const isRecipesUrl = (url: string): boolean => /^\/(\?[^\s\\]*)?$/.test(url);
+
+type Entry = { url: string; y: number };
 
 export function createSession(storage: StorageLike) {
   const safe = <T>(fn: () => T, fallback: T): T => {
@@ -109,20 +110,30 @@ export function createSession(storage: StorageLike) {
       return fallback;
     }
   };
+  // One entry only: the last Recipes URL and how far it was scrolled.
+  const read = (): Entry | null =>
+    safe(() => {
+      const raw = JSON.parse(storage.getItem(ENTRY_KEY) ?? 'null');
+      if (!raw || typeof raw.url !== 'string' || !isRecipesUrl(raw.url)) return null;
+      const y = typeof raw.y === 'number' && Number.isFinite(raw.y) && raw.y > 0 ? Math.round(raw.y) : 0;
+      return { url: raw.url, y };
+    }, null);
+  const write = (entry: Entry): void =>
+    safe(() => (isRecipesUrl(entry.url) ? storage.setItem(ENTRY_KEY, JSON.stringify(entry)) : storage.removeItem(ENTRY_KEY)), undefined);
   return {
     saveRecipesUrl(url: string): void {
-      safe(() => (isRecipesUrl(url) && url !== '/' ? storage.setItem(URL_KEY, url) : storage.removeItem(URL_KEY)), undefined);
+      const old = read();
+      write({ url, y: old && old.url === url ? old.y : 0 });
     },
     recipesHref(): string {
-      const url = safe(() => storage.getItem(URL_KEY), null);
-      return url && isRecipesUrl(url) ? url : '/';
+      return read()?.url ?? '/';
     },
     saveScroll(url: string, y: number): void {
-      safe(() => storage.setItem(SCROLL_PREFIX + url, String(Math.max(0, Math.round(y)))), undefined);
+      write({ url, y: Math.max(0, Math.round(y)) });
     },
     readScroll(url: string): number {
-      const y = Number(safe(() => storage.getItem(SCROLL_PREFIX + url), null));
-      return Number.isFinite(y) && y > 0 ? Math.round(y) : 0;
+      const entry = read();
+      return entry && entry.url === url ? entry.y : 0;
     },
   };
 }

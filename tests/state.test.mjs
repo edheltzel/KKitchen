@@ -115,7 +115,7 @@ test('diet tags combine with "every": a recipe needs ALL the picked tags', () =>
 // --- tab switches / Back: the session remembers the Recipes URL and the scroll per URL ----------
 function fakeStorage() {
   const m = new Map();
-  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), keys: () => [...m.keys()] };
 }
 
 test('Recipes tab returns to the last search/filters; plain "/" when nothing is stored', () => {
@@ -135,18 +135,38 @@ test('a stored Recipes URL can never point off-site or to another page', () => {
   }
 });
 
-test('scroll is remembered per URL and bad values fall back to the top', () => {
+test('one storage entry only: the last Recipes URL and its scroll', () => {
   const store = fakeStorage();
   const session = createSession(store);
+  session.saveRecipesUrl('/?q=pasta');
   session.saveScroll('/?q=pasta', 640.4);
-  session.saveScroll('/', 120);
   assert.equal(session.readScroll('/?q=pasta'), 640);
+  assert.equal(session.recipesHref(), '/?q=pasta');
+  session.saveScroll('/', 120);
   assert.equal(session.readScroll('/'), 120);
-  assert.equal(session.readScroll('/?q=other'), 0);
-  store.setItem('kk:scroll:/?q=bad', 'NaN');
-  assert.equal(session.readScroll('/?q=bad'), 0);
-  store.setItem('kk:scroll:/?q=neg', '-50');
-  assert.equal(session.readScroll('/?q=neg'), 0);
+  assert.equal(session.readScroll('/?q=pasta'), 0, 'older URLs are forgotten');
+  assert.equal(store.keys().length, 1, `one key, got ${store.keys()}`);
+  assert.ok(!store.keys().some((k) => k.startsWith('kk:scroll:')), 'no per-URL scroll keys');
+});
+
+test('saving the same URL again keeps its scroll; a new URL starts at the top', () => {
+  const session = createSession(fakeStorage());
+  session.saveScroll('/?q=a', 300);
+  session.saveRecipesUrl('/?q=a');
+  assert.equal(session.readScroll('/?q=a'), 300);
+  session.saveRecipesUrl('/?q=b');
+  assert.equal(session.readScroll('/?q=b'), 0);
+});
+
+test('a poisoned or garbled entry falls back to "/" and the top', () => {
+  for (const raw of ['garbage', '{"url":"//evil.example/","y":5}', '{"url":"/?q=a","y":"NaN"}', '{"url":"/?q=a","y":-50}', 'null']) {
+    const store = fakeStorage();
+    store.setItem('kk:recipes', raw);
+    const session = createSession(store);
+    const okUrl = raw.includes('"/?q=a"');
+    assert.equal(session.recipesHref(), okUrl ? '/?q=a' : '/', raw);
+    assert.equal(session.readScroll('/?q=a'), 0, raw);
+  }
 });
 
 test('session survives storage that throws (private mode)', () => {
