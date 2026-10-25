@@ -179,6 +179,12 @@
   color: var(--color-base-content);
 }
 
+/* A rating tap with nobody picked highlights the hint. */
+#me-hint[data-nudge='on'] {
+  color: var(--kk-accent-text);
+  font-weight: 700;
+}
+
 /* Browse grid cards (example data) */
 .kk-card {
   position: relative;

@@ -12,7 +12,7 @@ const count = exampleRecipes.length;
   <h1 class="text-3xl font-extrabold tracking-tight">Kris's Kitchen</h1>
   <p id="recipe-count" aria-live="polite" class="mt-1 text-[14px] font-semibold text-kk-accent">{count} recipes</p>
   <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>
-  <fieldset class="mt-3 flex flex-wrap items-center gap-2 border-0 p-0">
+  <fieldset id="me-picker" class="mt-3 flex flex-wrap items-center gap-2 border-0 p-0">
     <legend class="sr-only">Which person is this phone?</legend>
     <button type="button" class="kk-chip" aria-pressed="false" data-me="ed">I'm Ed</button>
     <button type="button" class="kk-chip" aria-pressed="false" data-me="kristina">I'm Kristina</button>

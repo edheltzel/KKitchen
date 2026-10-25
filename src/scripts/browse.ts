@@ -161,15 +161,23 @@ function renderRatings(view: ReturnType<typeof controller.view>): void {
     for (const button of card.buttons) {
       const mine = me && ratings ? ratingOf(ratings, id, me) : null;
       button.setAttribute('aria-pressed', String(mine === button.dataset.rating));
-      button.disabled = !me || unavailable;
+      button.disabled = unavailable; // with nobody picked a tap leads to the picker instead
     }
     card.badge.hidden = !(ratings && isFamilyFavorite(ratings, id));
   }
   for (const button of meButtons) button.setAttribute('aria-pressed', String(button.dataset.me === me));
   meHint.hidden = me !== null;
+  if (me !== null) meHint.dataset.nudge = 'off';
   unavailableBar.hidden = !unavailable;
   whoNote.textContent = unavailable ? 'Ratings unavailable: this filter is paused until they load.' : whoNoteText;
   showUndo(view.undo);
+}
+
+// A rating tap with nobody picked: take them to the picker and point at the hint. Nothing is saved.
+function nudgePicker(): void {
+  meHint.dataset.nudge = 'on';
+  $('#me-picker').scrollIntoView({ block: 'center' });
+  meButtons[0]?.focus({ preventScroll: true });
 }
 
 // The Undo offer stays for a while, then goes away on its own.
@@ -212,7 +220,9 @@ $('#clear-all').addEventListener('click', () => commit(emptyState()));
 $('#recipe-grid').addEventListener('click', (event) => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-rating]');
   const id = button?.closest<HTMLElement>('article')?.dataset.id;
-  if (button && id) void controller.tap(id, button.dataset.rating as Rating);
+  if (!button || !id) return;
+  if (controller.view().me === null) return nudgePicker();
+  void controller.tap(id, button.dataset.rating as Rating);
 });
 for (const button of meButtons) button.addEventListener('click', () => controller.setMe(button.dataset.me as Person));
 $('#ratings-retry').addEventListener('click', () => void controller.retry());

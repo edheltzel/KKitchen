@@ -37,6 +37,7 @@ test('"I\'m Ed / I\'m Kristina" picker: two toggles, exact labels, nothing chose
     assert.match(p[0], /class="kk-chip"/);
   }
   assert.match(home, /id="me-hint"[^>]*>[^<]*who you are/);
+  assert.match(home, /<fieldset[^>]*id="me-picker"/, 'a tap with nobody picked scrolls to this');
 });
 
 test('"Ratings unavailable" banner with Retry sits above the search bar and starts hidden', () => {
