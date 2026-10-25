@@ -41,6 +41,7 @@ const store = createLocalWeekStore({ storage: phoneStorage(), knownRecipeIds: ne
 const controller = createWeekController({ store, days: keys });
 const undoBar = createUndoBar({ bar: $('#undo-bar'), stack: $('#bottom-stack'), expire: () => controller.dismissUndo() });
 const undoText = $('#undo-text');
+const unavailableBar = $('#week-unavailable');
 const shortOf = (key: string) => dayOf(key).short;
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -128,6 +129,7 @@ function render(): void {
   const note = noteText(view.note, longOf, nameOf);
   if (view.undo) undoText.textContent = `Took ${nameOf(view.undo.recipeId)} off ${shortOf(view.undo.day)}`;
   undoBar.show(view.undo);
+  unavailableBar.hidden = !view.unavailable;
   for (const day of days) {
     const { cell } = rows.get(day.key)!;
     const recipeId = plan[day.key]?.recipeId ?? null;
@@ -259,6 +261,7 @@ document.addEventListener('visibilitychange', () => {
   if (weekDays(new Date())[0].key !== keys[0]) location.reload();
   else void controller.refresh();
 });
+$('#week-retry').addEventListener('click', () => void controller.retry());
 $('#undo-button').addEventListener('click', () => void controller.undo());
 addEventListener('storage', (event) => event.key === 'kk:week' && void controller.refresh());
 void controller.init();

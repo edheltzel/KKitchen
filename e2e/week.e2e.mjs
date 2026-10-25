@@ -111,6 +111,20 @@ try {
   await click(`${row(THU)} [data-role="remove"]`);
   await addFor(SAT, 'example-2');
   check('planning something else ends the Undo offer', !(await visible('#undo-bar')) && (await visible('.kk-dock')));
+  // 8. when saving fails: banner, controls paused, the change waits for Retry
+  await addFor(THU, 'example-1');
+  await ev("window.__fail = true; const set2 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (window.__fail && k === 'kk:week') throw new Error('full'); return set2.call(this, k, v); };");
+  await click(`${row(THU)} [data-role="remove"]`); // fails: the dinner is not removed, no Undo is offered
+  check('a failed save shows "Week plan unavailable. Your changes will save when you tap Retry."', (await visible('#week-unavailable')) && (await text('#week-unavailable p')) === 'Week plan unavailable. Your changes will save when you tap Retry.', await text('#week-unavailable p'));
+  check('a failed removal offers no Undo and the dinner is still shown', !(await visible('#undo-bar')) && (await visible('.kk-dock')) && (await name(THU)) === 'Weeknight Pasta');
+  check('Retry is at least 44px tall', (await rect('#week-retry')).h >= 44);
+  check('Add, change and Remove are paused while it is unavailable', await ev("[...document.querySelectorAll('#week-list button')].every((b) => b.disabled)"));
+  await ev(`document.querySelector('${row(THU)} [data-role="remove"]').click()`);
+  check('a paused Remove does nothing', (await name(THU)) === 'Weeknight Pasta');
+  await ev('window.__fail = false');
+  await click('#week-retry');
+  await sleep(200);
+  check('Retry saves the waiting removal, the banner goes and the controls come back', !(await visible('#week-unavailable')) && (await visible(`${row(THU)} [data-role="add"]`)) && (await saved()).entries[THU].recipeId === null && !(await ev("[...document.querySelectorAll('#week-list button')].some((b) => b.disabled)")));
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {
