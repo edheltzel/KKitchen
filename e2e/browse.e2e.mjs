@@ -250,18 +250,21 @@ try {
 
   const rect = (sel) => ev(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return { top: r.top, bottom: r.bottom, height: r.height }; })()`);
   const dockBefore = await rect('nav[aria-label="Main"]');
+  const activeTabKept = () => ev("(() => { const n = document.querySelector('nav[aria-label=\"Main\"]'); const a = [...n.querySelectorAll('[aria-current=\"page\"]')]; return a.length === 1 && a[0].dataset.tab === 'recipes' && a[0].classList.contains('dock-active') && n.querySelectorAll('.dock-active').length === 1; })()");
   check('tab bar is showing before any Undo bar', (await visible('nav[aria-label="Main"]')) && dockBefore.height > 60 && Math.abs(dockBefore.bottom - 844) < 1, JSON.stringify(dockBefore));
   await click(rb('example-1', 'loved')); // same button again = clear
   check('tapping Loved it again clears it and the favorite goes away', (await pressed(rb('example-1', 'loved'))) === 'false' && (await status('example-1', 'kristina')) === 'Kristina: not rated yet' && !(await badge('example-1')));
   check('removing a Family favorite shows the Undo bar', (await visible('#undo-bar')) && (await text('#undo-text')) === 'Family favorite removed' && (await ev("document.querySelector('#undo-bar').getAttribute('role')")) === 'status');
   const bar = await rect('#undo-bar');
   check('Undo bar REPLACES the tab bar: tab bar not visible and out of the accessibility tree', !(await visible('nav[aria-label="Main"]')) && (await ev("getComputedStyle(document.querySelector('nav[aria-label=\"Main\"]')).display")) === 'none', JSON.stringify(bar));
+  check('while the Undo bar replaces it, the tab bar still marks Recipes as the current tab (aria-current and dock-active)', await activeTabKept());
   check('Undo bar sits exactly where the tab bar was: same bottom edge, same height, flush with the screen bottom', Math.abs(bar.bottom - dockBefore.bottom) < 0.5 && Math.abs(bar.height - dockBefore.height) < 0.5, `${JSON.stringify(bar)} vs ${JSON.stringify(dockBefore)}`);
   check('Undo target is at least 44pt and inside the bar', (await ev("(() => { const r = document.querySelector('#undo-button').getBoundingClientRect(); const b = document.querySelector('#undo-bar').getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5 && r.top >= b.top && r.bottom <= b.bottom && r.right <= innerWidth; })()")));
   check('nothing else stacks above the search bar while Undo shows (the bottom card is not covered by a second bar)', !(await visible('#ratings-unavailable')) && (await ev("document.querySelector('#search-form').getBoundingClientRect().bottom <= document.querySelector('#undo-bar').getBoundingClientRect().top + 0.5")));
   await click('#undo-button');
   check('Undo puts the rating back, the badge returns, the bar goes, and it is saved', (await pressed(rb('example-1', 'loved'))) === 'true' && (await badge('example-1')) && !(await visible('#undo-bar')) && (await saved())['example-1'].kristina.value === 'loved');
   check('after Undo the tab bar is back, same place', (await visible('nav[aria-label="Main"]')) && Math.abs((await rect('nav[aria-label="Main"]')).bottom - dockBefore.bottom) < 0.5);
+  check('after Undo the active tab is still Recipes', await activeTabKept());
   await click(rb('example-1', 'not-for-us'));
   check('switching away from Loved it also removes the favorite and offers Undo', !(await badge('example-1')) && (await visible('#undo-bar')));
   await click('#undo-button');
@@ -271,6 +274,7 @@ try {
   check('(setup) Undo bar showing again', await visible('#undo-bar'));
   await click(rb('example-5', 'loved'));
   check('another rating dismisses the Undo bar and the tab bar returns', !(await visible('#undo-bar')) && (await visible('nav[aria-label="Main"]')));
+  check('after another tap the active tab is still Recipes', await activeTabKept());
   await click(rb('example-5', 'loved'));
   await click('[data-me="kristina"]');
   await click(rb('example-1', 'loved'));
@@ -283,9 +287,22 @@ try {
   await waitFor("document.querySelector('#undo-bar').hidden");
   await ev('window.setTimeout = window.__realTimeout');
   check('Undo bar times out by itself and the tab bar is restored', !(await visible('#undo-bar')) && (await visible('nav[aria-label="Main"]')) && (await ev("document.querySelector('nav[aria-label=\"Main\"]').getBoundingClientRect().bottom")) === dockBefore.bottom);
+  check('after the 10 s timer the active tab is still Recipes', await activeTabKept());
   await click(rb('example-1', 'loved')); // put Kristina's Loved it back (adding one offers no Undo)
   await click(rb('example-4', 'loved'));
   check('an ordinary rating that removes no favorite shows no Undo bar', !(await visible('#undo-bar')) && !(await badge('example-4')));
+  // Undo bar showing, then a save fails: the banner must win, the Undo bar must go, and Retry must stay reachable above the tab bar
+  await click(rb('example-1', 'loved'));
+  check('(setup) Undo bar showing before a failed save', (await visible('#undo-bar')) && !(await visible('nav[aria-label="Main"]')));
+  await ev("window.__realSet2 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (k === 'kk:ratings') throw new Error('full'); return window.__realSet2.call(this, k, v); }");
+  await click(rb('example-4', 'not-for-us'));
+  check('failed save while Undo showed: banner shows, Undo bar is gone, tab bar is back', (await visible('#ratings-unavailable')) && !(await visible('#undo-bar')) && (await visible('nav[aria-label="Main"]')) && (await activeTabKept()));
+  check('Retry is fully visible, not covered by the tab bar or the Undo bar, and the topmost thing at its centre', await ev(`(() => { const r = document.querySelector('#ratings-retry'); const b = r.getBoundingClientRect(); const dock = document.querySelector('nav[aria-label="Main"]').getBoundingClientRect(); const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return b.width > 0 && b.top >= 0 && b.bottom <= dock.top + 0.5 && (top === r || r.contains(top)); })()`));
+  await ev('Storage.prototype.setItem = window.__realSet2');
+  await click('#ratings-retry');
+  check('Retry saves the failed tap and clears the banner', !(await visible('#ratings-unavailable')) && (await saved())['example-4'].kristina.value === 'not-for-us');
+  await click(rb('example-4', 'loved')); // put my own test edits back so later checks see the same data
+  await click(rb('example-1', 'loved'));
 
   await click('[data-me="ed"]');
   await click(rb('example-3', 'loved'));
