@@ -35,8 +35,8 @@ test('fried chicken: serves 6, prep 15, cook 45, three groups, 16 ingredients, 6
   assert.equal(flatItems(r).length, 16);
   assert.equal(r.steps.length, 6);
   assert.equal(r.notes.length, 5);
-  assert.equal(recipeMeta(r), 'Prep 15 min · Cook 45 min · Plus 2 h marinate · Serves 6');
-  assert.equal(cardTime(r), '60 min + 2 h marinate');
+  assert.equal(recipeMeta(r), 'Prep 15 min · Cook 45 min · Plus\u00a02\u00a0h\u00a0marinate · Serves 6');
+  assert.equal(cardTime(r), '60 min +\u00a02\u00a0h\u00a0marinate');
 });
 
 test('fried chicken: the 2 hour marinate is in the first note and in step 1, so 60 min is not the whole story', () => {

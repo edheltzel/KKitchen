@@ -117,11 +117,11 @@ test('the Done screen says "Dinner\'s ready" for the dinners and "All done" for 
 
 test('home cards and recipe pages show honest times: the wait next to the minutes, hours above 120 min', () => {
   const home = page('index.html');
-  assert.ok(home.includes('60 min + 2 h marinate'));
+  assert.ok(home.includes('60 min +\u00a02\u00a0h\u00a0marinate'));
   assert.ok(home.includes('6 h 25 min'));
   assert.ok(!home.includes('385 min'));
   assert.ok(home.includes('25 min'));
-  assert.ok(page('recipe/gluten-free-fried-chicken/index.html').includes('Prep 15 min · Cook 45 min · Plus 2 h marinate · Serves 6'));
+  assert.ok(page('recipe/gluten-free-fried-chicken/index.html').includes('Prep 15 min · Cook 45 min · Plus\u00a02\u00a0h\u00a0marinate · Serves 6'));
   assert.ok(page('recipe/slow-cooker-roast/index.html').includes('Prep 25 min · Cook 6 h · Serves 8'));
   assert.ok(!page('recipe/slow-cooker-roast/index.html').includes('360 min'));
   assert.match(home, /data-minutes="60"/);

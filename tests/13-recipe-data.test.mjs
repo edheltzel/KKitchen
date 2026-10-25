@@ -91,8 +91,8 @@ test('formatMinutes: minutes up to and including 120, hours and minutes above it
 test('a wait (marinate, chill) is shown after the active time: "+ 2 h marinate" on the card, "Plus 2 h marinate" in the meta line, and only when set', () => {
   const base = exampleRecipes[0];
   const waiting = { ...base, prep: 15, cook: 45, minutes: 60, serves: 6, wait: '2 h marinate' };
-  assert.equal(cardTime(waiting), '60 min + 2 h marinate');
-  assert.equal(recipeMeta(waiting), 'Prep 15 min · Cook 45 min · Plus 2 h marinate · Serves 6');
+  assert.equal(cardTime(waiting), '60 min +\u00a02\u00a0h\u00a0marinate');
+  assert.equal(recipeMeta(waiting), 'Prep 15 min · Cook 45 min · Plus\u00a02\u00a0h\u00a0marinate · Serves 6');
   const plain = { ...waiting, wait: undefined };
   assert.equal(cardTime(plain), '60 min');
   assert.equal(recipeMeta(plain), 'Prep 15 min · Cook 45 min · Serves 6');

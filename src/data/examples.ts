@@ -178,14 +178,16 @@ export const formatMinutes = (n: number): string => {
 };
 
 /** The time on a recipe card: "60 min + 2 h marinate", or just "25 min". */
+/** The wait with no-break spaces, so "2 h marinate" never splits across two lines. */
+const glue = (text: string): string => text.split(' ').join('\u00a0');
 export const cardTime = (recipe: ExampleRecipe): string =>
-  recipe.wait ? `${formatMinutes(recipe.minutes)} + ${recipe.wait}` : formatMinutes(recipe.minutes);
+  recipe.wait ? `${formatMinutes(recipe.minutes)} +\u00a0${glue(recipe.wait)}` : formatMinutes(recipe.minutes);
 
 /** "Prep 10 min · Cook 15 min · Serves 4" */
 export const recipeMeta = (recipe: ExampleRecipe): string =>
   [
     ...(recipe.prep > 0 ? [`Prep ${formatMinutes(recipe.prep)}`] : []),
     recipe.cook > 0 ? `Cook ${formatMinutes(recipe.cook)}` : 'No cooking',
-    ...(recipe.wait ? [`Plus ${recipe.wait}`] : []),
+    ...(recipe.wait ? [`Plus\u00a0${glue(recipe.wait)}`] : []),
     `Serves ${recipe.serves}`,
   ].join(' · ');
