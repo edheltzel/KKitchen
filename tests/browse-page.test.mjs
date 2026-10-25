@@ -66,3 +66,9 @@ test('empty state, chips row and grid hooks exist', () => {
   assert.match(home, /<p[^>]*id="empty-message"/);
   assert.match(home, /<button[^>]*id="clear-all"[^>]*min-h-11[^>]*>\s*Clear\s*<\/button>/);
 });
+
+test('tray copy: diet says "needs all", the general hint no longer claims any-of for every group', () => {
+  assert.match(tray, /Diet tags: a recipe needs all you pick\./);
+  assert.ok(!/Pick several in one group to see any of them/.test(tray));
+  assert.match(tray, /Meal and time: pick several to see any of them\./);
+});

@@ -65,7 +65,7 @@ test('every word of the search must match a name or an ingredient', () => {
   assert.deepEqual(names({ q: 'tomato oats', meal: [], time: [], diet: [] }), []);
 });
 
-test('filters are AND across groups and OR within a group', () => {
+test('filters are AND across groups; meal is any-of, time is loosest-wins', () => {
   assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: [], diet: [] }), ['Weeknight Pasta', 'Tomato Soup']);
   assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['30'], diet: [] }), ['Weeknight Pasta', 'Tomato Soup']);
   assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['15'], diet: [] }), []);
@@ -87,6 +87,21 @@ test('zero-result messages', () => {
   assert.equal(emptyMessage({ q: 'saffron', meal: [], time: [], diet: [] }), "No recipe lists 'saffron'");
   assert.equal(emptyMessage({ q: 'saffron', meal: ['dinner'], time: [], diet: [] }), "No recipe lists 'saffron' with these filters");
   assert.equal(emptyMessage({ q: '', meal: ['dinner'], time: [], diet: [] }), 'No recipes match these filters');
+});
+
+test('diet tags combine with "every": a recipe needs ALL the picked tags', () => {
+  const options = { meal: [], time: [], diet: ['A', 'B'] };
+  const fixtures = [
+    { name: 'Only A', ingredients: ['x'], meal: 'dinner', minutes: 10, diet: ['A'] },
+    { name: 'A and B', ingredients: ['y'], meal: 'dinner', minutes: 10, diet: ['A', 'B'] },
+    { name: 'Neither', ingredients: ['z'], meal: 'dinner', minutes: 10, diet: [] },
+  ];
+  const pick = (diet) => filterRecipes(fixtures, { q: '', meal: [], time: [], diet }).map((r) => r.name);
+  assert.deepEqual(pick(['A']), ['Only A', 'A and B']);
+  assert.deepEqual(pick(['A', 'B']), ['A and B']);
+  assert.deepEqual(pick(['B']), ['A and B']);
+  assert.deepEqual(pick([]), ['Only A', 'A and B', 'Neither']);
+  assert.deepEqual(toggleValue(toggleValue({ q: '', meal: [], time: [], diet: [] }, 'diet', 'B', options), 'diet', 'A', options).diet, ['A', 'B']);
 });
 
 // --- tab switches / Back: the session remembers the Recipes URL and the scroll per URL ----------

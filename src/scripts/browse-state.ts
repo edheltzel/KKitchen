@@ -62,8 +62,9 @@ export function toggleValue(state: BrowseState, group: Group, value: string, opt
   return { ...state, [group]: canonical(next, options[group]) };
 }
 
-// Search: every word must appear in the name or in an ingredient. Filters: AND across groups,
-// OR within a group (time is "under N minutes", so several picks mean the loosest one).
+// Search: every word must appear in the name or in an ingredient. Filters: AND across groups.
+// Within a group: meal is any-of, time is "N min or less" (several picks mean the loosest one),
+// diet is every-of (a recipe needs ALL the picked tags).
 export function matchesRecipe(recipe: Searchable, state: BrowseState): boolean {
   const name = recipe.name.toLowerCase();
   const ingredients = recipe.ingredients.map((i) => i.toLowerCase());
@@ -71,7 +72,7 @@ export function matchesRecipe(recipe: Searchable, state: BrowseState): boolean {
   if (!words.every((w) => name.includes(w) || ingredients.some((i) => i.includes(w)))) return false;
   if (state.meal.length && !state.meal.includes(recipe.meal)) return false;
   if (state.time.length && recipe.minutes > Math.max(...state.time.map(Number))) return false;
-  if (state.diet.length && !state.diet.some((d) => recipe.diet.includes(d))) return false;
+  if (!state.diet.every((d) => recipe.diet.includes(d))) return false;
   return true;
 }
 

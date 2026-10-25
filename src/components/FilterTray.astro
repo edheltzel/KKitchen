@@ -7,7 +7,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const groups = [
   { id: 'meal', title: 'Meal type', items: options.meal.map((v) => ({ value: v, label: cap(v) })) },
   { id: 'time', title: 'Time', items: options.time.map((v) => ({ value: v, label: `Under ${v} min` })) },
-  { id: 'diet', title: 'Diet tags', items: options.diet.map((v) => ({ value: v, label: v })) },
+  { id: 'diet', title: 'Diet tags', note: 'Diet tags: a recipe needs all you pick.', items: options.diet.map((v) => ({ value: v, label: v })) },
 ].filter((g) => g.items.length > 0);
 ---
 
@@ -17,10 +17,11 @@ const groups = [
       <h2 id="filter-title" class="text-xl font-extrabold">Filters</h2>
       <button type="button" id="clear-filters" class="min-h-11 min-w-11 px-2 text-[15px] font-bold text-kk-accent">Clear filters</button>
     </div>
-    <p class="px-5 text-[13px] text-kk-muted">Pick several in one group to see any of them. Different groups all have to match.</p>
+    <p class="px-5 text-[13px] text-kk-muted">Meal and time: pick several to see any of them. Different groups all have to match.</p>
     {groups.map((g) => (
       <fieldset class="mx-5 mt-3 border-t border-base-300 pt-3">
         <legend class="pr-2 text-[13px] font-bold uppercase tracking-wide text-kk-muted">{g.title}</legend>
+        {g.note && <p class="mb-2 text-[13px] text-kk-muted">{g.note}</p>}
         <div class="flex flex-wrap gap-2">
           {g.items.map((i) => (
             <button type="button" class="kk-chip" aria-pressed="false" data-group={g.id} data-value={i.value}>{i.label}</button>
