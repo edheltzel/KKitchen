@@ -56,6 +56,7 @@ test('the page leaves room for whatever is stacked at the bottom (tab bar, Undo 
   const base = read('src/layouts/Base.astro');
   assert.match(base, /kk-room/);
   assert.match(base, /import ['"]\.\.\/scripts\/stack-room['"]/);
+  assert.match(base, /<\/div>\n {4}<script>\n {6}import '\.\.\/scripts\/stack-room';\n {4}<\/script>\n {2}<\/body>/, 'the script sits at the same level as <main> and the bottom stack');
   assert.match(read('src/styles/global.css'), /\.kk-room\s*\{[^}]*padding-bottom:\s*calc\(var\(--kk-stack-height,/);
   assert.match(read('src/scripts/stack-room.ts'), /ResizeObserver[\s\S]*--kk-stack-height/);
 });
