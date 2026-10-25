@@ -110,7 +110,7 @@ const roast: ExampleRecipe = {
 
 // A dessert or snack: Meal has no dessert, so it is a snack. The note gives no prep time, so prep is 0 and the meta line leaves it out.
 const brownies: ExampleRecipe = {
-  id: 'high-protein-brownies', name: 'High Protein Gluten Free Brownies That Actually Taste Good', meal: 'snack', approved: true, tags: [],
+  id: 'high-protein-brownies', name: 'High Protein Brownies', meal: 'snack', approved: true, tags: [],
   source: 'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/', author: 'Instructables',
   ingredients: ['cottage cheese', 'eggs', 'cocoa', 'whey', 'baking powder', 'walnuts', 'chocolate chips'],
   prep: 0, cook: 25, minutes: 25, serves: 8,

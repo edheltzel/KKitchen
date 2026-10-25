@@ -9,11 +9,11 @@ const by = (id) => realNotes.find((r) => r.id === id);
 const json = JSON.stringify(realNotes);
 const ITEM_ID = /^[a-z][a-z0-9-]{0,39}$/;
 
-test('exactly three real recipes, with fixed ids and the titles exactly as the notes have them', () => {
+test('exactly three real recipes, with fixed ids and the titles the captain chose (no gluten-free wording until confirmed)', () => {
   assert.deepEqual(realNotes.map((r) => [r.id, r.name]), [
     ['fried-chicken', 'Fried Chicken'],
     ['slow-cooker-roast', 'Slow Cooker Roast'],
-    ['high-protein-brownies', 'High Protein Gluten Free Brownies That Actually Taste Good'],
+    ['high-protein-brownies', 'High Protein Brownies'],
   ]);
   for (const r of realNotes) {
     assert.ok(isValidId(r.id));

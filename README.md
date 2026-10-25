@@ -15,7 +15,7 @@ npm run build
 - `src/data/examples.ts` holds the old example recipes as a **test fixture**. Only a build or test run with `KK_DATA=fixture` uses them, and `npm test` sets that for you. Run `node --test` on its own and you must set `KK_DATA=fixture` yourself. The e2e scripts serve the `dist` that `npm test` built, so run `npm test` first.
 - `tests/17-real-build.test.mjs` builds the site with no `KK_DATA` into a temp folder and scans it: no example recipe, no vault path, no Example badge.
 - These three notes had no `approved: true` marker. The captain asked for them by name, so they are treated as approved.
-- The gluten-free tag is held until the captain confirms it (the fried chicken is still open). No recipe has any tag, so there is no badge and no diet filter value. The titles stay exactly as the notes have them.
+- The gluten-free tag is held until the captain confirms it (the fried chicken is still open). No recipe has any tag, so there is no badge and no diet filter value. The titles drop the gluten-free wording until Ed or Kristina confirm each recipe (Fried Chicken, High Protein Brownies); sources and ingredient lines stay as written.
 - `source` shows as the "Original recipe" link. `author` is stored only: no page shows credit yet.
 - Time: the card and the meta line show prep + cook. A wait (the fried chicken marinate) is a note, not part of that total. A note with no prep time (the brownies) has `prep: 0`, and the meta line then leaves prep out.
 - The week plan offers every recipe on every dinner day. `meal` is not used there, so the brownies (a snack) can be planned like a dinner.

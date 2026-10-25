@@ -12,7 +12,7 @@ const IDS = ['fried-chicken', 'high-protein-brownies', 'slow-cooker-roast'];
 const TITLES = {
   'fried-chicken': 'Fried Chicken',
   'slow-cooker-roast': 'Slow Cooker Roast',
-  'high-protein-brownies': 'High Protein Gluten Free Brownies That Actually Taste Good',
+  'high-protein-brownies': 'High Protein Brownies',
 };
 let out;
 const page = (rel) => decode(readFileSync(join(out, rel), 'utf8'));
