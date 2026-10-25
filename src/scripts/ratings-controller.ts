@@ -3,6 +3,7 @@
 
 import { ratingOf, removedFamilyFavorite, type Person, type Rating, type Ratings } from './ratings.ts';
 import type { RatingsStore } from './ratings-store.ts';
+import { createOpQueue, type Op } from './op-queue.ts';
 
 export interface UndoInfo {
   id: string;
@@ -26,39 +27,13 @@ interface Identity {
 
 export function createRatingsController({ store, identity }: { store: RatingsStore; identity: Identity }) {
   let data: Ratings | null = null;
-  let unavailable = false;
   let me: Person | null = identity.get();
   let undo: UndoInfo | null = null;
-  // Operations that failed, in tap order. While this list is not empty nothing new runs: later taps wait
-  // behind it, and Retry replays the whole list in order, so no tap is lost or applied out of order.
-  interface Op {
-    kind: 'load' | 'write';
-    run: () => Promise<void>;
-  }
-  let failed: Op[] = [];
-  let chain: Promise<void> = Promise.resolve();
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((fn) => fn());
-
-  const fail = (ops: Op[]): void => {
-    failed = ops;
-    unavailable = true;
-    undo = null; // an Undo offer next to "Ratings unavailable" would be stale, and Retry is what matters then
-  };
-  const attempt = async (op: Op): Promise<void> => {
-    if (unavailable) {
-      if (op.kind === 'write') failed.push(op); // wait behind the failed ones
-    } else {
-      try {
-        await op.run();
-      } catch {
-        fail([op]);
-      }
-    }
-    emit();
-  };
-  // One at a time, in tap order, so quick taps never race each other.
-  const enqueue = (op: Op): Promise<void> => (chain = chain.then(() => attempt(op)));
+  // A failure clears any Undo offer: next to "Ratings unavailable" it would be stale, and Retry is what matters then.
+  const queue = createOpQueue({ emit, onFail: () => (undo = null) });
+  const enqueue = queue.enqueue;
 
   const loadOp: Op = {
     kind: 'load',
@@ -66,32 +41,16 @@ export function createRatingsController({ store, identity }: { store: RatingsSto
       data = await store.load();
     },
   };
-  const replay = async (): Promise<void> => {
-    const todo = failed.length ? [...failed] : [loadOp];
-    for (let i = 0; i < todo.length; i++) {
-      try {
-        await todo[i].run();
-      } catch {
-        fail(todo.slice(i)); // the one that failed again and everything behind it, still in order
-        emit();
-        return;
-      }
-    }
-    failed = [];
-    unavailable = false;
-    emit();
-  };
-
   return {
-    view: (): RatingsView => ({ ratings: unavailable ? null : data, unavailable, me, undo }),
+    view: (): RatingsView => ({ ratings: queue.unavailable ? null : data, unavailable: queue.unavailable, me, undo }),
     subscribe(listener: () => void): () => void {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
     init: () => enqueue(loadOp),
     /** Reload from the store (page shown again, another tab changed it). Does not paper over a failure. */
-    refresh: () => (unavailable ? Promise.resolve() : enqueue(loadOp)),
-    retry: () => (chain = chain.then(replay)),
+    refresh: () => (queue.unavailable ? Promise.resolve() : enqueue(loadOp)),
+    retry: () => queue.retry(loadOp),
     setMe(person: Person): void {
       identity.set(person);
       me = person;
