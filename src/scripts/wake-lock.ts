@@ -15,7 +15,8 @@ export interface WakeApi {
 
 /** The browser's own API, or null where there is none (older iPhones, some desktop browsers). */
 export function browserWakeApi(): WakeApi | null {
-  return typeof navigator !== 'undefined' && 'wakeLock' in navigator ? (navigator as unknown as { wakeLock: WakeApi }).wakeLock : null;
+  if (typeof navigator === 'undefined') return null;
+  return (navigator as unknown as { wakeLock?: WakeApi }).wakeLock ?? null;
 }
 
 export function createWakeLock({ api, isVisible, onChange }: { api: WakeApi | null; isVisible: () => boolean; onChange: (status: WakeStatus) => void }) {

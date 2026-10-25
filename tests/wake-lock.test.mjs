@@ -157,3 +157,20 @@ test('a denied lock stays failed on later visibility changes (no nagging loop), 
   await lock.acquire();
   assert.equal(lock.status(), 'on');
 });
+
+test('browserWakeApi: the real navigator.wakeLock when there is one, null when it is missing or undefined', async () => {
+  const { browserWakeApi } = await import('../src/scripts/wake-lock.ts');
+  const had = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const set = (value) => Object.defineProperty(globalThis, 'navigator', { value, configurable: true });
+  try {
+    const api = { request: async () => ({}) };
+    set({ wakeLock: api });
+    assert.equal(browserWakeApi(), api);
+    set({});
+    assert.equal(browserWakeApi(), null);
+    set({ wakeLock: undefined });
+    assert.equal(browserWakeApi(), null, 'present but undefined (some embedded browsers)');
+  } finally {
+    if (had) Object.defineProperty(globalThis, 'navigator', had);
+  }
+});
