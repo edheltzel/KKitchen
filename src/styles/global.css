@@ -195,3 +195,69 @@
   background: var(--color-primary);
   color: var(--color-primary-content);
 }
+
+/* Ratings (branch 3a): compact row on each card, derived Family favorite badge, notices. Tokens only. */
+.kk-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+.kk-rate-status {
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+  color: var(--kk-muted);
+}
+.kk-rate-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+.kk-rate-btn {
+  min-height: 2.75rem;
+  min-width: 0;
+  padding: 0 0.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-base-300);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.1;
+  -webkit-tap-highlight-color: transparent;
+}
+.kk-rate-btn[aria-pressed='true'][data-rating='loved'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.kk-rate-btn[aria-pressed='true'][data-rating='not-for-us'] {
+  border-color: var(--color-base-content);
+  background: var(--color-base-content);
+  color: var(--color-base-100);
+}
+.kk-rate-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-rate-btn:disabled {
+  opacity: 0.55;
+}
+.kk-fav-badge {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+}
+.kk-notice {
+  border: 1px solid var(--color-primary);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+}
