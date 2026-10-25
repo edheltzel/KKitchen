@@ -146,3 +146,14 @@
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* Search field: keyboard handling lives in src/scripts/keyboard-lift.ts */
+.kk-search:focus-within {
+  border-color: var(--color-primary);
+}
+#bottom-stack {
+  will-change: transform;
+}
+#bottom-stack[data-keyboard='open'] .kk-dock {
+  display: none;
+}
