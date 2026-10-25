@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, extname, resolve } from 'node:path';
+import { PHONE_WIDTH, PHONE_HEIGHT } from './harness.mjs';
 
 const dist = resolve(new URL('../dist', import.meta.url).pathname);
 const PORT = Number(process.env.PORT ?? 4399);
@@ -75,7 +76,7 @@ try {
   const chip = (g, v) => `[data-group="${g}"][data-value="${v}"]`;
   const visibleCards = () => ev("[...document.querySelectorAll('#recipe-grid article')].filter((a) => !a.hidden).map((a) => a.dataset.name)");
 
-  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+  await send('Emulation.setDeviceMetricsOverride', { width: PHONE_WIDTH, height: PHONE_HEIGHT, deviceScaleFactor: 2, mobile: true });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
 
   // 0. the whole placeholder fits at 390px with the count badge showing
@@ -255,7 +256,7 @@ try {
   const rect = (sel) => ev(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return { top: r.top, bottom: r.bottom, height: r.height }; })()`);
   const dockBefore = await rect('nav[aria-label="Main"]');
   const activeTabKept = () => ev("(() => { const n = document.querySelector('nav[aria-label=\"Main\"]'); const a = [...n.querySelectorAll('[aria-current=\"page\"]')]; return a.length === 1 && a[0].dataset.tab === 'recipes' && a[0].classList.contains('dock-active') && n.querySelectorAll('.dock-active').length === 1; })()");
-  check('tab bar is showing before any Undo bar', (await visible('nav[aria-label="Main"]')) && dockBefore.height > 60 && Math.abs(dockBefore.bottom - 844) < 1, JSON.stringify(dockBefore));
+  check('tab bar is showing before any Undo bar', (await visible('nav[aria-label="Main"]')) && dockBefore.height > 60 && Math.abs(dockBefore.bottom - PHONE_HEIGHT) < 1, JSON.stringify(dockBefore));
   await click(rb('example-1', 'loved')); // same button again = clear
   check('tapping Loved it again clears it and the favorite goes away', (await pressed(rb('example-1', 'loved'))) === 'false' && (await status('example-1', 'kristina')) === 'Kristina: not rated yet' && !(await badge('example-1')));
   check('removing a Family favorite shows the Undo bar', (await visible('#undo-bar')) && (await text('#undo-text')) === 'Family favorite removed' && (await ev("document.querySelector('#undo-bar').getAttribute('role')")) === 'status');

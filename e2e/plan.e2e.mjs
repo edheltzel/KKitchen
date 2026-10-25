@@ -1,6 +1,6 @@
 // Headless-Chrome check of the Plan button and day picker on the Recipes page (the page thinks it is Thursday 29 Oct 2026).
 // Run: npm run build && node e2e/plan.e2e.mjs
-import { startHarness } from './harness.mjs';
+import { startHarness, PHONE_HEIGHT } from './harness.mjs';
 
 const h = await startHarness();
 const { ev, check, goto, text, visible, click, sleep, rect } = h;
@@ -74,7 +74,7 @@ try {
   const stackTop = (await rect('#bottom-stack')).y;
   const lastCard = await ev("(() => { const c = [...document.querySelectorAll('#recipe-grid > *')].filter((e) => e.getBoundingClientRect().height > 0); const r = c[c.length - 1].getBoundingClientRect(); return { bottom: r.bottom }; })()");
   check('scrolled to the bottom, the last card ends above the two banners and the bars', lastCard.bottom <= stackTop, `${lastCard.bottom} vs ${stackTop}`);
-  check('the two banners together do not take over the screen (stack under 40% of the height)', (await rect('#bottom-stack')).h < 844 * 0.4, String((await rect('#bottom-stack')).h));
+  check('the two banners together do not take over the screen (stack under 40% of the height)', (await rect('#bottom-stack')).h < PHONE_HEIGHT * 0.4, String((await rect('#bottom-stack')).h));
   await ev('window.__rfail = false; window.__fail = false');
   await click('#week-retry');
   await click('#ratings-retry');

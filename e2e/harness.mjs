@@ -10,6 +10,10 @@ import { join, extname, resolve } from 'node:path';
 const dist = resolve(new URL('../dist', import.meta.url).pathname);
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webmanifest': 'application/manifest+json' };
 
+/** The phone every e2e emulates (CSS pixels). One place, so a check never hardcodes the screen height. */
+export const PHONE_WIDTH = 390;
+export const PHONE_HEIGHT = 844;
+
 export async function startHarness({ port = Number(process.env.PORT ?? 4399), debug = 9334, scheme = 'light' } = {}) {
   const chromePath = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   const server = createServer((req, res) => {
@@ -52,7 +56,7 @@ export async function startHarness({ port = Number(process.env.PORT ?? 4399), de
   };
 
   await send('Page.enable');
-  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+  await send('Emulation.setDeviceMetricsOverride', { width: PHONE_WIDTH, height: PHONE_HEIGHT, deviceScaleFactor: 2, mobile: true });
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: scheme }] });
   // The page believes it is Thursday 29 Oct 2026, 12:00, and the clock keeps running from there.
   const shift = new Date(2026, 9, 29, 12, 0, 0).getTime() - Date.now();
