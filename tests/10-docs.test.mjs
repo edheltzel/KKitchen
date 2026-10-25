@@ -134,3 +134,16 @@ test('cooking mode notes: why steps use replaceState, the hash, tap zones, the w
   assert.match(doc, /Finish/);
   assert.ok(doc.split('\n').length < 40, 'stays short');
 });
+
+test('real-iphone checklist: VoiceOver may read the step twice, and a cmd-click on Exit may release the screen lock (desktop only)', () => {
+  const doc = read('docs/real-iphone-checklist.md');
+  const voice = doc.split('\n').find((l) => /VoiceOver/.test(l) && /Cooking mode/.test(l));
+  assert.ok(voice, 'a Cooking mode VoiceOver item');
+  assert.match(voice, /step heading/);
+  assert.match(voice, /live region/);
+  assert.match(voice, /twice/);
+  const cmd = doc.split('\n').find((l) => /cmd-click/i.test(l) && /Exit/.test(l));
+  assert.ok(cmd, 'a cmd-click on Exit item');
+  assert.match(cmd, /desktop only/i);
+  assert.match(cmd, /screen lock|wake lock/i);
+});
