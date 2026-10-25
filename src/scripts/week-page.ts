@@ -130,7 +130,9 @@ function render(): void {
   unavailableBar.hidden = !view.unavailable;
   for (const day of days) {
     const { cell } = rows.get(day.key)!;
-    const recipeId = plan[day.key]?.recipeId ?? null;
+    // A saved dinner whose recipe is no longer on the site (an old id) is ignored: the day shows as empty.
+    const saved = plan[day.key]?.recipeId ?? null;
+    const recipeId = saved !== null && recipes.has(saved) ? saved : null;
     const noteHere = view.note?.day === day.key ? note : null;
     const sig = `${recipeId}|${noteHere}|${view.unavailable}`;
     if (cell.dataset.sig === sig) continue;
