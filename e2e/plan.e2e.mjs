@@ -17,6 +17,13 @@ const plan = async (id, slot) => {
 try {
   await goto('/');
   check('every card has a Plan button at least 44px tall', await ev(`[...document.querySelectorAll('#recipe-grid [data-role="plan"]')].length === 6 && [...document.querySelectorAll('#recipe-grid [data-role="plan"]')].every((b) => b.getBoundingClientRect().height >= 44 && b.textContent.trim() === 'Plan')`));
+  const cardLayout = await ev(`(() => [...document.querySelectorAll('#recipe-grid > article')].map((a) => {
+    const r = (e) => e.getBoundingClientRect();
+    const loved = r(a.querySelector('.kk-rate-btn[data-rating="loved"]')), nfu = r(a.querySelector('.kk-rate-btn[data-rating="not-for-us"]')), plan = r(a.querySelector('[data-role="plan"]'));
+    const body = r(a.querySelector('.card-body'));
+    return { sameRow: Math.abs(loved.y - nfu.y) < 2, planBelow: plan.top >= loved.bottom && plan.top - loved.bottom < 16, planH: plan.height, left: Math.abs(plan.left - loved.left) < 1, right: Math.abs(plan.right - nfu.right) < 1, wide: plan.width > body.width - 28 };
+  }))()`);
+  check('on every card Loved it and Not for us share one row and Plan is its own full-width row under them', cardLayout.length === 6 && cardLayout.every((c) => c.sameRow && c.planBelow && c.planH >= 43.5 && c.left && c.right && c.wide), JSON.stringify(cardLayout[0]));
   check('the filter tray is still the first dialog', (await ev("document.querySelector('dialog').id")) === 'filter-tray');
   const historyBefore = await ev('history.length');
 

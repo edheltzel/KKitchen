@@ -515,6 +515,22 @@
 .kk-card .kk-plan {
   position: relative;
 }
+/* On a card Plan is its own full-width 44px row under Loved it / Not for us, with its status above it. */
+.kk-card .kk-plan {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.25rem;
+}
+.kk-card .kk-plan-status {
+  flex: none;
+}
+.kk-card .kk-plan-btn {
+  width: 100%;
+  margin-left: 0;
+  padding: 0 0.5rem;
+  border-radius: 0.75rem;
+}
 
 /* Recipe page (branch 4a): back link, hero tile, tick rows, numbered steps. Tokens only. */
 .kk-back {
