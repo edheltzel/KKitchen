@@ -156,3 +156,13 @@ test('README explains the fixture switch, the approval, the held gluten-free tag
   assert.match(doc, /`author` is stored only/i);
   assert.match(doc, /week plan offers every recipe/i);
 });
+
+test('publishing: the README says to rebuild with a plain npm run build after the tests, and no doc here ends a deploy at npm test', () => {
+  const doc = read('README.md');
+  assert.match(doc, /npm test && rm -rf dist && npm run build/);
+  assert.match(doc, /`npm test` leaves the example fixture in `dist`/);
+  assert.match(doc, /ls dist\/recipe[^\n]*only the three real/i);
+  for (const f of ['README.md', 'docs/cooking-mode-notes.md', 'docs/ratings-store-notes.md', 'docs/real-iphone-checklist.md', 'docs/ticks-store-notes.md', 'docs/week-store-notes.md']) {
+    assert.ok(!/rm -rf dist && npm test\s*$/m.test(read(f)), `${f}: a deploy must not stop at npm test`);
+  }
+});

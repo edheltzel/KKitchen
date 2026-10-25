@@ -19,3 +19,9 @@ npm run build
 - `source` shows as the "Original recipe" link. `author` is stored only: no page shows credit yet.
 - Time: the card and the meta line show prep + cook. A wait (the fried chicken marinate) is a note, not part of that total. A note with no prep time (the brownies) has `prep: 0`, and the meta line then leaves prep out.
 - The week plan offers every recipe on every dinner day. `meal` is not used there, so the brownies (a snack) can be planned like a dinner.
+
+## Publishing
+
+- `npm test` leaves the example fixture in `dist`, so a deploy must never go straight after it. Run `npm test && rm -rf dist && npm run build`, then deploy.
+- Check with `ls dist/recipe`: only the three real folders (`gluten-free-fried-chicken`, `high-protein-brownies`, `slow-cooker-roast`).
+- A rollback does the same in its temp folder: `npm ci && npm test && rm -rf dist && npm run build`, then deploy.
