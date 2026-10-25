@@ -114,3 +114,23 @@ test('ratings notes record that a tap with nobody picked opens the picker and is
   const doc = read('docs/ratings-store-notes.md');
   assert.match(doc, /nobody picked[^\n]*in place[^\n]*not (applied|saved)[^\n]*taps again/i);
 });
+
+test('real-iphone checklist: cooking mode items (Wake Lock, tap zones, a 10 minute cook, Exit and reload)', () => {
+  const doc = read('docs/real-iphone-checklist.md');
+  assert.match(doc, /Cooking mode[^\n]*Wake Lock[^\n]*Safari[^\n]*installed home-screen app/i);
+  assert.match(doc, /Cooking mode[^\n]*tap zones[^\n]*thumb/i);
+  assert.match(doc, /Cooking mode[^\n]*screen stays on[^\n]*10 minute/i);
+  assert.match(doc, /Cooking mode[^\n]*Exit[^\n]*reload[^\n]*(keep|keeps)[^\n]*place/i);
+});
+
+test('cooking mode notes: why steps use replaceState, the hash, tap zones, the wake lock states, what Done clears', () => {
+  const doc = read('docs/cooking-mode-notes.md');
+  assert.match(doc, /replaceState[^\n]*Back leaves cooking mode/i);
+  assert.match(doc, /`#step-N`[^\n]*`#done`/);
+  assert.match(doc, /left 35%[^\n]*back/i);
+  assert.match(doc, /Screen stays on[^\n]*Screen may sleep/i);
+  assert.match(doc, /Done clears[^\n]*ticks[^\n]*Undo/i);
+  assert.match(doc, /Done[^\n]*Ed \/ Kristina[^\n]*picker[^\n]*(mock|differs)/i);
+  assert.match(doc, /Finish/);
+  assert.ok(doc.split('\n').length < 40, 'stays short');
+});
