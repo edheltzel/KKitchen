@@ -98,6 +98,14 @@ try {
   await click('#back-to-recipes');
   await loaded();
   check('Back to recipes opens the Recipes list', (await ev('location.pathname')) === '/' && await visible('#recipe-grid'));
+
+  // --- a recipe that is not a dinner finishes with neutral wording ----------------------------------------------------------
+  await goto('/cook/example-3/'); // Tomato Soup, a lunch with 4 steps
+  await loaded();
+  await click('#start');
+  for (let i = 0; i < 4; i++) await click('#next');
+  check('finishing a lunch opens Done with "All done", not "Dinner\'s ready"', (await shown()) === 'done' && (await text('#done-title')) === 'All done', await text('#done-title'));
+  check('and Done still has the rating buttons and Back to recipes', (await visible('#back-to-recipes')) && (await ev("document.querySelectorAll('#screen-done .kk-rate-btn').length")) === 2);
 } catch (e) {
   check('the run finished without an error: ' + e.message, false);
 }

@@ -107,3 +107,10 @@ test('each recipe page shows its notes under the steps, one line per note, and t
   assert.match(page('recipe/gluten-free-fried-chicken/index.html'), /<li[^>]*>Plus at least 2 hours to marinate, overnight is best\./);
   assert.match(page('recipe/high-protein-brownies/index.html'), /<li[^>]*>Equipment: bowl, whisk/);
 });
+
+test('the Done screen says "Dinner\'s ready" for the dinners and "All done" for the brownies (a snack)', () => {
+  const heading = (id) => page(`cook/${id}/index.html`).match(/<h2[^>]*id="done-title"[^>]*>([^<]*)<\/h2>/)?.[1];
+  assert.equal(heading('gluten-free-fried-chicken'), "Dinner's ready");
+  assert.equal(heading('slow-cooker-roast'), "Dinner's ready");
+  assert.equal(heading('high-protein-brownies'), 'All done');
+});

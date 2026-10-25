@@ -81,10 +81,11 @@ test('step screen: a focus-target heading, live step text, Use now list, Next as
   }
 });
 
-test('Done: "Dinner\'s ready", the cleared-checks note, the Loved it / Not for us buttons, the person picker and Back to recipes', () => {
+test('Done: "Dinner\'s ready" for a dinner, "All done" for anything else, the cleared-checks note, the Loved it / Not for us buttons, the person picker and Back to recipes', () => {
   for (const r of exampleRecipes) {
     const html = page(r);
-    assert.match(html, /<h2[^>]*id="done-title"[^>]*>Dinner's ready<\/h2>/);
+    const heading = r.meal === 'dinner' ? "Dinner's ready" : 'All done';
+    assert.match(html, new RegExp(`<h2[^>]*id="done-title"[^>]*>${heading}</h2>`), `${r.id} (${r.meal})`);
     assert.ok(html.includes('Ingredient checks are cleared for next time'));
     assert.match(html, /data-rating="loved"[^>]*>[\s\S]*?Loved it/);
     assert.match(html, /data-rating="not-for-us"[^>]*>[\s\S]*?Not for us/);

@@ -96,7 +96,7 @@ const cookData = {
       <div class="kk-done-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
       </div>
-      <h2 id="done-title" tabindex="-1" class="kk-cook-title text-center">Dinner's ready</h2>
+      <h2 id="done-title" tabindex="-1" class="kk-cook-title text-center">{recipe.meal === 'dinner' ? "Dinner's ready" : 'All done'}</h2>
       <p class="kk-done-note">Ingredient checks are cleared for next time.</p>
       <span data-role="family-badge" hidden class="kk-fav-badge kk-fav-badge-flow">★ Family favorite</span>
       <h3 class="kk-how">How was it?</h3>
