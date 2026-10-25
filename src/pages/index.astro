@@ -1,9 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
 import SearchBar from '../components/SearchBar.astro';
+import RecipeCard from '../components/RecipeCard.astro';
+import { exampleRecipes } from '../data/examples';
+
+const count = exampleRecipes.length;
 ---
 
 <Base active="recipes">
   <h1 class="text-3xl font-extrabold tracking-tight">Kris's Kitchen</h1>
+  <p class="mt-1 text-[14px] font-semibold text-kk-accent" data-recipe-count>{count} recipes</p>
+  <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>
+  <div class="mt-4 grid grid-cols-2 gap-3">
+    {exampleRecipes.map((recipe) => <RecipeCard recipe={recipe} />)}
+  </div>
   <SearchBar slot="search" />
 </Base>

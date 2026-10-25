@@ -157,3 +157,20 @@
 #bottom-stack[data-keyboard='open'] .kk-dock {
   display: none;
 }
+
+/* Browse grid cards (example data) */
+.kk-card {
+  position: relative;
+}
+.kk-tile {
+  background: linear-gradient(160deg, var(--kk-tile-from), var(--kk-tile-to));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kk-tile-letter {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--kk-tile-ink);
+}
