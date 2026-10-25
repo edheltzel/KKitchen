@@ -153,8 +153,9 @@ try {
   check('scroll restored after refresh', Math.abs((await ev('scrollY')) - 120) <= 2, String(await ev('scrollY')));
 
   await goto('/');
-  await type('tomato');
+  await type('a'); // matches all six, so the page stays tall enough to scroll
   await click(chip('time', '45'));
+  check('page still scrolls with this search', (await ev('document.documentElement.scrollHeight - innerHeight')) > 80);
   await ev('window.scrollTo(0, 60)');
   await sleep(300);
   const stateUrl = await loc();
@@ -167,7 +168,7 @@ try {
   await sleep(300);
   await waitFor("location.pathname === '/'");
   await sleep(500);
-  check('Recipes tab restores search, filters and scroll', (await loc()) === stateUrl && (await ev("document.querySelector('#search-input').value")) === 'tomato' && Math.abs((await ev('scrollY')) - 60) <= 2, `${await loc()} y=${await ev('scrollY')}`);
+  check('Recipes tab restores search, filters and scroll', (await loc()) === stateUrl && (await ev("document.querySelector('#search-input').value")) === 'a' && Math.abs((await ev('scrollY')) - 60) <= 2, `${await loc()} y=${await ev('scrollY')}`);
   check('Recipes tab still shows as active', await ev("document.querySelector('nav a:first-child').getAttribute('aria-current') === 'page' && document.querySelector('nav a:first-child').classList.contains('dock-active')"));
 
   await ev("document.querySelector('nav a[href$=\"/favorites/\"]').click()");

@@ -3,6 +3,7 @@
 // All text from the address goes through textContent / value, never innerHTML.
 import {
   GROUPS,
+  createSession,
   activeFilterCount,
   emptyMessage,
   emptyState,
@@ -51,6 +52,23 @@ const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')
 
 let state: BrowseState = parseState(location.search, options);
 
+function pageStorage(): Storage {
+  try {
+    return window.sessionStorage;
+  } catch {
+    // Storage blocked (private mode): the page still works, it just forgets scroll and tab state.
+    return { getItem: () => null, setItem: () => {}, removeItem: () => {} } as unknown as Storage;
+  }
+}
+const session = createSession(pageStorage());
+const here = () => location.pathname + serializeState(state, options);
+// Remember this URL for the Recipes tab, and the scroll offset under this exact URL.
+const remember = () => {
+  session.saveRecipesUrl(here());
+  session.saveScroll(here(), scrollY);
+};
+const restoreScroll = () => scrollTo(0, session.readScroll(here()));
+
 function render(): void {
   const matches = new Set(filterRecipes(cards.map((c) => c.data), state));
   for (const card of cards) card.el.hidden = !matches.has(card.data);
@@ -93,6 +111,7 @@ function commit(next: BrowseState): void {
   state = next;
   history.replaceState(history.state, '', location.pathname + serializeState(state, options));
   render();
+  remember();
 }
 
 input.addEventListener('input', () => commit({ ...state, q: input.value }));
@@ -111,3 +130,23 @@ $('#clear-all').addEventListener('click', () => commit(emptyState()));
 // Normalise a hand-edited address once so every reload and shared link looks the same.
 history.replaceState(history.state, '', location.pathname + serializeState(state, options));
 render();
+
+// Scroll: we restore it ourselves (per URL, in sessionStorage) after refresh, Back and tab switches.
+history.scrollRestoration = 'manual';
+let frame = 0;
+addEventListener(
+  'scroll',
+  () => {
+    if (!frame) frame = requestAnimationFrame(() => ((frame = 0), remember()));
+  },
+  { passive: true },
+);
+addEventListener('pagehide', remember);
+addEventListener('pageshow', (event) => {
+  if (!event.persisted) return;
+  state = parseState(location.search, options);
+  render();
+  restoreScroll();
+});
+session.saveRecipesUrl(here());
+restoreScroll();
