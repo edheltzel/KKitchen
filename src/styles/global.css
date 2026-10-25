@@ -28,6 +28,12 @@
   --color-warning-content: #2B1D10;
   --color-error: #B3261E;
   --color-error-content: #FFFFFF;
+    --kk-card: #FFFFFF;
+  --kk-tile-from: #F1EADD;
+  --kk-tile-to: #E3D8C6;
+  --kk-tile-ink: #C9B79C;
+  --kk-accent-text: #A63A1A;
+  --kk-muted: #6B5B4F;
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -63,6 +69,12 @@
   --color-warning-content: #2B1D10;
   --color-error: #F27A70;
   --color-error-content: #2D0C09;
+    --kk-card: #281F19;
+  --kk-tile-from: #352A22;
+  --kk-tile-to: #3B2F26;
+  --kk-tile-ink: #C9A57C;
+  --kk-accent-text: #F08A57;
+  --kk-muted: #A89A8C;
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -71,4 +83,19 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
+}
+
+@theme inline {
+  --color-kk-card: var(--kk-card);
+  --color-kk-accent: var(--kk-accent-text);
+  --color-kk-muted: var(--kk-muted);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
 }
