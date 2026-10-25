@@ -15,7 +15,6 @@ test('manifest names use the straight apostrophe', () => {
   const m = JSON.parse(read('public/manifest.webmanifest'));
   assert.equal(m.name, "Kris's Kitchen");
   assert.equal(m.short_name, "Kris's");
-  assert.equal(m.icons, undefined, 'no icons yet');
 });
 
 test('no curly apostrophes anywhere in source, public or dist text', () => {
