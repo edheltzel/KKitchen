@@ -58,3 +58,21 @@ test('this data adds no gluten-free (or any new diet) claim', () => {
   assert.ok(!/gluten|fried chicken|keto|vegan/i.test(JSON.stringify(allExampleNotes)));
   assert.deepEqual([...new Set(allExampleNotes.flatMap((n) => n.tags.map((t) => t.label)))].sort(), ['Draft-only', 'Meatless', 'Nut-free']);
 });
+
+test('a step may mark the ingredients it uses (ids of that recipe, no repeats); some do, some do not', () => {
+  const marked = [];
+  for (const r of allExampleNotes) {
+    const ids = new Set(flatItems(r).map((i) => i.id));
+    for (const [n, s] of r.steps.entries()) {
+      if (s.uses === undefined) continue;
+      assert.ok(Array.isArray(s.uses) && s.uses.length > 0, `${r.id} step ${n + 1}: uses is omitted or lists something`);
+      assert.equal(new Set(s.uses).size, s.uses.length, `${r.id} step ${n + 1}: no repeats`);
+      for (const id of s.uses) assert.ok(ids.has(id), `${r.id} step ${n + 1}: unknown item ${id}`);
+      marked.push(r.id);
+    }
+  }
+  assert.ok(marked.length >= 3, 'some steps mark their ingredients');
+  const recipesWithMarks = new Set(marked);
+  assert.ok(exampleRecipes.some((r) => !recipesWithMarks.has(r.id)), 'one whole recipe has no marks: its steps show no "Use now"');
+  assert.ok(exampleRecipes.some((r) => r.steps.some((s) => s.uses) && r.steps.some((s) => !s.uses)), 'one recipe marks only some of its steps');
+});

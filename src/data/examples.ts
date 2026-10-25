@@ -25,6 +25,8 @@ export interface IngredientGroup {
 }
 export interface Step {
   text: string;
+  /** Item ids (of this recipe) the step uses. Cooking mode shows them under "Use now"; omitted means it shows nothing there. */
+  uses?: readonly string[];
 }
 
 export interface ExampleRecipe {
@@ -49,7 +51,7 @@ export interface ExampleRecipe {
 }
 
 const it = (id: string, text: string): Ingredient => ({ id, text });
-const step = (text: string): Step => ({ text });
+const step = (text: string, ...uses: string[]): Step => (uses.length > 0 ? { text, uses } : { text });
 
 const notes: readonly ExampleRecipe[] = [
   { id: 'example-1', name: 'Weeknight Pasta', minutes: 25, meal: 'dinner', approved: true,
@@ -60,9 +62,9 @@ const notes: readonly ExampleRecipe[] = [
       { title: 'Sauce', items: [it('tomato', '4 ripe tomatoes, chopped'), it('garlic', '2 cloves garlic'), it('olive-oil', '2 tbsp olive oil')] },
     ],
     steps: [
-      step('Boil the spaghetti in salted water until tender.'),
-      step('Warm the olive oil and cook the garlic for one minute.'),
-      step('Add the tomatoes and simmer until soft.'),
+      step('Boil the spaghetti in salted water until tender.', 'spaghetti'),
+      step('Warm the olive oil and cook the garlic for one minute.', 'olive-oil', 'garlic'),
+      step('Add the tomatoes and simmer until soft.', 'tomato'),
       step('Toss with the drained spaghetti and serve.'),
     ] },
   { id: 'example-2', name: 'Sheet-Pan Vegetables', minutes: 40, meal: 'dinner', approved: true,
@@ -85,10 +87,10 @@ const notes: readonly ExampleRecipe[] = [
       { title: 'To finish', items: [it('vegetable-stock', '500 ml vegetable stock'), it('basil', 'A handful of basil')] },
     ],
     steps: [
-      step('Soften the onion in a large pot.'),
-      step('Add the tomatoes and the stock.'),
+      step('Soften the onion in a large pot.', 'onion'),
+      step('Add the tomatoes and the stock.', 'tomato', 'vegetable-stock'),
       step('Simmer for fifteen minutes.'),
-      step('Blend until smooth and stir in the basil.'),
+      step('Blend until smooth and stir in the basil.', 'basil'),
     ] },
   { id: 'example-4', name: 'Overnight Oats', minutes: 10, meal: 'breakfast', approved: true,
     ingredients: ['rolled oats', 'milk', 'chia seeds', 'honey'], tags: [{ label: 'Meatless', confirmed: true }],
@@ -120,8 +122,8 @@ const notes: readonly ExampleRecipe[] = [
       { title: 'Batter', items: [it('banana', '2 ripe bananas'), it('flour', '150 g flour'), it('egg', '2 eggs'), it('milk', '200 ml milk')] },
     ],
     steps: [
-      step('Mash the bananas and whisk in the eggs and milk.'),
-      step('Stir in the flour until just combined.'),
+      step('Mash the bananas and whisk in the eggs and milk.', 'banana', 'egg', 'milk'),
+      step('Stir in the flour until just combined.', 'flour'),
       step('Cook spoonfuls in a hot pan, turning once.'),
       step('Serve warm.'),
     ] },
