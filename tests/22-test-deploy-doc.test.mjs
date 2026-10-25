@@ -83,3 +83,18 @@ test('test-deploy doc rolls back from a git archive in a temp dir outside ~/Deve
   assert.match(rb, /wrangler rollback[^\n]*unchecked/i);
   assert.ok(!/wrangler rollback[^\n]*(works|will restore|restores)/i.test(rb), 'no claim that wrangler rollback works');
 });
+
+test('test-deploy doc verifies the noindex header on a built asset and a 404 path, and compares the uploaded file count with dist', () => {
+  const d = doc();
+  const v = d.slice(d.search(/## Verify/), d.search(/## Delete/));
+  assert.match(v, /curl -sI "\$URL\/_astro\/[^"\n]*\.css" \| grep -i x-robots-tag/, 'a built /_astro/ css file');
+  assert.match(v, /curl -sI "\$URL\/[^"\n]*not-a-page[^"\n]*" \| grep -i x-robots-tag/, 'a 404 path');
+  assert.match(v, /404/);
+  assert.match(v, /find dist -type f \| wc -l/);
+  assert.match(v, /find dist -mindepth 1 \| wc -l/);
+  assert.match(v, /uploaded/i);
+  assert.match(v, /folders/i, 'wrangler counts folders as well as files in "Read N files"');
+  assert.match(v, /49/, 'the dry run read 49 entries');
+  assert.match(v, /32 files/, 'dist has 32 files today');
+  assert.match(v, /tell Atlas/i);
+});
