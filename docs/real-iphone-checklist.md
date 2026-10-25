@@ -18,3 +18,4 @@ Things headless Chrome cannot prove. Check these on a real iPhone (Safari and th
 - [ ] Recipe page, Safari and the home-screen app keep separate tick storage: ingredients ticked in Safari will not show in the installed app. Tick again after installing. Ticks stay on each phone, with the shared store too.
 - [ ] Recipe page, Back from a recipe returns to the same filters and scroll: filter and scroll the Recipes list, open a recipe, tap Back (and the Safari back swipe), and the list is where you left it.
 - [ ] Recipe page, tick rows are easy to hit with a thumb (the whole row is the target, at least 44pt) and the Plan and rating buttons behave like they do on the list.
+- [ ] Cards, tap just outside each button on a card (the Loved it, Not for us and Plan buttons, and the gaps between them) and see what opens: the recipe page should open, because the whole card is a tap target. Taps on the buttons themselves must not open it.

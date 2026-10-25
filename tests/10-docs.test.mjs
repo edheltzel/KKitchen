@@ -98,3 +98,14 @@ test('ticks store notes: ticks are per phone by design and never shared', () => 
   assert.match(doc, /Do not (move|add) (them|ticks) to the (shared|real) store/i);
   assert.ok(doc.split('\n').length < 30, 'stays short');
 });
+
+test('ticks store notes say what Retry does to a tick made in another tab', () => {
+  const doc = read('docs/ticks-store-notes.md');
+  assert.match(doc, /Retry clears the saved list and re-adds what is on screen[^\n]*another tab[^\n]*blocked[^\n]*lost/i);
+  assert.ok(doc.split('\n').length < 30, 'stays short');
+});
+
+test('real-iphone checklist: tapping just outside each button on a card opens the recipe (the whole card is a tap target)', () => {
+  const doc = read('docs/real-iphone-checklist.md');
+  assert.match(doc, /tap just outside each button on a card[^\n]*what opens[^\n]*whole card is a tap target/i);
+});
