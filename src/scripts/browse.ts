@@ -115,7 +115,11 @@ function commit(next: BrowseState): void {
 }
 
 input.addEventListener('input', () => commit({ ...state, q: input.value }));
-filtersButton.addEventListener('click', () => tray.showModal());
+filtersButton.addEventListener('click', () => {
+  // Drop the keyboard first, so the sheet and its Done button are not hidden behind it on iOS.
+  input.blur();
+  tray.showModal();
+});
 tray.addEventListener('click', (event) => {
   const chip = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-group]');
   if (chip) commit(toggleValue(state, chip.dataset.group as Group, chip.dataset.value!, options));

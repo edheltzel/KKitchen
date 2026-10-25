@@ -103,9 +103,16 @@ try {
   check('Clear resets search and URL', (await text('#recipe-count')) === '6 recipes' && (await ev("document.querySelector('#search-input').value")) === '' && (await loc()) === '/' && !(await visible('#empty')), await loc());
 
   // 3. filters tray: open, AND/OR, chips, count on the button, filters-only empty text
+  await ev("document.querySelector('#search-input').focus()");
+  check('search input is focused before opening the tray', await ev("document.activeElement === document.querySelector('#search-input')"));
+  await ev("window.__blurs = 0; const nativeBlur = HTMLElement.prototype.blur; HTMLElement.prototype.blur = function () { if (this.id === 'search-input') window.__blurs++; return nativeBlur.call(this); }");
   await click('#filters-button');
+  await sleep(500); // let the sheet finish sliding up
   const opened = await ev("document.querySelector('#filter-tray').open");
   check('Filters opens the tray dialog', opened);
+  check('the tray-open handler explicitly blurs the search input', opened && (await ev('window.__blurs')) >= 1, String(await ev('window.__blurs')));
+  check('opening the tray blurs the search input (keyboard goes down)', opened && (await ev("document.activeElement !== document.querySelector('#search-input') && !document.querySelector('#search-input').matches(':focus')")));
+  check('Done is on screen with the tray open', opened && (await ev("(() => { const r = document.querySelector('#filter-tray form:not(.modal-backdrop) button').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; })()")));
   await click(chip('meal', 'dinner'));
   await click(chip('meal', 'lunch'));
   check('OR within a group (dinner + lunch = 4)', (await text('#recipe-count')) === '4 recipes', await text('#recipe-count'));
