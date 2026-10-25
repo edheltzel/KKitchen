@@ -54,3 +54,17 @@ test('test-deploy doc says CLOUDFLARE_ACCOUNT_ID must be set, and to tell Atlas 
   assert.match(d, /do not widen the token/i);
   assert.ok(!/CLOUDFLARE_ACCOUNT_ID\s*=\s*[0-9a-f]{8,}/i.test(d), 'the variable name only, never an account id');
 });
+
+test('test-deploy doc warns the Workers-edit token covers all 8 existing Workers, and has a read-only name-collision check before the first deploy', () => {
+  const d = doc();
+  assert.match(d, /all 8 existing Workers/i);
+  assert.match(d, /cannot be limited to one/i);
+  assert.match(d, /short-lived/i);
+  const pre = d.slice(d.search(/## Before the first deploy/i));
+  assert.ok(pre.length < d.length, 'a "Before the first deploy" section');
+  assert.ok(pre.includes(name()), 'the section names the random Worker name');
+  assert.match(pre, /does not already exist/i);
+  assert.match(pre, /workers_list/);
+  assert.match(pre, /read-only/i);
+  assert.ok(d.indexOf('## Before the first deploy') < d.indexOf('## Deploy'), 'the check comes before the deploy section');
+});
