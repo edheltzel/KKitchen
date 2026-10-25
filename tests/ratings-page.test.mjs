@@ -41,7 +41,7 @@ test('"I\'m Ed / I\'m Kristina" picker: two toggles, exact labels, nothing chose
 });
 
 test('"Ratings unavailable" banner with Retry sits above the search bar and starts hidden', () => {
-  assert.match(stack, /<div[^>]*id="ratings-unavailable"[^>]*role="alert"[^>]*hidden[^>]*>[\s\S]*<p[^>]*>Ratings unavailable\. Your last tap will save when you tap Retry\.<\/p>[\s\S]*<button[^>]*id="ratings-retry"[^>]*>\s*Retry\s*<\/button>/);
+  assert.match(stack, /<div[^>]*id="ratings-unavailable"[^>]*role="alert"[^>]*hidden[^>]*>[\s\S]*<p[^>]*>Ratings unavailable\. Your taps will save when you tap Retry\.<\/p>[\s\S]*<button[^>]*id="ratings-retry"[^>]*>\s*Retry\s*<\/button>/);
   assert.ok(stack.indexOf('id="ratings-unavailable"') < stack.indexOf('id="search-form"'), 'banner sits above the search bar');
 });
 
