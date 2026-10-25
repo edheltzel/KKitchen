@@ -34,6 +34,7 @@
   --kk-tile-ink: #C9B79C;
   --kk-accent-text: #A63A1A;
   --kk-muted: #6B5B4F;
+  --kk-shadow: rgb(43 29 16 / 0.16);
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -75,6 +76,7 @@
   --kk-tile-ink: #C9A57C;
   --kk-accent-text: #F08A57;
   --kk-muted: #A89A8C;
+  --kk-shadow: rgb(0 0 0 / 0.6);
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -259,5 +261,5 @@
   border: 1px solid var(--color-primary);
   background: var(--kk-card);
   color: var(--color-base-content);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+  box-shadow: 0 2px 8px var(--kk-shadow);
 }
