@@ -23,5 +23,5 @@ npm run build
 ## Publishing
 
 - `npm test` leaves the example fixture in `dist`, so a deploy must never go straight after it. Run `npm test && rm -rf dist && npm run build`, then deploy.
-- Check with `ls dist/recipe`: only the three real folders (`gluten-free-fried-chicken`, `high-protein-brownies`, `slow-cooker-roast`).
+- Check with `ls dist/recipe`: only the three real folders (`fried-chicken`, `high-protein-brownies`, `slow-cooker-roast`).
 - A rollback does the same in its temp folder: `npm ci && npm test && rm -rf dist && npm run build`, then deploy.

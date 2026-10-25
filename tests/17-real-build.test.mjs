@@ -8,9 +8,9 @@ import { root, decode } from './helpers.mjs';
 
 // `npm test` builds dist with KK_DATA=fixture (the old example recipes, for the other tests). This file builds the site the way
 // `npm run build` does, with no KK_DATA, into a temp folder, and proves that build holds only the three real recipes.
-const IDS = ['gluten-free-fried-chicken', 'high-protein-brownies', 'slow-cooker-roast'];
+const IDS = ['fried-chicken', 'high-protein-brownies', 'slow-cooker-roast'];
 const TITLES = {
-  'gluten-free-fried-chicken': 'Gluten-Free Fried Chicken',
+  'fried-chicken': 'Fried Chicken',
   'slow-cooker-roast': 'Slow Cooker Roast',
   'high-protein-brownies': 'High Protein Gluten Free Brownies That Actually Taste Good',
 };
@@ -95,7 +95,7 @@ test('the real build stays under the same 102,400 byte CSS cap', () => {
 });
 
 test('each recipe page shows its notes under the steps, one line per note, and the marinate time is the first chicken note', () => {
-  const counts = { 'gluten-free-fried-chicken': 5, 'slow-cooker-roast': 4, 'high-protein-brownies': 3 };
+  const counts = { 'fried-chicken': 5, 'slow-cooker-roast': 4, 'high-protein-brownies': 3 };
   for (const id of IDS) {
     const html = page(`recipe/${id}/index.html`);
     const section = html.match(/<section aria-labelledby="notes-title"[\s\S]*?<\/section>/);
@@ -104,13 +104,13 @@ test('each recipe page shows its notes under the steps, one line per note, and t
     assert.equal((section[0].match(/<li/g) ?? []).length, counts[id], `${id}: one line per note`);
     assert.ok(html.indexOf('id="steps"') < html.indexOf('id="notes-title"'), `${id}: notes come after the steps`);
   }
-  assert.match(page('recipe/gluten-free-fried-chicken/index.html'), /<li[^>]*>Plus at least 2 hours to marinate, overnight is best\./);
+  assert.match(page('recipe/fried-chicken/index.html'), /<li[^>]*>Plus at least 2 hours to marinate, overnight is best\./);
   assert.match(page('recipe/high-protein-brownies/index.html'), /<li[^>]*>Equipment: bowl, whisk/);
 });
 
 test('the Done screen says "Dinner\'s ready" for the dinners and "All done" for the brownies (a snack)', () => {
   const heading = (id) => page(`cook/${id}/index.html`).match(/<h2[^>]*id="done-title"[^>]*>([^<]*)<\/h2>/)?.[1];
-  assert.equal(heading('gluten-free-fried-chicken'), "Dinner's ready");
+  assert.equal(heading('fried-chicken'), "Dinner's ready");
   assert.equal(heading('slow-cooker-roast'), "Dinner's ready");
   assert.equal(heading('high-protein-brownies'), 'All done');
 });
@@ -121,7 +121,7 @@ test('home cards and recipe pages show honest times: the wait next to the minute
   assert.ok(home.includes('6 h 25 min'));
   assert.ok(!home.includes('385 min'));
   assert.ok(home.includes('25 min'));
-  assert.ok(page('recipe/gluten-free-fried-chicken/index.html').includes('Prep 15 min · Cook 45 min · Plus\u00a02\u00a0h\u00a0marinate · Serves 6'));
+  assert.ok(page('recipe/fried-chicken/index.html').includes('Prep 15 min · Cook 45 min · Plus\u00a02\u00a0h\u00a0marinate · Serves 6'));
   assert.ok(page('recipe/slow-cooker-roast/index.html').includes('Prep 25 min · Cook 6 h · Serves 8'));
   assert.ok(!page('recipe/slow-cooker-roast/index.html').includes('360 min'));
   assert.match(home, /data-minutes="60"/);

@@ -10,7 +10,7 @@ const it = (id: string, text: string): Ingredient => ({ id, text });
 const step = (text: string, ...uses: string[]): Step => (uses.length > 0 ? { text, uses } : { text });
 
 const friedChicken: ExampleRecipe = {
-  id: 'gluten-free-fried-chicken', name: 'Gluten-Free Fried Chicken', meal: 'dinner', approved: true, tags: [],
+  id: 'fried-chicken', name: 'Fried Chicken', meal: 'dinner', approved: true, tags: [],
   source: 'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/',
   ingredients: ['chicken', 'milk', 'vinegar', 'flour', 'cornstarch', 'paprika', 'oil'],
   prep: 15, cook: 45, minutes: 60, wait: '2 h marinate', serves: 6,

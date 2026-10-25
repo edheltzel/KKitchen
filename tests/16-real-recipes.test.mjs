@@ -11,7 +11,7 @@ const ITEM_ID = /^[a-z][a-z0-9-]{0,39}$/;
 
 test('exactly three real recipes, with fixed ids and the titles exactly as the notes have them', () => {
   assert.deepEqual(realNotes.map((r) => [r.id, r.name]), [
-    ['gluten-free-fried-chicken', 'Gluten-Free Fried Chicken'],
+    ['fried-chicken', 'Fried Chicken'],
     ['slow-cooker-roast', 'Slow Cooker Roast'],
     ['high-protein-brownies', 'High Protein Gluten Free Brownies That Actually Taste Good'],
   ]);
@@ -28,7 +28,7 @@ test('the stub, the furniture note and the Recipes index are not in the data', (
 });
 
 test('fried chicken: serves 6, prep 15, cook 45, three groups, 16 ingredients, 6 steps, 5 notes', () => {
-  const r = by('gluten-free-fried-chicken');
+  const r = by('fried-chicken');
   assert.equal(r.meal, 'dinner');
   assert.deepEqual([r.serves, r.prep, r.cook, r.minutes], [6, 15, 45, 60]);
   assert.deepEqual(r.groups.map((g) => [g.title, g.items.length]), [['Marinade', 6], ['Breading', 9], ['For frying', 1]]);
@@ -40,7 +40,7 @@ test('fried chicken: serves 6, prep 15, cook 45, three groups, 16 ingredients, 6
 });
 
 test('fried chicken: the 2 hour marinate is in the first note and in step 1, so 60 min is not the whole story', () => {
-  const r = by('gluten-free-fried-chicken');
+  const r = by('fried-chicken');
   assert.match(r.notes[0], /at least 2 hours to marinate/);
   assert.match(r.steps[0].text, /at least 2 hours/);
   assert.ok(r.minutes > Math.max(...TIME_OPTIONS), 'no "N min or less" choice includes it');
@@ -76,7 +76,7 @@ test('brownies: a snack, 9 ingredients, 3 steps, notes carry the equipment, no p
 });
 
 test('quantities and temperatures stay as the notes have them', () => {
-  const chicken = JSON.stringify(by('gluten-free-fried-chicken'));
+  const chicken = JSON.stringify(by('fried-chicken'));
   for (const s of ['350°F', '165°F', '15-18 minutes', '4 cups vegetable oil (peanut oil is great)', '3 cups milk (dairy-free: unsweetened almond, cashew or coconut milk)']) assert.ok(chicken.includes(s), s);
   const roast = JSON.stringify(by('slow-cooker-roast'));
   for (const s of ['3 lbs. boneless pork shoulder roast', '1.5 tablespoons cornstarch', '45 seconds', '1/4 teaspoon cinnamon', '1/2 cup red wine']) assert.ok(roast.includes(s), s);
@@ -103,10 +103,10 @@ test('no image, no image link, no affiliate link, no promo or review text, no va
 });
 
 test('every recipe has its source link, and only the roast and the brownies name an author', () => {
-  assert.equal(by('gluten-free-fried-chicken').source, 'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/');
+  assert.equal(by('fried-chicken').source, 'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/');
   assert.equal(by('slow-cooker-roast').source, 'https://fitfoodiefinds.com/slow-cooker-pork-roast/');
   assert.equal(by('high-protein-brownies').source, 'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/');
-  assert.equal(by('gluten-free-fried-chicken').author, undefined);
+  assert.equal(by('fried-chicken').author, undefined);
 });
 
 test('the shared data rules hold: prep + cook = minutes, valid unique item ids, keywords are in the items, uses are real ids', () => {
@@ -130,7 +130,7 @@ test('the shared data rules hold: prep + cook = minutes, valid unique item ids, 
 });
 
 test('fried chicken: the wait is 2 h marinate, "at least" stays in the notes, and a note says frying in batches takes longer than the 45 min', () => {
-  const r = by('gluten-free-fried-chicken');
+  const r = by('fried-chicken');
   assert.equal(r.wait, '2 h marinate');
   assert.match(r.notes[0], /at least 2 hours to marinate, overnight is best/);
   assert.ok(r.notes.some((n) => /12 pieces/.test(n) && /3 or 4 at a time/.test(n) && /15-18 minutes/.test(n) && /can take longer than the 45 min/.test(n) && !/takes longer/.test(n)));
@@ -138,7 +138,7 @@ test('fried chicken: the wait is 2 h marinate, "at least" stays in the notes, an
 });
 
 test('only the fried chicken has a wait, and the roast reads in hours', () => {
-  assert.deepEqual(realNotes.filter((r) => r.wait).map((r) => r.id), ['gluten-free-fried-chicken']);
+  assert.deepEqual(realNotes.filter((r) => r.wait).map((r) => r.id), ['fried-chicken']);
   const roast = by('slow-cooker-roast');
   assert.equal(cardTime(roast), '6 h 25 min');
   assert.equal(recipeMeta(roast), 'Prep 25 min · Cook 6 h · Serves 8');
@@ -149,7 +149,7 @@ test('only the fried chicken has a wait, and the roast reads in hours', () => {
 test('the one note we added is labelled "Added by us:" and every other note stays in the source words', () => {
   const labelled = realNotes.flatMap((r) => (r.notes ?? []).filter((n) => n.startsWith('Added by us: ')).map((n) => [r.id, n]));
   assert.equal(labelled.length, 1);
-  assert.equal(labelled[0][0], 'gluten-free-fried-chicken');
+  assert.equal(labelled[0][0], 'fried-chicken');
   assert.match(labelled[0][1], /^Added by us: Frying 12 pieces, 3 or 4 at a time, at 15-18 minutes each can take longer than the 45 min cook time\.$/);
-  assert.ok(!by('gluten-free-fried-chicken').notes[0].startsWith('Added by us'), 'the marinate note is the source\'s');
+  assert.ok(!by('fried-chicken').notes[0].startsWith('Added by us'), 'the marinate note is the source\'s');
 });
