@@ -446,3 +446,39 @@
   white-space: nowrap;
   transition: width 0.18s ease-out;
 }
+
+/* Plan button on each card: status on the left, a 44px outlined button on the right. */
+.kk-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.kk-plan-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--kk-accent-text);
+}
+.kk-plan-btn {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-left: auto;
+  padding: 0 1rem;
+  border: 1.5px solid var(--kk-accent-text);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--kk-accent-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+.kk-plan-btn:disabled {
+  opacity: 0.5;
+}
+.kk-plan-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

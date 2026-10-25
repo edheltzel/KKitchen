@@ -1,0 +1,25 @@
+---
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+---
+
+<dialog id="plan-sheet" class="modal modal-bottom" aria-labelledby="plan-title">
+  <div class="modal-box mx-auto max-w-md rounded-t-3xl bg-base-100 p-0">
+    <h2 id="plan-title" class="px-5 pt-4 text-xl font-extrabold">Plan a dinner</h2>
+    <ul class="mt-2 px-3">
+      {days.map((day, i) => (
+        <li>
+          <button type="button" class="kk-sheet-row" data-slot={i}>
+            <span class="font-bold" data-role="day-label">{day}</span>
+            <span class="text-[13px] text-kk-muted" data-role="day-status"></span>
+          </button>
+        </li>
+      ))}
+    </ul>
+    <form method="dialog" class="mt-2 border-t border-base-300 bg-base-100 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <button class="btn btn-block h-12 min-h-11 rounded-full text-base">Cancel</button>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button aria-label="Close">close</button>
+  </form>
+</dialog>

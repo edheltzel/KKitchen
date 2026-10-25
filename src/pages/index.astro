@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import SearchBar from '../components/SearchBar.astro';
 import RecipeCard from '../components/RecipeCard.astro';
 import FilterTray from '../components/FilterTray.astro';
+import PlanSheet from '../components/PlanSheet.astro';
 import { exampleRecipes } from '../data/examples';
 
 const count = exampleRecipes.length;
@@ -27,10 +28,16 @@ const count = exampleRecipes.length;
     {exampleRecipes.map((recipe) => <RecipeCard recipe={recipe} />)}
   </div>
   <FilterTray />
+  <PlanSheet />
+  <p id="plan-live" class="sr-only" aria-live="polite"></p>
   <div slot="above" class="px-4">
     <div id="ratings-unavailable" role="alert" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
       <p class="text-[15px] font-bold">Ratings unavailable. Your taps will save when you tap Retry.</p>
       <button type="button" id="ratings-retry" class="btn btn-primary min-h-11 rounded-full px-5">Retry</button>
+    </div>
+    <div id="week-unavailable" role="alert" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
+      <p class="text-[15px] font-bold">Week plan unavailable. Your changes will save when you tap Retry.</p>
+      <button type="button" id="week-retry" class="btn btn-primary min-h-11 rounded-full px-5">Retry</button>
     </div>
   </div>
   <div id="undo-bar" slot="replaces-tabs" role="status" hidden class="kk-undo-bar flex items-center justify-between gap-3">
@@ -42,4 +49,5 @@ const count = exampleRecipes.length;
 
 <script>
   import '../scripts/browse';
+  import '../scripts/plan-sheet';
 </script>
