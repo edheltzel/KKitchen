@@ -7,7 +7,7 @@ const stack = document.getElementById('bottom-stack');
 const form = document.getElementById('search-form');
 const vv = window.visualViewport;
 
-// No search logic in this branch: stop Enter from reloading the page.
+// Enter must not reload the page: search runs live on every keystroke.
 form?.addEventListener('submit', (event) => event.preventDefault());
 
 if (stack && vv) {

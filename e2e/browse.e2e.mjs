@@ -121,7 +121,6 @@ try {
   check('Filters button shows the count (3)', (await text('#filters-count')) === '3' && (await visible('#filters-count')));
   check('chips and Filters button are >= 44px', await ev("(() => { const bs = [...document.querySelectorAll('#chips button, #filters-button')].filter((b) => b.getBoundingClientRect().width > 0); return bs.length >= 4 && bs.every((b) => { const r = b.getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5; }); })()"));
   await click('#chips button');
-  await click('#chips button');
   check('removing a chip updates chips, results and URL', (await ev("document.querySelectorAll('#chips button').length")) === 2 && (await text('#recipe-count')) === '1 recipe' && (await loc()) === '/?meal=dinner&time=30', `${await text('#recipe-count')} ${await loc()}`);
   await click('#filters-button');
   await click('#clear-filters');
