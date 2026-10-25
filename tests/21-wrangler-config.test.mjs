@@ -15,7 +15,7 @@ test('wrangler.jsonc exists and is a static-assets-only Worker: no code, no bind
   assert.deepEqual(Object.keys(c).sort(), ['assets', 'compatibility_date', 'name', 'workers_dev']);
 });
 
-test('the Worker name is k + 20 random lowercase hex characters and names nothing about the site', () => {
+test('the Worker name is k + 20 random hex (a-f, 0-9) characters and names nothing about the site', () => {
   const { name } = config();
   assert.match(name, /^k[0-9a-f]{20}$/);
   for (const word of ['kitchen', 'kris', 'recipe']) assert.ok(!name.toLowerCase().includes(word), word);
