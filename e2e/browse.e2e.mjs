@@ -142,6 +142,7 @@ try {
   check('backdrop tap closes the tray', opened && (await ev("document.querySelector('#filter-tray').open")) === false);
   check('chips show above the grid, one per filter', (await ev("document.querySelectorAll('#chips button').length")) === 3 && (await visible('#chips')));
   check('Filters button shows the count (3)', (await text('#filters-count')) === '3' && (await visible('#filters-count')));
+  check('Filters button label says "Filters, 3 active" when the badge shows', (await ev("document.querySelector('#filters-button').getAttribute('aria-label')")) === 'Filters, 3 active', await ev("document.querySelector('#filters-button').getAttribute('aria-label')"));
   check('chips and Filters button are >= 44px', await ev("(() => { const bs = [...document.querySelectorAll('#chips button, #filters-button')].filter((b) => b.getBoundingClientRect().width > 0); return bs.length >= 4 && bs.every((b) => { const r = b.getBoundingClientRect(); return r.height >= 43.5 && r.width >= 43.5; }); })()"));
   await click('#chips button');
   check('removing a chip updates chips, results and URL', (await ev("document.querySelectorAll('#chips button').length")) === 2 && (await text('#recipe-count')) === '1 recipe' && (await loc()) === '/?meal=dinner&time=30', `${await text('#recipe-count')} ${await loc()}`);
@@ -154,10 +155,12 @@ try {
   check('filters-only empty text', (await text('#empty-message')) === 'No recipes match these filters', await text('#empty-message'));
   await click('#clear-all');
   check('Clear also resets filters (count, URL, button badge)', (await text('#recipe-count')) === '6 recipes' && (await loc()) === '/' && !(await visible('#filters-count')), `${await text('#recipe-count')} ${await loc()}`);
+  check('Filters button label is plain "Filters" at 0 active', (await ev("document.querySelector('#filters-button').getAttribute('aria-label')")) === 'Filters', await ev("document.querySelector('#filters-button').getAttribute('aria-label')"));
 
   // 4. shared link and refresh restore the same results
   await goto('/?q=tomato&meal=dinner');
   check('shared link restores search box, results and button count', (await ev("document.querySelector('#search-input').value")) === 'tomato' && (await text('#recipe-count')) === '1 recipe' && (await text('#filters-count')) === '1', await text('#recipe-count'));
+  check('shared link restores the label "Filters, 1 active"', (await ev("document.querySelector('#filters-button').getAttribute('aria-label')")) === 'Filters, 1 active', await ev("document.querySelector('#filters-button').getAttribute('aria-label')"));
   await ev('location.reload()');
   await sleep(600);
   await waitFor("document.readyState === 'complete'");

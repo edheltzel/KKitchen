@@ -104,6 +104,7 @@ function render(): void {
   const active = activeFilterCount(state);
   filtersCount.textContent = String(active);
   filtersCount.hidden = active === 0;
+  filtersButton.setAttribute('aria-label', active > 0 ? `Filters, ${active} active` : 'Filters');
 }
 
 // replaceState everywhere: a tap or keystroke should not add a Back step, so Back leaves Recipes.
