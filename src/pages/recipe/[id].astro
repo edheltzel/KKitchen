@@ -48,12 +48,12 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
             {tags.map((tag) => <li class="kk-tag">{tag}</li>)}
           </ul>
         )}
-        <MePicker />
-        <RatingBlock title={title} />
-        <PlanBlock title={title} />
-        {recipe.source && (
-          <a href={recipe.source} target="_blank" rel="noopener noreferrer" class="kk-source">Original recipe<span class="sr-only"> (opens in a new tab)</span> ↗</a>
-        )}
+        <div class="kk-actions" role="group" aria-label={`Rate or plan ${title}`}>
+          <RatingBlock title={title} part="buttons" />
+          <PlanBlock title={title} part="button" />
+        </div>
+        <PlanBlock title={title} part="status" />
+        <MePicker inline />
       </div>
     </header>
 
@@ -88,6 +88,15 @@ const catalog = exampleRecipes.map((r) => ({ id: r.id, name: r.name }));
         </ol>
       </section>
     </div>
+
+    <section aria-labelledby="ratings-title" class="mt-8">
+      <h2 id="ratings-title" class="text-xl font-extrabold">Ratings</h2>
+      <RatingBlock title={title} part="status" />
+      <MePicker />
+      {recipe.source && (
+        <a href={recipe.source} target="_blank" rel="noopener noreferrer" class="kk-source">Original recipe<span class="sr-only"> (opens in a new tab)</span> ↗</a>
+      )}
+    </section>
   </article>
   <PlanSheet />
   <p id="plan-live" class="sr-only" aria-live="polite"></p>

@@ -11,7 +11,18 @@ import type { UndoOffer, createUndoSlot } from './undo-slot';
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
 /** `cards` are the elements with a data-id that hold a RatingBlock; clicks are handled once, on `root`. */
-export function mountRatings({ root, cards: elements, slot }: { root: HTMLElement; cards: HTMLElement[]; slot: ReturnType<typeof createUndoSlot> }) {
+export function mountRatings({
+  root,
+  cards: elements,
+  slot,
+  inlinePicker,
+}: {
+  root: HTMLElement;
+  cards: HTMLElement[];
+  slot: ReturnType<typeof createUndoSlot>;
+  /** When given, a rating tap with nobody picked opens this Ed / Kristina row where the buttons are, instead of scrolling to the bottom picker. */
+  inlinePicker?: HTMLElement;
+}) {
   const meButtons = [...document.querySelectorAll<HTMLButtonElement>('button[data-me]')];
   const meHint = $('#me-hint');
   const unavailableBar = $('#ratings-unavailable');
@@ -63,6 +74,7 @@ export function mountRatings({ root, cards: elements, slot }: { root: HTMLElemen
     }
     for (const button of meButtons) button.setAttribute('aria-pressed', String(button.dataset.me === me));
     meHint.hidden = me !== null;
+    if (me !== null && inlinePicker) inlinePicker.hidden = true;
     if (me !== null) meHint.dataset.nudge = 'off';
     unavailableBar.hidden = !unavailable;
     syncUndo(view);
@@ -72,6 +84,13 @@ export function mountRatings({ root, cards: elements, slot }: { root: HTMLElemen
   // The card they tapped is remembered, so picking a person takes them back to it.
   let tappedCard: HTMLElement | null = null;
   function nudgePicker(card: HTMLElement): void {
+    if (inlinePicker) {
+      // In place: the row opens right under the buttons, nothing scrolls unless it would be cut off, and there is no card to return to.
+      inlinePicker.hidden = false;
+      inlinePicker.scrollIntoView({ block: 'nearest' });
+      inlinePicker.querySelector<HTMLButtonElement>('button[data-me]')?.focus({ preventScroll: true });
+      return;
+    }
     tappedCard = card;
     meHint.dataset.nudge = 'on';
     $('#me-picker').scrollIntoView({ block: 'center' });

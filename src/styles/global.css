@@ -543,8 +543,48 @@
   font-weight: 700;
 }
 .kk-hero {
-  aspect-ratio: 16 / 9;
+  /* A short strip on the phone so the title and the first ingredient stay in view; the full 16:9 photo from tablet width up. */
+  height: 8.75rem;
   border-radius: var(--radius-box);
+}
+@media (min-width: 48rem) {
+  .kk-hero {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+}
+/* The recipe page's one row of three actions: Loved it, Not for us, Plan (outlined). */
+.kk-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.kk-actions .kk-rate-btn,
+.kk-actions .kk-plan-btn {
+  min-width: 0;
+  margin-left: 0;
+  padding: 0 0.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.kk-plan-status-page,
+.kk-rate-status-page {
+  margin-top: 0.5rem;
+}
+.kk-rate-status-page {
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+}
+.kk-me-inline {
+  margin-top: 0.5rem;
+}
+.kk-me-ask {
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--kk-muted);
 }
 .kk-hero .kk-tile-letter {
   font-size: 5rem;

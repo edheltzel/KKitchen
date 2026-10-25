@@ -49,6 +49,27 @@ try {
   check('nothing scrolls sideways at 390px', await ev('document.documentElement.scrollWidth <= innerWidth'));
   check('Reset checks is off while nothing is ticked', await ev("document.querySelector('#reset-ticks').disabled"));
 
+  // --- phone layout: short photo, one row of three actions, the first ingredient in view ------------------------------
+  await ev('window.scrollTo(0, 0)');
+  const lay = await ev(`(() => {
+    const r = (s) => document.querySelector(s).getBoundingClientRect();
+    const hero = r('.kk-hero');
+    const loved = r('.kk-rate-btn[data-rating="loved"]'), nfu = r('.kk-rate-btn[data-rating="not-for-us"]'), plan = r('[data-role="plan"]');
+    const first = r('.kk-tick'), stack = r('#bottom-stack'), title = r('h1');
+    const planStyle = getComputedStyle(document.querySelector('[data-role="plan"]'));
+    return { heroH: hero.height, heroW: hero.width, fit: getComputedStyle(document.querySelector('.kk-hero')).aspectRatio, y: [loved.y, nfu.y, plan.y], h: [loved.height, nfu.height, plan.height], w: [loved.width, nfu.width, plan.width],
+      firstTop: first.top, firstBottom: first.bottom, stackTop: stack.top, titleBottom: title.bottom, lovedTop: loved.top, planBg: planStyle.backgroundColor, planBorder: planStyle.borderTopWidth };
+  })()`);
+  check('the photo strip is about 140px tall on the phone and as wide as the page', lay.heroH >= 132 && lay.heroH <= 148 && lay.heroW > 340, JSON.stringify([lay.heroH, lay.heroW]));
+  check('Loved it, Not for us and Plan sit on one row', Math.abs(lay.y[0] - lay.y[1]) < 2 && Math.abs(lay.y[0] - lay.y[2]) < 2, JSON.stringify(lay.y));
+  check('each is at least 44px tall and about a third of the width (95 to 130px)', lay.h.every((v) => v >= 43.5) && lay.w.every((v) => v >= 95 && v <= 130), JSON.stringify([lay.h, lay.w]));
+  check('Plan is in the outline style (clear fill, border)', lay.planBg === 'rgba(0, 0, 0, 0)' && parseFloat(lay.planBorder) >= 1, JSON.stringify([lay.planBg, lay.planBorder]));
+  check('the row comes right after the title block, before the ingredients', lay.lovedTop > lay.titleBottom && lay.lovedTop < lay.firstTop);
+  check('at 390x844 the first ingredient row is fully visible above the tab bar', lay.firstTop >= 0 && lay.firstBottom <= lay.stackTop, JSON.stringify([lay.firstTop, lay.firstBottom, lay.stackTop]));
+  const below = await ev(`(() => { const y = (s) => document.querySelector(s).getBoundingClientRect().top; const lastStep = [...document.querySelectorAll('#steps li')].pop().getBoundingClientRect().bottom;
+    return { lastStep, status: y('[data-person="ed"]'), picker: y('#me-picker'), source: y('.kk-source') }; })()`);
+  check('the Ed / Kristina switch, the two status lines and the original-recipe link come after the steps', below.status > below.lastStep && below.picker > below.lastStep && below.source > below.lastStep, JSON.stringify(below));
+
   // --- ticks: tick, reload, still ticked --------------------------------------------------------------------------
   await tick('garlic');
   await tick('tomato');
@@ -96,8 +117,21 @@ try {
   // --- ratings and Plan are the same controls as on the list --------------------------------------------------------
   await goto('/recipe/example-1/');
   check('the rating buttons are the list\'s: Loved it / Not for us, 44px tall', (await ev("[...document.querySelectorAll('.kk-rate-btn')].map((b) => b.textContent).join('|')")) === 'Loved it|Not for us' && (await ev("[...document.querySelectorAll('.kk-rate-btn')].every((b) => b.getBoundingClientRect().height >= 44)")));
+  await ev('window.scrollTo(0, 0)');
+  await sleep(100);
+  check('(setup) nobody picked: the Ed / Kristina row is not showing yet', !(await visible('#me-inline')));
   await click('.kk-rate-btn[data-rating="loved"]');
-  check('rating with nobody picked asks who you are and saves nothing', (await ev("localStorage.getItem('kk:ratings')")) === null && (await visible('#me-hint')));
+  await sleep(250);
+  const inline = await ev("(() => { const r = document.querySelector('#me-inline').getBoundingClientRect(); const b = document.querySelector('.kk-rate-btn[data-rating=\"loved\"]').getBoundingClientRect(); return { top: r.top, bottom: r.bottom, below: r.top - b.bottom, y: scrollY, vh: innerHeight }; })()");
+  check('rating with nobody picked opens the Ed / Kristina row in place, right under the buttons, and the page stays put', (await visible('#me-inline')) && inline.y <= 40 && inline.below >= 0 && inline.below < 24 && inline.bottom < inline.vh, JSON.stringify(inline));
+  check('and saves nothing', (await ev("localStorage.getItem('kk:ratings')")) === null);
+  check('the in-place picker names both people and its buttons are 44px tall', (await ev("[...document.querySelectorAll('#me-inline button[data-me]')].map((b) => b.textContent.trim()).join('|')")) === "I'm Ed|I'm Kristina" && (await ev("[...document.querySelectorAll('#me-inline button[data-me]')].every((b) => b.getBoundingClientRect().height >= 44)")));
+  await click('#me-inline [data-me="ed"]');
+  check('picking Ed closes the in-place row and saves nothing yet (tap the rating again)', !(await visible('#me-inline')) && (await ev("localStorage.getItem('kk:ratings')")) === null && (await ev('scrollY')) <= 40);
+  await click('.kk-rate-btn[data-rating="loved"]');
+  check('the second tap rates as Ed', (await text('[data-person="ed"]')) === 'Ed: Loved it');
+  await ev("localStorage.clear()");
+  await reload();
   await click('[data-me="ed"]');
   await click('.kk-rate-btn[data-rating="loved"]');
   check('Ed rates Loved it: status line and pressed button', (await text('[data-person="ed"]')) === 'Ed: Loved it' && (await ev("document.querySelector('.kk-rate-btn[data-rating=\"loved\"]').getAttribute('aria-pressed')")) === 'true');

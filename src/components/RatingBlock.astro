@@ -1,21 +1,34 @@
 ---
 // The two status lines and the Loved it / Not for us buttons. ratings-ui.ts draws and wires them, on a card and on the recipe page.
+// part: "all" is the card (status over buttons). "buttons" and "status" are the two halves, for the recipe page, where the
+// buttons share a row with Plan near the top and the status lines sit lower down.
 import { PERSON_LABEL, PEOPLE, RATINGS, RATING_LABEL } from '../scripts/ratings';
 
 interface Props {
   title: string;
+  part?: 'all' | 'buttons' | 'status';
 }
 
-const { title } = Astro.props;
+const { title, part = 'all' } = Astro.props;
 ---
 
-<div class="kk-rate" role="group" aria-label={`Ratings for ${title}`}>
-  <div class="kk-rate-status">
+{part === 'all' ? (
+  <div class="kk-rate" role="group" aria-label={`Ratings for ${title}`}>
+    <div class="kk-rate-status">
+      {PEOPLE.map((person) => <p data-person={person}>{PERSON_LABEL[person]}: not rated yet</p>)}
+    </div>
+    <div class="kk-rate-buttons">
+      {RATINGS.map((rating) => (
+        <button type="button" class="kk-rate-btn" data-rating={rating} aria-pressed="false">{RATING_LABEL[rating]}</button>
+      ))}
+    </div>
+  </div>
+) : part === 'buttons' ? (
+  RATINGS.map((rating) => (
+    <button type="button" class="kk-rate-btn" data-rating={rating} aria-pressed="false">{RATING_LABEL[rating]}</button>
+  ))
+) : (
+  <div class="kk-rate-status kk-rate-status-page" role="group" aria-label={`Ratings for ${title}`}>
     {PEOPLE.map((person) => <p data-person={person}>{PERSON_LABEL[person]}: not rated yet</p>)}
   </div>
-  <div class="kk-rate-buttons">
-    {RATINGS.map((rating) => (
-      <button type="button" class="kk-rate-btn" data-rating={rating} aria-pressed="false">{RATING_LABEL[rating]}</button>
-    ))}
-  </div>
-</div>
+)}

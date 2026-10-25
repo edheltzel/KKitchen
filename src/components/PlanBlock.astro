@@ -1,13 +1,21 @@
 ---
 // Plan status and the Plan button. plan-ui.ts opens the day picker (PlanSheet.astro) from it.
+// part: "all" is the card. "button" and "status" are the two halves for the recipe page's one row of three actions.
 interface Props {
   title: string;
+  part?: 'all' | 'button' | 'status';
 }
 
-const { title } = Astro.props;
+const { title, part = 'all' } = Astro.props;
 ---
 
-<div class="kk-plan">
-  <p data-role="plan-status" hidden class="kk-plan-status"></p>
+{part === 'all' ? (
+  <div class="kk-plan">
+    <p data-role="plan-status" hidden class="kk-plan-status"></p>
+    <button type="button" class="kk-plan-btn" data-role="plan" aria-label={`Plan ${title} for a day`}>Plan</button>
+  </div>
+) : part === 'button' ? (
   <button type="button" class="kk-plan-btn" data-role="plan" aria-label={`Plan ${title} for a day`}>Plan</button>
-</div>
+) : (
+  <p data-role="plan-status" hidden class="kk-plan-status kk-plan-status-page"></p>
+)}

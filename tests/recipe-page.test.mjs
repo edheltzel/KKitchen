@@ -115,3 +115,29 @@ test('nothing under dist/recipe (any file, any depth) mentions the unapproved no
     }
   }
 });
+
+test('page order: title, meta, tags, ONE row of the three actions, then ingredients and steps, then the who-and-status block and the source link', () => {
+  for (const r of exampleRecipes) {
+    const html = page(r);
+    const at = (needle) => {
+      const i = html.indexOf(needle);
+      assert.ok(i >= 0, `${r.id}: ${needle}`);
+      return i;
+    };
+    const order = [at('<h1'), at('class="kk-actions"'), at('id="ingredients-title"'), at('id="steps-title"'), at('id="ratings-title"'), at('data-person="ed"'), at('id="me-picker"')];
+    assert.deepEqual(order, [...order].sort((a, b) => a - b), `${r.id}: order ${order}`);
+    if (r.source) assert.ok(at('class="kk-source"') > at('id="me-picker"'), `${r.id}: source link last`);
+    const actions = html.match(/<div class="kk-actions"[\s\S]*?<\/div>/)[0];
+    assert.deepEqual([...actions.matchAll(/data-rating="([^"]+)"|data-role="(plan)"/g)].map((m) => m[1] ?? m[2]), ['loved', 'not-for-us', 'plan'], `${r.id}: one row, in order`);
+    assert.equal([...html.matchAll(/data-person="ed"/g)].length, 1, 'one status line per person');
+  }
+});
+
+test('the in-place Ed / Kristina row is hidden until needed, sits right after the actions, and names both people', () => {
+  const html = page(exampleRecipes[0]);
+  const inline = html.match(/<fieldset id="me-inline"[^>]*>[\s\S]*?<\/fieldset>/)[0];
+  assert.match(inline, /^<fieldset id="me-inline" hidden/);
+  assert.match(inline, /data-me="ed"[^>]*>I'm Ed</);
+  assert.match(inline, /data-me="kristina"[^>]*>I'm Kristina</);
+  assert.ok(html.indexOf('id="me-inline"') > html.indexOf('class="kk-actions"') && html.indexOf('id="me-inline"') < html.indexOf('id="ingredients-title"'));
+});
