@@ -8,7 +8,8 @@ const name = () => JSON.parse(read('wrangler.jsonc')).name;
 test('test-deploy doc says what is deployed and what stays on each phone', () => {
   const d = doc();
   assert.match(d, /static/i);
-  assert.match(d, /example recipes only/i);
+  assert.match(d, /three real recipes/i);
+  assert.ok(!/example recipes only/i.test(d), 'a plain build ships the real recipes, not examples');
   for (const word of ['ratings', 'week plan', 'ticks']) assert.ok(d.toLowerCase().includes(word), word);
   assert.match(d, /not shared/i);
 });
@@ -34,9 +35,12 @@ test('test-deploy doc has the verify steps, delete step, rollback and the scoped
   const d = doc();
   assert.match(d, /curl -sI .*\| grep -i x-robots-tag/);
   assert.match(d, /<meta name="robots" content="noindex">/);
-  assert.match(d, /Draft-only/);
-  assert.match(d, /saffron/);
-  assert.match(d, /Hidden Draft Note/);
+  // The verify steps match a real build: three real recipe folders, and no example recipe text in dist.
+  assert.match(d, /`ls dist\/recipe`[^\n]*exactly[^\n]*gluten-free-fried-chicken[^\n]*slow-cooker-roast[^\n]*high-protein-brownies/);
+  assert.match(d, /grep -ril "example recipe" dist` prints nothing/);
+  assert.ok(!/example-1/.test(d), 'no verify step points at an example recipe page');
+  assert.ok(!/Draft-only|saffron|Hidden Draft Note|Nut-free/.test(d), 'no fixture-string greps');
+  assert.match(d, /\/recipe\/gluten-free-fried-chicken\//, 'noindex is checked on a real recipe page');
   assert.ok(d.includes(`cd /Users/ed && wrangler delete ${name()} -c /Users/ed/Developer/KKitchen/wrangler.jsonc`), 'delete step with the real name, run from /Users/ed');
   assert.match(d, /rollback/i);
   assert.ok(!/git checkout/.test(d), 'rollback never switches the working tree or branch');
