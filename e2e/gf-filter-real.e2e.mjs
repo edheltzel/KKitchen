@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { startHarness } from './harness.mjs';
-import { gfFlow } from './gf-filter-flow.mjs';
+import { gfFlow, leftOutCheck } from './gf-filter-flow.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const out = mkdtempSync(join(tmpdir(), 'kk-gf-real-'));
@@ -25,7 +25,7 @@ try {
     zeroSearch: 'pork', zero: ['time', '15'],
   });
   // The real build only: the flag-less roast never appears under the chip, and the Roast page has no label.
-  h.check('real build: the roast is the one recipe the chip leaves out', (await h.text('#recipe-count')) === '3 recipes');
+  await leftOutCheck(h, { id: 'slow-cooker-roast', name: 'real build: the roast', total: 3 });
 } catch (e) {
   h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 }

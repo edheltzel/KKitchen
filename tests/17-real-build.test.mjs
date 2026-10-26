@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, decode, theme, contrast } from './helpers.mjs';
 import { realNotes } from '../src/data/recipes.ts';
+import { parseState } from '../src/scripts/browse-state.ts';
 
 // `npm test` builds dist with KK_DATA=fixture (the old example recipes, for the other tests). This file builds the site the way
 // `npm run build` does, with no KK_DATA, into a temp folder, and proves that build holds only the three real recipes.
@@ -148,9 +149,9 @@ test('no gluten-free claim anywhere in the real build, except exactly the kept i
   for (const f of textFiles) {
     const rel = f.slice(out.length + 1);
     let s = readFileSync(f, 'utf8');
-    for (const k of Object.keys(KEPT)) {
+    for (const [k, where] of Object.entries(KEPT)) {
       if (s.includes(k)) (seen[k] ??= []).push(rel);
-      s = s.split(k).join('');
+      if (where.includes(rel)) s = s.split(k).join(''); // strip a kept line only in the file(s) it is allowed in
     }
     assert.ok(!/gluten|\bgf\b/i.test(s), `${rel} still says gluten: ${(s.match(/.{0,40}(gluten|\bgf\b).{0,40}/i) ?? [''])[0]}`);
   }
@@ -168,7 +169,9 @@ test('the "Gluten-free per the original recipe" label is on the fried chicken an
   assert.ok(!/gluten/i.test(page('recipe/slow-cooker-roast/index.html')), 'no gluten text on the roast page');
   for (const id of ['fried-chicken', 'high-protein-brownies']) assert.ok(!page(`recipe/${id}/index.html`).includes('>Gluten-free<'), `${id}: no bare Gluten-free label, it always says per the original recipe`);
   for (const rel of ['index.html', 'week/index.html', 'favorites/index.html', ...IDS.map((id) => `cook/${id}/index.html`)]) {
-    assert.ok(!/gluten-free/i.test(page(rel).replace(/(all-purpose gluten-free flour|Combine the gluten-free flour|>Gluten-free per source<)/g, '')), `${rel} has no Gluten-free text`);
+    let text = page(rel).replace(/(all-purpose gluten-free flour|Combine the gluten-free flour)/g, '');
+    if (rel === 'index.html') text = text.split('>Gluten-free per source<').join(''); // the chip text is allowed on the home page only
+    assert.ok(!/gluten-free/i.test(text), `${rel} has no Gluten-free text`);
   }
   for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
     assert.ok(!/verified|certified/i.test(readFileSync(f, 'utf8').replace(/<script[\s\S]*?<\/script>/g, '')), `${f.slice(out.length)} has no verified or certified wording`);
@@ -201,12 +204,12 @@ test('the home page has exactly one Gluten-free per source chip, in the Filters 
   assert.equal(chips.length, 1);
   assert.match(chips[0], /^<button type="button" class="kk-chip" aria-pressed="false" data-group="source" data-value="stated">Gluten-free per source<\/button>$/);
   assert.equal((home.match(/Gluten-free per source/g) ?? []).length, 1, 'the wording appears once on the page');
-  assert.ok(!home.includes('>Gluten-free<') && !/"Gluten-free"/.test(home) && !/aria-label="[^"]*gluten/i.test(home));
+  assert.ok(!home.includes('>Gluten-free<') && !/"Gluten-free"/i.test(home) && !/aria-label="[^"]*gluten/i.test(home));
   assert.match(home, /<legend[^>]*>From the source<\/legend>/);
   assert.ok(home.indexOf('data-group="source"') > home.indexOf('<dialog'), 'the chip lives in the Filters sheet with the other chips');
   for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
     const s = readFileSync(f, 'utf8');
-    assert.ok(!s.includes('>Gluten-free<') && !/["'`]Gluten-free["'`]/.test(s), `${f.slice(out.length)} has no bare Gluten-free`);
+    assert.ok(!s.includes('>Gluten-free<') && !/["'`]Gluten-free["'`]/i.test(s), `${f.slice(out.length)} has no bare Gluten-free`);
   }
 });
 
@@ -221,8 +224,10 @@ test('the per-source flag marks exactly the flagged recipes on the home page, re
   assert.ok(!/data-source-stated/.test(page('week/index.html')) && !/data-source-stated/.test(page('favorites/index.html')));
 });
 
-test('the chip stays off when no recipe has the flag (the group is drawn from the data, not hard-coded)', () => {
-  const tray = readFileSync(join(root, 'src/components/FilterTray.astro'), 'utf8');
-  assert.match(tray, /exampleRecipes\.some\(\(r\) => r\.glutenFreePerSource\)/);
-  assert.ok(!/Gluten-free per source/.test(readFileSync(join(root, 'src/components/RecipeCard.astro'), 'utf8')));
+test('the chip stays off when no recipe has the flag: a shared ?source=stated link is ignored when the group has no options', () => {
+  // With no flagged recipe the sheet draws no source group, so parseState gets an empty option list for it.
+  const noFlag = { meal: ['dinner'], time: ['30'], diet: [], who: [], source: [] };
+  assert.deepEqual(parseState('?source=stated', noFlag).source, []);
+  assert.deepEqual(parseState('?source=stated&meal=dinner', noFlag), { q: '', meal: ['dinner'], time: [], diet: [], who: [], source: [] });
+  assert.deepEqual(parseState('?source=stated', { ...noFlag, source: ['stated'] }).source, ['stated'], 'and it is honoured when the group does exist');
 });

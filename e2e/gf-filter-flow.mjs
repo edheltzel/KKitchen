@@ -107,3 +107,20 @@ export async function gfFlow(h, d) {
   await goto('/?source=nonsense');
   check('an unknown source value in the address is ignored', (await text('#recipe-count')) === plural(d.total) && !(await visible('#chips')) && (await loc()) === '/', await loc());
 }
+
+/** One unflagged recipe (by data-id): its card is on screen with no filter, gone while the chip is ON, and back after the chip is turned off. */
+export async function leftOutCheck(h, { id, name, total }) {
+  const { ev, check, goto, click, text } = h;
+  const shown = () => ev(`(() => { const a = document.querySelector('article[data-id="${id}"]'); return !!a && !a.hidden && a.getBoundingClientRect().height > 0; })()`);
+  await goto('/');
+  const before = await shown();
+  await click(CHIP);
+  const during = await shown();
+  const countOn = await text('#recipe-count');
+  await click(CHIP);
+  const after = await shown();
+  const countOff = await text('#recipe-count');
+  check(`${name} (${id}) is the kind of recipe the chip leaves out: shown with no filter, hidden while the chip is on, shown again once it is off`,
+    before === true && during === false && after === true && countOff === plural(total) && countOn !== plural(total),
+    JSON.stringify({ before, during, after, countOn, countOff }));
+}
