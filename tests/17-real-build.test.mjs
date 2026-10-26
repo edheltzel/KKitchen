@@ -5,6 +5,7 @@ import { mkdtempSync, readdirSync, readFileSync, statSync, rmSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root, decode, theme, contrast } from './helpers.mjs';
+import { realNotes } from '../src/data/recipes.ts';
 
 // `npm test` builds dist with KK_DATA=fixture (the old example recipes, for the other tests). This file builds the site the way
 // `npm run build` does, with no KK_DATA, into a temp folder, and proves that build holds only the three real recipes.
@@ -134,6 +135,8 @@ const KEPT = {
   'all-purpose gluten-free flour': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
   'Combine the gluten-free flour, cornstarch': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
   '>Gluten-free per the original recipe<': ['recipe/fried-chicken/index.html', 'recipe/high-protein-brownies/index.html'],
+  // The one filter chip, in the Filters sheet on the home page. Its careful wording is pinned by the filter tests below.
+  '>Gluten-free per source<': ['index.html'],
   'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/': ['recipe/fried-chicken/index.html'],
   'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/': ['recipe/high-protein-brownies/index.html'],
 };
@@ -165,7 +168,7 @@ test('the "Gluten-free per the original recipe" label is on the fried chicken an
   assert.ok(!/gluten/i.test(page('recipe/slow-cooker-roast/index.html')), 'no gluten text on the roast page');
   for (const id of ['fried-chicken', 'high-protein-brownies']) assert.ok(!page(`recipe/${id}/index.html`).includes('>Gluten-free<'), `${id}: no bare Gluten-free label, it always says per the original recipe`);
   for (const rel of ['index.html', 'week/index.html', 'favorites/index.html', ...IDS.map((id) => `cook/${id}/index.html`)]) {
-    assert.ok(!/gluten-free/i.test(page(rel).replace(/(all-purpose gluten-free flour|Combine the gluten-free flour)/g, '')), `${rel} has no Gluten-free text`);
+    assert.ok(!/gluten-free/i.test(page(rel).replace(/(all-purpose gluten-free flour|Combine the gluten-free flour|>Gluten-free per source<)/g, '')), `${rel} has no Gluten-free text`);
   }
   for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
     assert.ok(!/verified|certified/i.test(readFileSync(f, 'utf8').replace(/<script[\s\S]*?<\/script>/g, '')), `${f.slice(out.length)} has no verified or certified wording`);
@@ -186,4 +189,40 @@ test('the label is plain small muted text that wraps and is never cut off, and t
     console.log(`  label contrast ${ratio.toFixed(2)}:1  ${name} ${t['--kk-muted']} on ${t['--color-base-100']}`);
     assert.ok(ratio >= 4.5, `${name}: muted text on the page color is ${ratio.toFixed(2)}`);
   }
+});
+
+// --- the "Gluten-free per source" filter chip ---------------------------------------------------------------------------------
+// It uses only the glutenFreePerSource flag already on a recipe (the flag behind the recipe-page label). Nothing is inferred.
+const flaggedIds = realNotes.filter((r) => r.glutenFreePerSource === true).map((r) => r.id).sort();
+
+test('the home page has exactly one Gluten-free per source chip, in the Filters sheet, worded like the label and never a bare Gluten-free', () => {
+  const home = page('index.html');
+  const chips = home.match(/<button[^>]*data-group="source"[^>]*>[^<]*<\/button>/g) ?? [];
+  assert.equal(chips.length, 1);
+  assert.match(chips[0], /^<button type="button" class="kk-chip" aria-pressed="false" data-group="source" data-value="stated">Gluten-free per source<\/button>$/);
+  assert.equal((home.match(/Gluten-free per source/g) ?? []).length, 1, 'the wording appears once on the page');
+  assert.ok(!home.includes('>Gluten-free<') && !/"Gluten-free"/.test(home) && !/aria-label="[^"]*gluten/i.test(home));
+  assert.match(home, /<legend[^>]*>From the source<\/legend>/);
+  assert.ok(home.indexOf('data-group="source"') > home.indexOf('<dialog'), 'the chip lives in the Filters sheet with the other chips');
+  for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
+    const s = readFileSync(f, 'utf8');
+    assert.ok(!s.includes('>Gluten-free<') && !/["'`]Gluten-free["'`]/.test(s), `${f.slice(out.length)} has no bare Gluten-free`);
+  }
+});
+
+test('the per-source flag marks exactly the flagged recipes on the home page, read from the data: chicken and brownies yes, the roast no', () => {
+  assert.deepEqual(flaggedIds, ['fried-chicken', 'high-protein-brownies'], 'the data still flags the same two');
+  const home = page('index.html');
+  const cards = [...home.matchAll(/<article [^>]*data-example[^>]*>/g)].map((m) => m[0]);
+  const marked = cards.filter((c) => /data-source-stated(=|\s|>)/.test(c)).map((c) => c.match(/data-id="([^"]*)"/)[1]).sort();
+  assert.deepEqual(marked, flaggedIds);
+  const roast = cards.find((c) => c.includes('data-id="slow-cooker-roast"'));
+  assert.ok(roast && !roast.includes('data-source-stated'));
+  assert.ok(!/data-source-stated/.test(page('week/index.html')) && !/data-source-stated/.test(page('favorites/index.html')));
+});
+
+test('the chip stays off when no recipe has the flag (the group is drawn from the data, not hard-coded)', () => {
+  const tray = readFileSync(join(root, 'src/components/FilterTray.astro'), 'utf8');
+  assert.match(tray, /exampleRecipes\.some\(\(r\) => r\.glutenFreePerSource\)/);
+  assert.ok(!/Gluten-free per source/.test(readFileSync(join(root, 'src/components/RecipeCard.astro'), 'utf8')));
 });

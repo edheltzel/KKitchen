@@ -77,11 +77,28 @@ test('tray offers only meal, time and confirmed diet options, each target >= 44p
   assert.deepEqual(by('meal'), ['breakfast', 'lunch', 'dinner']);
   assert.deepEqual(by('time'), ['15', '30', '45']);
   assert.deepEqual(by('diet'), ['Meatless']);
+  assert.deepEqual(by('source'), ['stated']);
   for (const c of chips) {
     assert.match(c[0], /aria-pressed="false"/);
     assert.match(c[0], /class="kk-chip"/);
   }
-  assert.ok(!/gluten/i.test(home));
+  assert.ok(!/gluten/i.test(home.split('>Gluten-free per source<').join('')), 'the one chip is the only gluten wording on the fixture home page');
+});
+
+test('the per-source chip: one chip, careful wording, same classes as the other chips, never a bare Gluten-free', () => {
+  const chip = tray.match(/<button[^>]*data-group="source"[^>]*>[^<]*<\/button>/g) ?? [];
+  assert.equal(chip.length, 1);
+  assert.match(chip[0], /^<button type="button" class="kk-chip" aria-pressed="false" data-group="source" data-value="stated">Gluten-free per source<\/button>$/);
+  assert.ok(!home.includes('>Gluten-free<') && !/"Gluten-free"/.test(home), 'no bare Gluten-free');
+  assert.ok(!/aria-label="[^"]*gluten/i.test(home), 'no gluten wording in any aria-label (the pressed/remove labels are built from the chip text)');
+  assert.match(tray, /<legend[^>]*>From the source<\/legend>/);
+  assert.match(tray, /Shown only when the original recipe says so\./);
+});
+
+test('cards carry the per-source flag as data-source-stated, only where the recipe data sets the flag', () => {
+  const flagged = cards.filter((c) => /data-source-stated(=|\s|>)/.test(c)).map((c) => c.match(/data-id="([^"]*)"/)[1]);
+  assert.deepEqual(flagged, ['example-4', 'example-5']);
+  assert.equal(cards.length, 6);
 });
 
 test('empty state, chips row and grid hooks exist', () => {

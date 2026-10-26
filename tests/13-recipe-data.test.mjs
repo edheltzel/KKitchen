@@ -55,7 +55,7 @@ test('the meta line says prep, cook and serves, and says so when nothing is cook
 });
 
 test('this data adds no gluten-free (or any new diet) claim', () => {
-  assert.ok(!/gluten|fried chicken|keto|vegan/i.test(JSON.stringify(allExampleNotes)));
+  assert.ok(!/gluten|fried chicken|keto|vegan/i.test(JSON.stringify(allExampleNotes).split('"glutenFreePerSource":true').join('')), 'only the fixture flag key may say gluten');
   assert.deepEqual([...new Set(allExampleNotes.flatMap((n) => n.tags.map((t) => t.label)))].sort(), ['Draft-only', 'Meatless', 'Nut-free']);
 });
 
@@ -100,6 +100,8 @@ test('a wait (marinate, chill) is shown after the active time: "+ 2 h marinate" 
   assert.equal(recipeMeta({ ...plain, prep: 25, cook: 360, serves: 8 }), 'Prep 25 min · Cook 6 h · Serves 8');
 });
 
-test('no example recipe sets glutenFreePerSource, so the recipe page label never shows on a fixture build', () => {
-  assert.ok(exampleRecipes.every((r) => r.glutenFreePerSource === undefined));
+// FIXTURE ONLY: two example recipes carry the flag so the filter tests have a positive and a negative case. It is example data, not a claim about any real recipe.
+test('exactly two example recipes (Overnight Oats, Lemon Rice Bowl) set glutenFreePerSource, as a plain true; the other four leave it unset', () => {
+  assert.deepEqual(exampleRecipes.filter((r) => r.glutenFreePerSource !== undefined).map((r) => [r.id, r.glutenFreePerSource]), [['example-4', true], ['example-5', true]]);
+  assert.ok(exampleRecipes.filter((r) => r.glutenFreePerSource === undefined).length === 4);
 });

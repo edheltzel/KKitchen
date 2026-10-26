@@ -44,7 +44,7 @@ export interface ExampleRecipe {
   cook: number;
   /** Hands-off time that is not in `minutes` (a marinate), as short text like "2 h marinate". Shown beside the minutes; the time filter ignores it. */
   wait?: string;
-  /** Set only on a recipe whose source says it is gluten-free. Shows one small plain label on the recipe page ("Gluten-free per the original recipe"); no tag, filter or card badge. */
+  /** Set only on a recipe whose source says it is gluten-free. Shows one small plain label on the recipe page ("Gluten-free per the original recipe") and is the only thing the "Gluten-free per source" filter chip reads; no tag, no card badge, nothing inferred. */
   glutenFreePerSource?: true;
   serves: number;
   groups: readonly IngredientGroup[];
@@ -102,7 +102,8 @@ const fixtureNotes: readonly ExampleRecipe[] = [
       step('Simmer for fifteen minutes.'),
       step('Blend until smooth and stir in the basil.', 'basil'),
     ] },
-  { id: 'example-4', name: 'Overnight Oats', minutes: 10, meal: 'breakfast', approved: true,
+  // FIXTURE ONLY: the flag on example-4 and example-5 gives the filter tests a positive and a negative case. Example data, not a claim about any real recipe.
+  { id: 'example-4', name: 'Overnight Oats', minutes: 10, meal: 'breakfast', approved: true, glutenFreePerSource: true,
     ingredients: ['rolled oats', 'milk', 'chia seeds', 'honey'], tags: [{ label: 'Meatless', confirmed: true }],
     prep: 10, cook: 0, serves: 2, source: 'https://example.com/example-oats',
     groups: [
@@ -113,7 +114,7 @@ const fixtureNotes: readonly ExampleRecipe[] = [
       step('Stir in the honey.'),
       step('Cover and chill overnight.'),
     ] },
-  { id: 'example-5', name: 'Lemon Rice Bowl', minutes: 20, meal: 'lunch', approved: true,
+  { id: 'example-5', name: 'Lemon Rice Bowl', minutes: 20, meal: 'lunch', approved: true, glutenFreePerSource: true,
     ingredients: ['rice', 'lemon', 'peas', 'parsley'], tags: [],
     prep: 5, cook: 15, serves: 2,
     groups: [

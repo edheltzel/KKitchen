@@ -33,7 +33,7 @@ const whoNote = $('#who-note');
 const whoNoteText = whoNote.textContent ?? '';
 
 // Filter options and their labels come from the tray markup, which is built from approved data only.
-const options: Options = { meal: [], time: [], diet: [], who: [] };
+const options: Options = { meal: [], time: [], diet: [], who: [], source: [] };
 const labels = new Map<string, string>();
 const trayChips = [...tray.querySelectorAll<HTMLButtonElement>('button[data-group]')];
 for (const chip of trayChips) {
@@ -51,6 +51,7 @@ const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')
     meal: el.dataset.meal ?? '',
     minutes: Number(el.dataset.minutes),
     diet: list(el.dataset.diet),
+    sourceStated: el.hasAttribute('data-source-stated'),
   };
   return { el, data };
 });

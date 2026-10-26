@@ -33,7 +33,7 @@ test('filter options come only from approved recipes', () => {
 
 test('example data stays obviously fake and makes no gluten-free claim', () => {
   const blob = JSON.stringify(allExampleNotes);
-  assert.ok(!/gluten|fried chicken|keto/i.test(blob));
+  assert.ok(!/gluten|fried chicken|keto/i.test(blob.split('"glutenFreePerSource":true').join('')), 'only the fixture flag key may say gluten');
   for (const r of exampleRecipes) assert.ok(r.name.length > 0);
 });
 

@@ -18,6 +18,7 @@ const tags = confirmedTags(recipe);
   data-meal={recipe.meal}
   data-minutes={recipe.minutes}
   data-diet={tags.join('|')}
+  data-source-stated={recipe.glutenFreePerSource ? '' : undefined}
 >
   <div class="relative">
     <div class="kk-tile relative aspect-[4/3]" aria-hidden="true">

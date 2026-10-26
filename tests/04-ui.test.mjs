@@ -49,7 +49,8 @@ test('safe-area padding is present for the bottom bar', () => {
 test('example data: 6 clearly fake recipes, no real recipe or gluten-free claims', () => {
   assert.equal(exampleRecipes.length, 6);
   for (const r of exampleRecipes) assert.ok(exampleTitle(r).startsWith(EXAMPLE_PREFIX));
-  const blob = JSON.stringify(exampleRecipes) + home;
+  // The flag key, the two recipe-page labels and the one filter chip are the only gluten words a fixture build may carry.
+  const blob = (JSON.stringify(exampleRecipes) + home).split('"glutenFreePerSource":true').join('').split('>Gluten-free per source<').join('');
   assert.ok(!/fried chicken|gluten|keto|vegetarian|dairy/i.test(blob));
 });
 
