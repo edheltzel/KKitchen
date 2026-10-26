@@ -1,10 +1,11 @@
 // Pure browse state: no DOM, so node:test can run it. The page address is the source of truth
-// (?q=...&meal=...&time=...&diet=...&who=...), which makes refresh, Back and shared links restore the same results.
+// (?q=...&meal=...&time=...&diet=...&who=...&source=...), which makes refresh, Back and shared links restore the same results.
 
 import { likedBy, type Liked, type Ratings } from './ratings.ts';
 
 // `who` is the "Who liked it" rating group: favorite, ed, kristina, untried (see ratings.ts).
-export const GROUPS = ['meal', 'time', 'diet', 'who'] as const;
+// `source` is the one-chip "per source" group (value `stated`): it needs the recipe's own source-stated flag, nothing inferred.
+export const GROUPS = ['meal', 'time', 'diet', 'who', 'source'] as const;
 export type Group = (typeof GROUPS)[number];
 export type Options = Record<Group, string[]>;
 
@@ -14,6 +15,7 @@ export interface BrowseState {
   time: string[];
   diet: string[];
   who: string[];
+  source: string[];
 }
 
 export interface Searchable {
@@ -23,11 +25,13 @@ export interface Searchable {
   meal: string;
   minutes: number;
   diet: string[];
+  /** True only when the recipe's data sets its source-stated flag (glutenFreePerSource on the page side). Missing means no. */
+  sourceStated?: boolean;
 }
 
 const MAX_QUERY = 100;
 
-export const emptyState = (): BrowseState => ({ q: '', meal: [], time: [], diet: [], who: [] });
+export const emptyState = (): BrowseState => ({ q: '', meal: [], time: [], diet: [], who: [], source: [] });
 
 // Keep only known values, in the canonical option order.
 const canonical = (values: string[], allowed: string[]): string[] => allowed.filter((v) => values.includes(v));
@@ -41,6 +45,7 @@ export function parseState(search: string, options: Options): BrowseState {
     time: list('time'),
     diet: list('diet'),
     who: list('who'),
+    source: list('source'),
   };
 }
 
@@ -71,6 +76,7 @@ export function toggleValue(state: BrowseState, group: Group, value: string, opt
 // Search: every word must appear in the name or in an ingredient. Filters: AND across groups.
 // Within a group: meal is any-of, time is "N min or less" (several picks mean the loosest one),
 // diet is every-of (a recipe needs ALL the picked tags), who is any-of (Ed loved it OR Kristina loved it).
+// source is every-of too, but it has one value: the recipe's flag must be exactly true.
 // `ratings` is null while the ratings store is unavailable: the who group is then not applied, so
 // browsing and search keep working.
 export function matchesRecipe(recipe: Searchable, state: BrowseState, ratings: Ratings | null = null): boolean {
@@ -81,6 +87,7 @@ export function matchesRecipe(recipe: Searchable, state: BrowseState, ratings: R
   if (state.meal.length && !state.meal.includes(recipe.meal)) return false;
   if (state.time.length && recipe.minutes > Math.max(...state.time.map(Number))) return false;
   if (!state.diet.every((d) => recipe.diet.includes(d))) return false;
+  if (state.source.length && recipe.sourceStated !== true) return false;
   if (ratings && state.who.length) {
     const liked = recipe.id ? likedBy(ratings, recipe.id) : new Set<Liked>(['untried']);
     if (!state.who.some((w) => liked.has(w as Liked))) return false;

@@ -7,6 +7,7 @@ import {
   toggleValue,
   activeFilterCount,
   emptyMessage,
+  emptyState,
   createSession,
 } from '../src/scripts/browse-state.ts';
 import { exampleRecipes, confirmedTags } from '../src/data/examples.ts';
@@ -16,6 +17,7 @@ const OPTIONS = {
   time: ['15', '30', '45'],
   diet: ['Meatless'],
   who: ['favorite', 'ed', 'kristina', 'untried'],
+  source: ['stated'],
 };
 
 const recipes = [
@@ -29,7 +31,7 @@ const names = (state) => filterRecipes(recipes, state).map((r) => r.name);
 test('state round-trips through the address (refresh and shared link give the same results)', () => {
   const link = '?q=tomato&meal=lunch,dinner&time=30&diet=Meatless';
   const state = parseState(link, OPTIONS);
-  assert.deepEqual(state, { q: 'tomato', meal: ['lunch', 'dinner'], time: ['30'], diet: ['Meatless'], who: [] });
+  assert.deepEqual(state, { q: 'tomato', meal: ['lunch', 'dinner'], time: ['30'], diet: ['Meatless'], who: [], source: [] });
   assert.equal(serializeState(state, OPTIONS), '?q=tomato&meal=lunch%2Cdinner&time=30&diet=Meatless');
   const again = parseState(serializeState(state, OPTIONS), OPTIONS);
   assert.deepEqual(again, state);
@@ -57,60 +59,60 @@ test('unknown params and values from a hand-edited link are dropped; q is capped
 
 // --- filter logic ---------------------------------------------------------------------------------
 test('search matches names and ingredients, case-insensitively', () => {
-  assert.deepEqual(names({ q: 'PASTA', meal: [], time: [], diet: [], who: [] }), ['Weeknight Pasta']);
-  assert.deepEqual(names({ q: 'Tomato', meal: [], time: [], diet: [], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: 'rolled', meal: [], time: [], diet: [], who: [] }), ['Overnight Oats']);
+  assert.deepEqual(names({ q: 'PASTA', meal: [], time: [], diet: [], who: [], source: [] }), ['Weeknight Pasta']);
+  assert.deepEqual(names({ q: 'Tomato', meal: [], time: [], diet: [], who: [], source: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: 'rolled', meal: [], time: [], diet: [], who: [], source: [] }), ['Overnight Oats']);
 });
 
 test('every word of the search must match a name or an ingredient', () => {
-  assert.deepEqual(names({ q: 'tomato garlic', meal: [], time: [], diet: [], who: [] }), ['Weeknight Pasta']);
-  assert.deepEqual(names({ q: 'tomato oats', meal: [], time: [], diet: [], who: [] }), []);
+  assert.deepEqual(names({ q: 'tomato garlic', meal: [], time: [], diet: [], who: [], source: [] }), ['Weeknight Pasta']);
+  assert.deepEqual(names({ q: 'tomato oats', meal: [], time: [], diet: [], who: [], source: [] }), []);
 });
 
 test('filters are AND across groups; meal is any-of, time is loosest-wins', () => {
-  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: [], diet: [], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['30'], diet: [], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['15'], diet: [], who: [] }), []);
-  assert.deepEqual(names({ q: '', meal: [], time: ['15', '30'], diet: ['Meatless'], who: [] }), ['Weeknight Pasta', 'Tomato Soup']);
-  assert.deepEqual(names({ q: 'tomato', meal: ['dinner'], time: [], diet: [], who: [] }), ['Weeknight Pasta']);
+  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: [], diet: [], who: [], source: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['30'], diet: [], who: [], source: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: '', meal: ['lunch', 'dinner'], time: ['15'], diet: [], who: [], source: [] }), []);
+  assert.deepEqual(names({ q: '', meal: [], time: ['15', '30'], diet: ['Meatless'], who: [], source: [] }), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(names({ q: 'tomato', meal: ['dinner'], time: [], diet: [], who: [], source: [] }), ['Weeknight Pasta']);
 });
 
 test('a 30-minute recipe (Tomato Soup) appears under the "30 min or less" chip', () => {
   const searchable = exampleRecipes.map((r) => ({ name: r.name, ingredients: [...r.ingredients], meal: r.meal, minutes: r.minutes, diet: confirmedTags(r) }));
-  const shown = filterRecipes(searchable, { q: '', meal: [], time: ['30'], diet: [], who: [] }).map((r) => r.name);
+  const shown = filterRecipes(searchable, { q: '', meal: [], time: ['30'], diet: [], who: [], source: [] }).map((r) => r.name);
   assert.ok(shown.includes('Tomato Soup'));
   assert.ok(!shown.includes('Sheet-Pan Vegetables'), '40 minutes is not 30 or less');
 });
 
 test('toggleValue adds and removes one filter value without touching the rest', () => {
-  const s1 = toggleValue({ q: 'x', meal: [], time: [], diet: [], who: [] }, 'meal', 'dinner', OPTIONS);
-  assert.deepEqual(s1, { q: 'x', meal: ['dinner'], time: [], diet: [], who: [] });
+  const s1 = toggleValue({ q: 'x', meal: [], time: [], diet: [], who: [], source: [] }, 'meal', 'dinner', OPTIONS);
+  assert.deepEqual(s1, { q: 'x', meal: ['dinner'], time: [], diet: [], who: [], source: [] });
   const s2 = toggleValue(s1, 'meal', 'lunch', OPTIONS);
   assert.deepEqual(s2.meal, ['lunch', 'dinner']);
   assert.deepEqual(toggleValue(s2, 'meal', 'lunch', OPTIONS).meal, ['dinner']);
   assert.equal(activeFilterCount(s2), 2);
-  assert.equal(activeFilterCount({ q: 'only search', meal: [], time: [], diet: [], who: [] }), 0);
+  assert.equal(activeFilterCount({ q: 'only search', meal: [], time: [], diet: [], who: [], source: [] }), 0);
 });
 
 test('zero-result messages', () => {
-  assert.equal(emptyMessage({ q: 'saffron', meal: [], time: [], diet: [], who: [] }), "No recipe lists 'saffron'");
-  assert.equal(emptyMessage({ q: 'saffron', meal: ['dinner'], time: [], diet: [], who: [] }), "No recipe lists 'saffron' with these filters");
-  assert.equal(emptyMessage({ q: '', meal: ['dinner'], time: [], diet: [], who: [] }), 'No recipes match these filters');
+  assert.equal(emptyMessage({ q: 'saffron', meal: [], time: [], diet: [], who: [], source: [] }), "No recipe lists 'saffron'");
+  assert.equal(emptyMessage({ q: 'saffron', meal: ['dinner'], time: [], diet: [], who: [], source: [] }), "No recipe lists 'saffron' with these filters");
+  assert.equal(emptyMessage({ q: '', meal: ['dinner'], time: [], diet: [], who: [], source: [] }), 'No recipes match these filters');
 });
 
 test('diet tags combine with "every": a recipe needs ALL the picked tags', () => {
-  const options = { meal: [], time: [], diet: ['A', 'B'], who: [] };
+  const options = { meal: [], time: [], diet: ['A', 'B'], who: [], source: [] };
   const fixtures = [
     { name: 'Only A', ingredients: ['x'], meal: 'dinner', minutes: 10, diet: ['A'] },
     { name: 'A and B', ingredients: ['y'], meal: 'dinner', minutes: 10, diet: ['A', 'B'] },
     { name: 'Neither', ingredients: ['z'], meal: 'dinner', minutes: 10, diet: [] },
   ];
-  const pick = (diet) => filterRecipes(fixtures, { q: '', meal: [], time: [], diet }).map((r) => r.name);
+  const pick = (diet) => filterRecipes(fixtures, { q: '', meal: [], time: [], diet, who: [], source: [] }).map((r) => r.name);
   assert.deepEqual(pick(['A']), ['Only A', 'A and B']);
   assert.deepEqual(pick(['A', 'B']), ['A and B']);
   assert.deepEqual(pick(['B']), ['A and B']);
   assert.deepEqual(pick([]), ['Only A', 'A and B', 'Neither']);
-  assert.deepEqual(toggleValue(toggleValue({ q: '', meal: [], time: [], diet: [], who: [] }, 'diet', 'B', options), 'diet', 'A', options).diet, ['A', 'B']);
+  assert.deepEqual(toggleValue(toggleValue({ q: '', meal: [], time: [], diet: [], who: [], source: [] }, 'diet', 'B', options), 'diet', 'A', options).diet, ['A', 'B']);
 });
 
 // --- tab switches / Back: the session remembers the Recipes URL and the scroll per URL ----------
@@ -194,7 +196,7 @@ const ratings = {
   // r-rice: nobody has rated it
 };
 const whoNames = (who, extra = {}, r = ratings) =>
-  filterRecipes(rated, { q: '', meal: [], time: [], diet: [], who, ...extra }, r).map((x) => x.name);
+  filterRecipes(rated, { q: '', meal: [], time: [], diet: [], who, source: [], ...extra }, r).map((x) => x.name);
 
 test('who: address round trip in canonical order; unknown values are dropped', () => {
   const state = parseState('?who=untried,bob,ed&diet=Meatless&q=x&meal=lunch', OPTIONS);
@@ -206,7 +208,7 @@ test('who: address round trip in canonical order; unknown values are dropped', (
 });
 
 test('who: toggling and counting', () => {
-  const s1 = toggleValue({ q: '', meal: [], time: [], diet: [], who: [] }, 'who', 'untried', OPTIONS);
+  const s1 = toggleValue({ q: '', meal: [], time: [], diet: [], who: [], source: [] }, 'who', 'untried', OPTIONS);
   const s2 = toggleValue(s1, 'who', 'favorite', OPTIONS);
   assert.deepEqual(s2.who, ['favorite', 'untried']);
   assert.equal(activeFilterCount(s2), 2);
@@ -228,7 +230,7 @@ test('who: several picks mean any of them; different groups still all have to ma
   assert.deepEqual(whoNames(['ed', 'untried']), ['Weeknight Pasta', 'Tomato Soup', 'Lemon Rice']);
   assert.deepEqual(whoNames(['ed', 'kristina'], { meal: ['lunch'] }), ['Tomato Soup']);
   assert.deepEqual(whoNames(['favorite'], { meal: ['lunch'] }), []);
-  assert.deepEqual(filterRecipes(rated, { q: 'tomato', meal: [], time: [], diet: [], who: ['ed'] }, ratings).map((x) => x.name), ['Weeknight Pasta', 'Tomato Soup']);
+  assert.deepEqual(filterRecipes(rated, { q: 'tomato', meal: [], time: [], diet: [], who: ['ed'], source: [] }, ratings).map((x) => x.name), ['Weeknight Pasta', 'Tomato Soup']);
 });
 
 test('who: an empty "no ratings yet" store and an unavailable store (null) both keep browsing working', () => {
@@ -236,4 +238,56 @@ test('who: an empty "no ratings yet" store and an unavailable store (null) both 
   assert.deepEqual(whoNames(['favorite'], {}, {}), [], 'nothing is a favorite yet');
   assert.equal(whoNames(['untried'], {}, {}).length, 4, 'everything is untried yet');
   assert.equal(whoNames(['favorite'], {}, null).length, 4, 'ratings unavailable: the rating filter is not applied');
+});
+
+// --- "per source" filter: uses only the recipe's own sourceStated flag (the glutenFreePerSource flag on the page side) -----------
+const sourced = [
+  { id: 's-chicken', name: 'Fried Chicken', ingredients: ['chicken'], meal: 'dinner', minutes: 60, diet: [], sourceStated: true },
+  { id: 's-brownies', name: 'Brownies', ingredients: ['cocoa'], meal: 'snack', minutes: 25, diet: [], sourceStated: true },
+  { id: 's-roast', name: 'Roast', ingredients: ['pork'], meal: 'dinner', minutes: 385, diet: [] },
+  { id: 's-other', name: 'Other', ingredients: ['pork'], meal: 'dinner', minutes: 20, diet: [], sourceStated: false },
+];
+const sourceNames = (extra = {}) => filterRecipes(sourced, { ...emptyState(), source: ['stated'], ...extra }).map((r) => r.id);
+
+test('source: address round trip; unknown values are dropped; empty state stays empty', () => {
+  const state = parseState('?source=stated&meal=dinner&q=chick', OPTIONS);
+  assert.deepEqual(state, { q: 'chick', meal: ['dinner'], time: [], diet: [], who: [], source: ['stated'] });
+  assert.equal(serializeState(state, OPTIONS), '?q=chick&meal=dinner&source=stated');
+  assert.deepEqual(parseState('?source=yes,stated,gluten', OPTIONS).source, ['stated']);
+  assert.deepEqual(parseState('?source=gluten-free', OPTIONS).source, []);
+  assert.equal(serializeState(parseState('?source=bogus', OPTIONS), OPTIONS), '');
+  assert.deepEqual(emptyState().source, []);
+});
+
+test('source: only a recipe whose flag is exactly true matches; missing and false do not', () => {
+  assert.deepEqual(sourceNames(), ['s-chicken', 's-brownies']);
+  assert.deepEqual(filterRecipes(sourced, emptyState()).map((r) => r.id), ['s-chicken', 's-brownies', 's-roast', 's-other'], 'no chip: everything shows');
+  const odd = [{ id: 'x', name: 'X', ingredients: [], meal: 'dinner', minutes: 5, diet: ['gluten-free'], sourceStated: 'true' }];
+  assert.deepEqual(filterRecipes(odd, { ...emptyState(), source: ['stated'] }), [], 'a string or a diet tag is not the flag');
+});
+
+test('source: combines with every other filter and with search (AND)', () => {
+  assert.deepEqual(sourceNames({ meal: ['snack'] }), ['s-brownies']);
+  assert.deepEqual(sourceNames({ time: ['30'] }), ['s-brownies']);
+  assert.deepEqual(sourceNames({ q: 'chick' }), ['s-chicken']);
+  assert.deepEqual(sourceNames({ q: 'pork' }), [], 'the roast matches the search but not the flag');
+  assert.deepEqual(sourceNames({ meal: ['snack'], q: 'chick' }), []);
+});
+
+test('source: toggling adds and removes it, counts as one active filter, and leaves the others alone', () => {
+  const on = toggleValue({ ...emptyState(), q: 'x', meal: ['dinner'] }, 'source', 'stated', OPTIONS);
+  assert.deepEqual(on.source, ['stated']);
+  assert.equal(activeFilterCount(on), 2);
+  assert.deepEqual(on.meal, ['dinner']);
+  const off = toggleValue(on, 'source', 'stated', OPTIONS);
+  assert.deepEqual(off.source, []);
+  assert.equal(activeFilterCount(off), 1);
+  assert.equal(toggleValue(emptyState(), 'source', 'bogus', OPTIONS).source.length, 0, 'unknown value is not kept');
+});
+
+test('source: zero results reuse the generic messages and never make a gluten-free claim', () => {
+  const s = { ...emptyState(), source: ['stated'] };
+  assert.equal(emptyMessage(s), 'No recipes match these filters');
+  assert.equal(emptyMessage({ ...s, q: 'pork' }), "No recipe lists 'pork' with these filters");
+  assert.ok(!/gluten/i.test(emptyMessage(s)));
 });
