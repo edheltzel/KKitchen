@@ -7,9 +7,9 @@ import { readFileSync, existsSync, statSync, mkdtempSync, rmSync } from 'node:fs
 import { tmpdir } from 'node:os';
 import { join, extname, resolve } from 'node:path';
 
-const dist = resolve(new URL('../dist', import.meta.url).pathname);
+const defaultDist = resolve(new URL('../dist', import.meta.url).pathname);
 /** The `/*` block of dist/_headers (what Cloudflare would add to every response), so the e2e runs under the live headers. */
-function headerRules() {
+function headerRules(dist) {
   const file = join(dist, '_headers');
   if (!existsSync(file)) return {};
   const out = {};
@@ -26,9 +26,11 @@ const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascrip
 export const PHONE_WIDTH = 390;
 export const PHONE_HEIGHT = 844;
 
-export async function startHarness({ port = Number(process.env.PORT ?? 4399), debug = 9334, scheme = 'light' } = {}) {
+/** `dist` (optional) serves another build folder, e.g. a temp build of the real recipes while ./dist holds the fixture build. */
+export async function startHarness({ port = Number(process.env.PORT ?? 4399), debug = 9334, scheme = 'light', dist: distOption } = {}) {
+  const dist = distOption ? resolve(distOption) : defaultDist;
   const chromePath = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-  const liveHeaders = headerRules();
+  const liveHeaders = headerRules(dist);
   const server = createServer((req, res) => {
     for (const [k, v] of Object.entries(liveHeaders)) res.setHeader(k, v);
     const path = new URL(req.url, 'http://x').pathname;
