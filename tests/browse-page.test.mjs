@@ -89,7 +89,7 @@ test('the per-source chip: one chip, careful wording, same classes as the other 
   const chip = tray.match(/<button[^>]*data-group="source"[^>]*>[^<]*<\/button>/g) ?? [];
   assert.equal(chip.length, 1);
   assert.match(chip[0], /^<button type="button" class="kk-chip" aria-pressed="false" data-group="source" data-value="stated">Gluten-free per source<\/button>$/);
-  assert.ok(!home.includes('>Gluten-free<') && !/"Gluten-free"/.test(home), 'no bare Gluten-free');
+  assert.ok(!home.includes('>Gluten-free<') && !/"Gluten-free"/i.test(home), 'no bare Gluten-free');
   assert.ok(!/aria-label="[^"]*gluten/i.test(home), 'no gluten wording in any aria-label (the pressed/remove labels are built from the chip text)');
   assert.match(tray, /<legend[^>]*>From the source<\/legend>/);
   assert.match(tray, /Shown only when the original recipe says so\./);
