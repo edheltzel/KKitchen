@@ -10,6 +10,8 @@ import UndoBar from '../components/UndoBar.astro';
 import { exampleRecipes, isFixture } from '../data/examples';
 
 const count = exampleRecipes.length;
+
+export const prerender = true;
 ---
 
 <Base active="recipes">

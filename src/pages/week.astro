@@ -3,25 +3,39 @@ import Base from '../layouts/Base.astro';
 import { exampleRecipes, exampleTitle, isFixture } from '../data/examples';
 
 const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+export const prerender = true;
 ---
 
 <Base title="Week · Kris's Kitchen" active="week">
   <header class="flex items-baseline justify-between gap-3">
     <h1 class="text-3xl font-extrabold tracking-tight">This week</h1>
     <p id="week-range" class="text-[13px] font-semibold text-kk-muted"></p>
+      <a id="week-prev" class="text-[13px] font-bold">Earlier</a>
   </header>
   {isFixture && <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>}
   <ul id="week-list" class="kk-week mt-3">
     {labels.map((label, i) => (
       <li class="kk-week-row" data-slot={i}>
         <span class="kk-week-day">{label}</span>
-        <div class="kk-week-cell"></div>
+        {meals.map((meal) => <div class="kk-week-cell" data-meal={meal}></div>)}
       </li>
     ))}
   </ul>
   <p class="mt-4 text-center text-[13px] text-kk-muted">Remove on every dinner. Swipe left works too.</p>
   <p id="week-live" class="sr-only" aria-live="polite"></p>
-  <dialog id="add-sheet" class="modal modal-bottom" aria-labelledby="add-title">
+  <dialog id="conflict" class="modal" aria-labelledby="conflict-title">
+      <div class="modal-box">
+        <h2 id="conflict-title" class="text-xl font-extrabold">This meal changed</h2>
+        <p id="conflict-text" class="mt-2"></p>
+        <div class="mt-4 flex gap-3">
+          <button type="button" id="conflict-keep" class="btn h-12 min-h-11 flex-1 rounded-full">Keep theirs</button>
+          <button type="button" id="conflict-replace" class="btn btn-primary h-12 min-h-11 flex-1 rounded-full">Replace it</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="add-sheet" class="modal modal-bottom" aria-labelledby="add-title">
     <div class="modal-box mx-auto max-w-md rounded-t-3xl bg-base-100 p-0">
       <h2 id="add-title" class="px-5 pt-4 text-xl font-extrabold">Add a dinner</h2>
       <ul class="mt-2 px-3">

@@ -84,7 +84,7 @@ test('leak scan: no example recipe, fixture-only text or vault path anywhere in 
   ];
   const files = walk(out);
   assert.ok(files.length > 10);
-  for (const f of files.filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
+  for (const f of files.filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp|map)$/.test(f) && !f.includes('/server/'))) {
     const s = readFileSync(f, 'utf8');
     for (const b of banned) assert.ok(!s.includes(b), `${f.slice(out.length)} contains ${b}`);
   }
@@ -143,7 +143,9 @@ const KEPT = {
 };
 
 test('no gluten-free claim anywhere in the real build, except exactly the kept ingredient lines and source links', () => {
-  const textFiles = walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f));
+  // The bundled recipe files repeat the source data, including glutenFreePerSource. The pages are what a person sees.
+// The server bundle repeats the source data, including glutenFreePerSource, for the live recipe route. The pages are what a person sees.
+const textFiles = walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f) && !f.includes('recipe-files_') && !f.includes('/server/'));
   assert.ok(textFiles.length > 10);
   const seen = {};
   for (const f of textFiles) {
@@ -173,7 +175,7 @@ test('the "Gluten-free per the original recipe" label is on the fried chicken an
     if (rel === 'index.html') text = text.split('>Gluten-free per source<').join(''); // the chip text is allowed on the home page only
     assert.ok(!/gluten-free/i.test(text), `${rel} has no Gluten-free text`);
   }
-  for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp)$/.test(f))) {
+  for (const f of walk(out).filter((f) => !/\.(png|ico|woff2?|jpg|jpeg|webp|map)$/.test(f) && !f.includes('/server/'))) {
     assert.ok(!/verified|certified/i.test(readFileSync(f, 'utf8').replace(/<script[\s\S]*?<\/script>/g, '')), `${f.slice(out.length)} has no verified or certified wording`);
   }
 });

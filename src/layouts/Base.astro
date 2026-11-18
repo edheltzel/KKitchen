@@ -13,10 +13,12 @@ interface Props {
 
 const { title = "Kris's Kitchen", active = 'recipes', wide = false, bare = false } = Astro.props;
 const hasSearch = Astro.slots.has('search');
+
+export const prerender = true;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-person={Astro.locals.person}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -33,10 +35,10 @@ const hasSearch = Astro.slots.has('search');
     <title>{title}</title>
   </head>
   <body class="bg-base-100 text-base-content min-h-dvh">
-    <main class:list={['kk-room mx-auto', bare && 'kk-cook', wide ? 'max-w-md md:max-w-4xl' : 'max-w-md', 'px-4 pt-[calc(1rem+env(safe-area-inset-top))]']} data-search={hasSearch ? '' : undefined}>
+    <main class:list={['kk-room mx-auto', bare && 'kk-cook', wide ? 'max-w-md lg:max-w-5xl' : 'max-w-md lg:max-w-5xl', 'px-4 pt-[calc(1rem+env(safe-area-inset-top))]']} data-search={hasSearch ? '' : undefined}>
       <slot />
     </main>
-    <div id="bottom-stack" class:list={['fixed inset-x-0 bottom-0 z-10 mx-auto', wide ? 'max-w-md md:max-w-4xl' : 'max-w-md', 'bg-base-100']}>
+    <div id="bottom-stack" class:list={['fixed inset-x-0 bottom-0 z-10 mx-auto', wide ? 'max-w-md lg:max-w-5xl' : 'max-w-md lg:max-w-5xl', 'bg-base-100']}>
       <slot name="above" />
       <slot name="search" />
       <slot name="replaces-tabs" />

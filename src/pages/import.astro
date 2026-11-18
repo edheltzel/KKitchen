@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+
+export const prerender = false;
+---
+
+<Base title="Bring in your saved recipes · Kris's Kitchen">
+  <h1 class="text-3xl font-extrabold tracking-tight">Bring in what this phone saved</h1>
+  <p id="import-summary" class="mt-2 text-kk-muted">Checking this phone.</p>
+  <div id="import-actions" hidden class="mt-4 flex gap-3">
+    <button type="button" id="import-confirm" class="btn btn-primary h-12 min-h-11 flex-1 rounded-full">Copy it in</button>
+    <button type="button" id="import-decline" class="btn h-12 min-h-11 flex-1 rounded-full">Not now</button>
+  </div>
+</Base>
+
+<script>
+  import { localCopy, markImported } from '../scripts/import-local';
+  import { phoneStorage } from '../scripts/phone-storage';
+
+  const storage = phoneStorage();
+  const copy = localCopy(storage);
+  const summary = document.querySelector('#import-summary')!;
+  const actions = document.querySelector<HTMLElement>('#import-actions')!;
+  if (!copy) {
+    summary.textContent = 'Nothing on this phone to copy.';
+  } else {
+    summary.textContent = `${copy.ratings.length} ratings and ${copy.dinners.length} planned dinners.`;
+    actions.hidden = false;
+  }
+
+  document.querySelector('#import-confirm')?.addEventListener('click', async () => {
+    if (!copy) return;
+    const response = await fetch('/api/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(copy) });
+    if (response.ok) {
+      const result = await response.json();
+      markImported(storage);
+      summary.textContent = result.skipped?.length
+        ? `Copied. ${result.skipped.length} dinner${result.skipped.length === 1 ? '' : 's'} already planned, left as they were.`
+        : 'Copied.';
+    }
+  });
+  document.querySelector('#import-decline')?.addEventListener('click', () => {
+    sessionStorage.setItem('kk:import-declined', '1');
+    location.assign('/');
+  });
+</script>

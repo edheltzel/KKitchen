@@ -10,6 +10,8 @@ interface Props {
 }
 
 const { title, part = 'all' } = Astro.props;
+
+export const prerender = true;
 ---
 
 {part === 'all' ? (

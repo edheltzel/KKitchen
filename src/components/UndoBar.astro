@@ -1,5 +1,7 @@
 ---
 // The shared Undo bar. Put it in the Base layout's replaces-tabs slot; mountUndoSlot() wires it.
+
+export const prerender = true;
 ---
 
 <div id="undo-bar" role="status" hidden class="kk-undo-bar flex items-center justify-between gap-3">

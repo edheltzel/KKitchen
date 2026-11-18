@@ -6,9 +6,9 @@ export const PEOPLE = ['ed', 'kristina'] as const;
 export type Person = (typeof PEOPLE)[number];
 export const PERSON_LABEL: Record<Person, string> = { ed: 'Ed', kristina: 'Kristina' };
 
-export const RATINGS = ['loved', 'not-for-us'] as const;
+export const RATINGS = ['loved', 'fine', 'not-for-us'] as const;
 export type Rating = (typeof RATINGS)[number];
-export const RATING_LABEL: Record<Rating, string> = { loved: 'Loved it', 'not-for-us': 'Not for us' };
+export const RATING_LABEL: Record<Rating, string> = { loved: 'Loved it', fine: 'It was fine', 'not-for-us': 'Not for us' };
 
 /** value null = cleared. A cleared entry is kept (a tombstone) so a clear on one phone beats an older rating on another. */
 export interface Entry {

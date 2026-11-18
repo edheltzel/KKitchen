@@ -11,6 +11,8 @@ interface Props {
 
 const { recipe, startHidden = false } = Astro.props;
 const tags = confirmedTags(recipe);
+
+export const prerender = true;
 ---
 
 <article class="card kk-card overflow-hidden rounded-2xl border border-base-300 bg-kk-card shadow-sm" data-example hidden={startHidden || undefined}

@@ -6,6 +6,8 @@ interface Props {
 }
 
 const { inline = false } = Astro.props;
+
+export const prerender = true;
 ---
 
 {inline ? (
