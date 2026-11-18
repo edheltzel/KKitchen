@@ -2,6 +2,7 @@
 // (?q=...&meal=...&time=...&diet=...&who=...&source=...), which makes refresh, Back and shared links restore the same results.
 
 import { likedBy, type Liked, type Ratings } from './ratings.ts';
+import type { StorageLike } from './phone-storage.ts';
 
 // `who` is the "Who liked it" rating group: favorite, ed, kristina, untried (see ratings.ts).
 // `source` is the one-chip "per source" group (value `stated`): it needs the recipe's own source-stated flag, nothing inferred.
@@ -65,8 +66,6 @@ export function serializeState(state: BrowseState, options: Options): string {
 export const activeFilterCount = (state: BrowseState): number =>
   GROUPS.reduce((sum, group) => sum + state[group].length, 0);
 
-export const hasAnyState = (state: BrowseState): boolean => state.q.trim() !== '' || activeFilterCount(state) > 0;
-
 export function toggleValue(state: BrowseState, group: Group, value: string, options: Options): BrowseState {
   const has = state[group].includes(value);
   const next = has ? state[group].filter((v) => v !== value) : [...state[group], value];
@@ -79,7 +78,7 @@ export function toggleValue(state: BrowseState, group: Group, value: string, opt
 // source is every-of too, but it has one value: the recipe's flag must be exactly true.
 // `ratings` is null while the ratings store is unavailable: the who group is then not applied, so
 // browsing and search keep working.
-export function matchesRecipe(recipe: Searchable, state: BrowseState, ratings: Ratings | null = null): boolean {
+function matchesRecipe(recipe: Searchable, state: BrowseState, ratings: Ratings | null = null): boolean {
   const name = recipe.name.toLowerCase();
   const ingredients = recipe.ingredients.map((i) => i.toLowerCase());
   const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -104,14 +103,6 @@ export function emptyMessage(state: BrowseState): string {
   if (q && filtered) return `No recipe lists '${q}' with these filters`;
   if (q) return `No recipe lists '${q}'`;
   return 'No recipes match these filters';
-}
-
-// --- session: last Recipes URL (for the tab bar) and scroll position per URL ---------------------------
-
-export interface StorageLike {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-  removeItem(key: string): void;
 }
 
 const ENTRY_KEY = 'kk:recipes';

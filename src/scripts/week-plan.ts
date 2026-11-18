@@ -3,8 +3,8 @@
 
 import { isValidId } from './ratings.ts';
 
-/** One day's dinner. `recipeId: null` is a removal, kept with its time so an older plan on another phone cannot bring the dinner back. */
-export interface DayEntry {
+/** One day's dinner. `recipeId: null` is a removal, kept with its time so an older plan cannot bring the dinner back. */
+interface DayEntry {
   recipeId: string | null;
   at: number;
 }

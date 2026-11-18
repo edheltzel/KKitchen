@@ -6,12 +6,12 @@ import { createOpQueue, type Op } from './op-queue.ts';
 import { dinnerOn, planChange, type Plan, type PlanChange, type PlanNote } from './week-plan.ts';
 import type { WeekPlanStore } from './week-store.ts';
 
-export interface WeekUndo {
+interface WeekUndo {
   day: string;
   recipeId: string;
 }
 
-export interface WeekView {
+interface WeekView {
   /** null while unavailable (never loaded, or a load/save failed): the pages then show nothing they cannot trust. */
   plan: Plan | null;
   unavailable: boolean;
@@ -46,7 +46,7 @@ export function createWeekController({ store, days }: { store: WeekPlanStore; da
     /** Reload from the store (page shown again). Does not paper over a failure. */
     refresh: () => (queue.unavailable ? Promise.resolve() : queue.enqueue(loadOp)),
     retry: () => queue.retry(loadOp),
-    /** Plan a dinner: a replace if the day has one, a move if the recipe is on another day. While the store is failing it waits for Retry. */
+    /** Plan a dinner: a replace if the day has one, a move if the recipe is already on another day. Waits for Retry while the store is failing. */
     plan(day: string, recipeId: string): Promise<void> {
       // What this tap meant to write, kept for Retry. A move is two writes; if the second failed, the dinner
       // is already on the new day, so re-planning from the saved plan alone would find nothing left to do and

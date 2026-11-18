@@ -5,13 +5,15 @@ import { cardTime, confirmedTags, exampleTitle, isFixture, type ExampleRecipe } 
 
 interface Props {
   recipe: ExampleRecipe;
+  /** Favorites passes this so a card that is not a Family favorite starts hidden. */
+  startHidden?: boolean;
 }
 
-const { recipe } = Astro.props;
+const { recipe, startHidden = false } = Astro.props;
 const tags = confirmedTags(recipe);
 ---
 
-<article class="card kk-card overflow-hidden rounded-2xl border border-base-300 bg-kk-card shadow-sm" data-example
+<article class="card kk-card overflow-hidden rounded-2xl border border-base-300 bg-kk-card shadow-sm" data-example hidden={startHidden || undefined}
   data-id={recipe.id}
   data-name={recipe.name}
   data-ingredients={recipe.ingredients.join('|')}

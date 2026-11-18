@@ -17,7 +17,7 @@ import {
   type Rating,
   type Ratings,
 } from './ratings.ts';
-import type { StorageLike } from './browse-state.ts';
+import type { StorageLike } from './phone-storage.ts';
 
 export const RATINGS_KEY = 'kk:ratings';
 export const IDENTITY_KEY = 'kk:me';
@@ -36,7 +36,7 @@ export class RatingsUnavailableError extends Error {
   }
 }
 
-export interface LocalStoreOptions {
+interface LocalStoreOptions {
   storage: StorageLike;
   key?: string;
   /** Injectable clock (milliseconds). */

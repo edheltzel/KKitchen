@@ -5,7 +5,7 @@ import { ratingOf, removedFamilyFavorite, type Person, type Rating, type Ratings
 import type { RatingsStore } from './ratings-store.ts';
 import { createOpQueue, type Op } from './op-queue.ts';
 
-export interface UndoInfo {
+interface UndoInfo {
   id: string;
   person: Person;
   /** What to put back: the rating before the change that removed the Family favorite. */
@@ -57,7 +57,7 @@ export function createRatingsController({ store, identity }: { store: RatingsSto
       undo = null;
       emit();
     },
-    /** Tap a rating button: the same rating again clears it. Needs a chosen person. While the store is failing the tap waits for Retry. */
+    /** Tap a rating button: the same rating again clears it. Needs a chosen person. Waits for Retry while the store is failing. */
     tap(id: string, rating: Rating): Promise<void> {
       const person = me;
       if (!person) return Promise.resolve();

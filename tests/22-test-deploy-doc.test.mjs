@@ -17,7 +17,7 @@ test('test-deploy doc says what is deployed and what stays on each phone', () =>
 test('test-deploy doc has the exact manual deploy command, with the Worker name from wrangler.jsonc, and says there is no automatic republish', () => {
   const d = doc();
   // The commands as they were really run: build and test in the project, then wrangler from /Users/ed, where it finds the token in .env.
-  // npm test builds the example fixture into dist, so the deploy step ends with a plain npm run build (the real recipes), after the tests.
+  // npm test leaves the example fixture in dist, so the deploy step ends with a plain npm run build (the real recipes).
   assert.match(d, /cd \/Users\/ed\/Developer\/KKitchen && npm test && rm -rf dist && npm run build\n/);
   assert.ok(!/rm -rf dist && npm test\s*$/m.test(d), 'no deploy step stops at npm test: its dist holds the examples');
   assert.match(d, /npm test` builds the example fixture[^\n]*plain `npm run build`/);

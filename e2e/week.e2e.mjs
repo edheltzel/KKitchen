@@ -1,5 +1,5 @@
 // Headless-Chrome check of the Week page and the Plan sheet on recipe cards, against the built site.
-// Run: npm run build && node e2e/week.e2e.mjs   (the page believes it is Thursday 29 Oct 2026)
+// Run: npm run e2e, or npm test && node e2e/week.e2e.mjs   (the page believes it is Thursday 29 Oct 2026)
 import { startHarness } from './harness.mjs';
 
 const h = await startHarness();

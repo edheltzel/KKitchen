@@ -16,6 +16,7 @@ import {
   type Options,
   type Searchable,
 } from './browse-state';
+import { pageSession } from './phone-storage';
 import { mountRatings } from './ratings-ui';
 import { mountUndoSlot } from './undo-mount';
 
@@ -65,15 +66,7 @@ const { controller } = mountRatings({
 
 let state: BrowseState = parseState(location.search, options);
 
-function pageStorage(): Storage {
-  try {
-    return window.sessionStorage;
-  } catch {
-    // Storage blocked (private mode): the page still works, it just forgets scroll and tab state.
-    return { getItem: () => null, setItem: () => {}, removeItem: () => {} } as unknown as Storage;
-  }
-}
-const session = createSession(pageStorage());
+const session = createSession(pageSession());
 const here = () => location.pathname + serializeState(state, options);
 // Remember this URL for the Recipes tab, and the scroll offset under this exact URL.
 const remember = () => {
@@ -95,30 +88,39 @@ function render(): void {
     chip.setAttribute('aria-pressed', String(state[chip.dataset.group as Group].includes(chip.dataset.value!)));
   }
 
-  chipsRow.replaceChildren();
-  for (const group of GROUPS) {
-    for (const value of state[group]) {
-      const label = labels.get(`${group}:${value}`) ?? value;
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'kk-chip kk-chip-on';
-      chip.dataset.group = group;
-      chip.dataset.value = value;
-      const paused = group === 'who' && view.unavailable; // ratings cannot be read, so this filter is not applied
-      if (paused) {
-        chip.classList.add('kk-chip-paused');
-        chip.dataset.paused = 'true';
+  // Reuse the buttons already in the row. Typing only changes the search, so rebuilding here
+    // would throw away the focused chip and the click target on every keystroke.
+    const wanted = GROUPS.flatMap((group) => state[group].map((value) => ({ group, value })));
+    const have = [...chipsRow.querySelectorAll<HTMLButtonElement>('button')];
+    const same =
+      have.length === wanted.length &&
+      wanted.every((w, i) => have[i].dataset.group === w.group && have[i].dataset.value === w.value);
+    if (!same) {
+      chipsRow.replaceChildren();
+      for (const { group, value } of wanted) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'kk-chip kk-chip-on';
+        chip.append(document.createTextNode(''));
+        chip.dataset.group = group;
+        chip.dataset.value = value;
+        chip.insertAdjacentHTML(
+          'beforeend',
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+        );
+        chipsRow.append(chip);
       }
-      chip.setAttribute('aria-label', paused ? `Remove filter: ${label} (paused until ratings load)` : `Remove filter: ${label}`);
-      chip.textContent = paused ? `${label}, paused` : label;
-      chip.insertAdjacentHTML(
-        'beforeend',
-        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>',
-      );
-      chipsRow.append(chip);
     }
-  }
-  chipsRow.hidden = chipsRow.childElementCount === 0;
+    for (const chip of chipsRow.querySelectorAll<HTMLButtonElement>('button')) {
+      const label = labels.get(`${chip.dataset.group}:${chip.dataset.value}`) ?? chip.dataset.value!;
+      const paused = chip.dataset.group === 'who' && view.unavailable; // ratings cannot be read, so this filter is not applied
+      chip.classList.toggle('kk-chip-paused', paused);
+      if (paused) chip.dataset.paused = 'true';
+      else delete chip.dataset.paused;
+      chip.setAttribute('aria-label', paused ? `Remove filter: ${label} (paused until ratings load)` : `Remove filter: ${label}`);
+      chip.firstChild!.textContent = paused ? `${label}, paused` : label;
+    }
+    chipsRow.hidden = wanted.length === 0;
 
   const active = activeFilterCount(state);
   filtersCount.textContent = String(active);

@@ -1,6 +1,6 @@
-// Headless-Chrome check of the recipe page: ticks that survive a reload, Reset with Undo, Back keeping the filters and the
-// scroll, ratings and Plan reused from the Recipes page, and the two-column desktop layout (the page thinks it is Thu 29 Oct 2026).
-// Run: npm run build && timeout 60 node e2e/recipe.e2e.mjs
+// Headless-Chrome check of the recipe page: ticks that survive a reload, Reset with Undo, Back keeping the filters and scroll,
+// ratings and Plan reused from the Recipes page, and the two-column desktop layout (the page thinks it is Thu 29 Oct 2026).
+// Run: npm run e2e, or npm test && timeout 60 node e2e/recipe.e2e.mjs
 import { startHarness, PHONE_WIDTH, PHONE_HEIGHT } from './harness.mjs';
 
 const h = await startHarness();

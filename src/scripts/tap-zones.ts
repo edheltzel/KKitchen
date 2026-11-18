@@ -1,6 +1,6 @@
-// Tap zones on a cooking step: the left 35% of the screen goes back, the rest goes forward (except on the last step, where only the
-// Finish button opens Done, because Done clears the ingredient ticks). Pure, so node:test can check it.
-export type TapAction = 'back' | 'next' | 'none';
+// Tap zones on a cooking step: the left 35% goes back, the rest forward. On the last step only Finish opens Done, since Done clears the ticks.
+// Pure, so node:test can check it.
+type TapAction = 'back' | 'next' | 'none';
 
 export const BACK_FRACTION = 0.35;
 

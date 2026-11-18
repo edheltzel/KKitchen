@@ -1,6 +1,6 @@
-// A small headless-Chrome harness for the e2e files that come after browse.e2e.mjs (that one still carries
-// its own copy). Chrome here quits about 30 s after it starts, so each e2e file is its own launch and has to
-// finish well inside that. The server binds 127.0.0.1 only and everything is stopped by finish().
+// A small headless-Chrome harness shared by every e2e file. Chrome here quits about 30 s after it starts,
+// so each e2e file is its own launch and has to finish well inside that. The server binds 127.0.0.1 only
+// and everything is stopped by finish().
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync, mkdtempSync, rmSync } from 'node:fs';

@@ -20,7 +20,7 @@ export function mountRatings({
   root: HTMLElement;
   cards: HTMLElement[];
   slot: ReturnType<typeof createUndoSlot>;
-  /** When given, a rating tap with nobody picked opens this Ed / Kristina row where the buttons are, instead of scrolling to the bottom picker. */
+  /** When given, a rating tap with nobody picked opens this Ed / Kristina row in place, instead of scrolling to the bottom picker. */
   inlinePicker?: HTMLElement;
 }) {
   const meButtons = [...document.querySelectorAll<HTMLButtonElement>('button[data-me]')];

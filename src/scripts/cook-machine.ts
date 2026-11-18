@@ -38,7 +38,7 @@ export function parse(hash: unknown, total: number): CookState {
   return { phase: 'step', index: clamp(Number(match[1]) - 1, total) };
 }
 
-export type SegmentState = 'done' | 'current' | 'todo';
+type SegmentState = 'done' | 'current' | 'todo';
 
 /** One progress segment per step. */
 export function segments(state: CookState, total: number): SegmentState[] {

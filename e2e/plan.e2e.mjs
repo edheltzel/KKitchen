@@ -1,5 +1,5 @@
 // Headless-Chrome check of the Plan button and day picker on the Recipes page (the page thinks it is Thursday 29 Oct 2026).
-// Run: npm run build && node e2e/plan.e2e.mjs
+// Run: npm run e2e, or npm test && node e2e/plan.e2e.mjs
 import { startHarness, PHONE_HEIGHT } from './harness.mjs';
 
 const h = await startHarness();

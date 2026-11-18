@@ -2,14 +2,14 @@
 // (or a stand-in in tests), so granted, denied, released-by-the-system and re-request-when-visible are all testable.
 //   'on'      the lock is held: show "Screen stays on".
 //   'off'     not held right now (not asked yet, let go, or the system took it while the page was hidden and we will ask again).
-//   'failed'  no API, the request was refused, or the system took it while the page was showing: show "Screen may sleep" and the banner.
+//   'failed'  no API, refused, or taken while the page was showing: show "Screen may sleep" and the banner.
 export type WakeStatus = 'off' | 'on' | 'failed';
 
 interface Sentinel {
   addEventListener(name: 'release', listener: () => void): void;
   release(): Promise<void>;
 }
-export interface WakeApi {
+interface WakeApi {
   request(type: 'screen'): Promise<Sentinel>;
 }
 

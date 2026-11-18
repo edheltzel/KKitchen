@@ -2,7 +2,7 @@
 // (see docs/ticks-store-notes.md), so there is no timestamp and no server shape: just the ticked item ids per recipe
 // under one localStorage key. Every write re-reads the saved data and changes only what it means to change, so a second
 // tab ticking a different item is never overwritten.
-import type { StorageLike } from './browse-state.ts';
+import type { StorageLike } from './phone-storage.ts';
 import { isValidId } from './ratings.ts';
 
 export const TICKS_KEY = 'kk:ticks';
@@ -16,7 +16,7 @@ export class TicksUnavailableError extends Error {
 }
 
 const ITEM_ID = /^[a-z][a-z0-9-]{0,39}$/;
-export const isItemId = (value: unknown): value is string => typeof value === 'string' && ITEM_ID.test(value);
+const isItemId = (value: unknown): value is string => typeof value === 'string' && ITEM_ID.test(value);
 
 type Saved = Record<string, string[]>;
 

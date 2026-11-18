@@ -4,13 +4,13 @@
 import { TicksUnavailableError, type TicksStore } from './ticks-store.ts';
 import type { UndoOffer } from './undo-slot.ts';
 
-export interface TicksView {
+interface TicksView {
   checked: ReadonlySet<string>;
   /** The phone could not read or save the checks; they last until this page closes unless Retry works. */
   unavailable: boolean;
 }
 
-export interface TicksControllerOptions {
+interface TicksControllerOptions {
   store: TicksStore;
   recipeId: string;
   /** Every item id this recipe has: anything else saved is ignored. */

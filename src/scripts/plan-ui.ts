@@ -1,5 +1,5 @@
-// Plan button on each recipe card and on the recipe page: a day picker sheet, the third way to plan a dinner (after the Week page's
-// Add a dinner and swiping/Remove there). Same store key and controller as the Week page. Text via textContent only.
+// Day picker sheet on each recipe card and the recipe page: the third way to plan a dinner, after the Week page's Add and Remove.
+// Same store key and controller as the Week page. Text via textContent only.
 import { createWeekController } from './week-controller';
 import { createLocalWeekStore } from './week-store';
 import { phoneStorage } from './phone-storage';

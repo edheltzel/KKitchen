@@ -6,10 +6,10 @@ import { realNotes } from './recipes.ts';
 export const EXAMPLE_PREFIX = 'Example recipe: ';
 
 export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-export const MEAL_ORDER: readonly Meal[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+const MEAL_ORDER: readonly Meal[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 export const TIME_OPTIONS: readonly number[] = [15, 30, 45];
 
-export interface DietTag {
+interface DietTag {
   label: string;
   /** Only tags a person confirmed are ever shown or offered as a filter. */
   confirmed: boolean;
@@ -20,7 +20,7 @@ export interface Ingredient {
   id: string;
   text: string;
 }
-export interface IngredientGroup {
+interface IngredientGroup {
   /** Omitted when a recipe has one plain list. */
   title?: string;
   items: readonly Ingredient[];
@@ -39,12 +39,12 @@ export interface ExampleRecipe {
   meal: Meal;
   /** Search keywords only. What the page shows is `groups`. */
   ingredients: readonly string[];
-  /** prep + cook = minutes (the total shown on the card). A prep of 0 means the note gives none, and the meta line then leaves it out. */
+  /** prep + cook = minutes, the total on the card. 0 means the note gives no prep, and the meta line leaves it out. */
   prep: number;
   cook: number;
-  /** Hands-off time that is not in `minutes` (a marinate), as short text like "2 h marinate". Shown beside the minutes; the time filter ignores it. */
+  /** Hands-off time not in `minutes`, e.g. "2 h marinate". Shown beside the minutes; the time filter ignores it. */
   wait?: string;
-  /** Set only on a recipe whose source says it is gluten-free. Shows one small plain label on the recipe page ("Gluten-free per the original recipe") and is the only thing the "Gluten-free per source" filter chip reads; no tag, no card badge, nothing inferred. */
+  /** Set only when the source says gluten-free. The only input to the recipe-page label and the "Gluten-free per source" chip; no tag, no badge, nothing inferred. */
   glutenFreePerSource?: true;
   serves: number;
   groups: readonly IngredientGroup[];
@@ -102,7 +102,7 @@ const fixtureNotes: readonly ExampleRecipe[] = [
       step('Simmer for fifteen minutes.'),
       step('Blend until smooth and stir in the basil.', 'basil'),
     ] },
-  // FIXTURE ONLY: the flag on example-4 and example-5 gives the filter tests a positive and a negative case. Example data, not a claim about any real recipe.
+  // FIXTURE ONLY: example-4 and example-5 carry the flag so filter tests have both cases. Not a claim about any real recipe.
   { id: 'example-4', name: 'Overnight Oats', minutes: 10, meal: 'breakfast', approved: true, glutenFreePerSource: true,
     ingredients: ['rolled oats', 'milk', 'chia seeds', 'honey'], tags: [{ label: 'Meatless', confirmed: true }],
     prep: 10, cook: 0, serves: 2, source: 'https://example.com/example-oats',

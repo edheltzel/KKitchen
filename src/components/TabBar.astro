@@ -49,19 +49,14 @@ const tabs = [
 <script>
   // The Recipes tab goes back to the last search, filters and scroll. Without JS it is just "/".
   import { createSession } from '../scripts/browse-state';
+  import { pageSession } from '../scripts/phone-storage';
 
   const link = document.querySelector<HTMLAnchorElement>('nav[aria-label="Main"] a[data-tab="recipes"]');
-  if (link) {
-    let storage: Storage | undefined;
-    try {
-      storage = window.sessionStorage;
-    } catch {}
-    if (storage) {
-      const session = createSession(storage);
+    if (link) {
+    const session = createSession(pageSession());
       const sync = () => link.setAttribute('href', session.recipesHref());
-      sync();
-      link.addEventListener('click', sync);
+    sync();
+    link.addEventListener('click', sync);
       addEventListener('pageshow', sync);
     }
-  }
 </script>

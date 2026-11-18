@@ -3,7 +3,7 @@
 // Approval: these notes carry no approved marker, but the captain asked for these three by name, so each is treated as approved.
 // Gluten-free: the gluten-free tag is held until the captain confirms it (the fried chicken is still open), so no recipe has any tag.
 // Credit: `source` shows as the "Original recipe" link. `author` is stored only; no page shows it yet.
-// Time: `minutes` is prep + cook, and the time filter uses it. A wait (the chicken's marinate) is `wait`: shown beside the minutes, not in them. The note's own words (at least 2 hours) stay in the notes.
+// Time: `minutes` is prep + cook, and the time filter uses it. A wait (the chicken's marinate) is `wait`: shown beside the minutes, not in them.
 import type { ExampleRecipe, Ingredient, Step } from './examples.ts';
 
 const it = (id: string, text: string): Ingredient => ({ id, text });
@@ -108,7 +108,7 @@ const roast: ExampleRecipe = {
   ],
 };
 
-// A dessert or snack: Meal has no dessert, so it is a snack. The note gives no prep time, so prep is 0 and the meta line leaves it out.
+// Meal has no dessert, so this snack is a snack. The note gives no prep, so prep is 0 and the meta line leaves it out.
 const brownies: ExampleRecipe = {
   id: 'high-protein-brownies', name: 'High Protein Brownies', meal: 'snack', approved: true, tags: [], glutenFreePerSource: true,
   source: 'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/', author: 'Instructables',

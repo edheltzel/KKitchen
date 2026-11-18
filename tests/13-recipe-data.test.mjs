@@ -100,7 +100,7 @@ test('a wait (marinate, chill) is shown after the active time: "+ 2 h marinate" 
   assert.equal(recipeMeta({ ...plain, prep: 25, cook: 360, serves: 8 }), 'Prep 25 min · Cook 6 h · Serves 8');
 });
 
-// FIXTURE ONLY: two example recipes carry the flag so the filter tests have a positive and a negative case. It is example data, not a claim about any real recipe.
+// FIXTURE ONLY: two example recipes carry the flag so the filter tests have both cases. Example data, not a claim about any real recipe.
 test('exactly two example recipes (Overnight Oats, Lemon Rice Bowl) set glutenFreePerSource, as a plain true; the other four leave it unset', () => {
   assert.deepEqual(exampleRecipes.filter((r) => r.glutenFreePerSource !== undefined).map((r) => [r.id, r.glutenFreePerSource]), [['example-4', true], ['example-5', true]]);
   assert.ok(exampleRecipes.filter((r) => r.glutenFreePerSource === undefined).length === 4);

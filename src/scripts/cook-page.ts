@@ -1,5 +1,5 @@
-// Cooking mode: Gather, one screen per step, Done. The position is the address hash (replaceState, see docs/cooking-mode-notes.md);
-// ticks are the recipe page's own (same store, same controller); Done reuses the ratings controller; the screen is kept on by wake-lock.ts.
+// Cooking mode: Gather, one screen per step, Done. Position is the address hash (replaceState, see docs/cooking-mode-notes.md);
+// ticks share the recipe page's store and controller; Done reuses the ratings controller; wake-lock.ts keeps the screen on.
 import { createSession } from './browse-state';
 import { back, encode, next, parse, segments, stepCount, type CookState } from './cook-machine';
 import { exitAction } from './cook-exit';
@@ -7,10 +7,9 @@ import { createTicksController } from './ticks-controller';
 import { TICKS_KEY, createTicksStore } from './ticks-store';
 import { mountRatings } from './ratings-ui';
 import { mountUndoSlot } from './undo-mount';
-import { phoneStorage } from './phone-storage';
+import { pageSession, phoneStorage } from './phone-storage';
 import { INTERACTIVE, tapDecision } from './tap-zones';
 import { browserWakeApi, createWakeLock, type WakeStatus } from './wake-lock';
-
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 const article = $('#cook');
@@ -18,12 +17,10 @@ const recipeId = article.dataset.id!;
 const total = Number(article.dataset.total);
 const data: { steps: { text: string; uses: string[] }[]; items: Record<string, string> } = JSON.parse($('#cook-data').textContent ?? '{}');
 
-// --- shared Undo bar, ratings (Done) -------------------------------------------------------------------------------
 const slot = mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') });
 const { controller: ratings } = mountRatings({ root: article, cards: [article], slot });
 void ratings.init();
 
-// --- ticks: the same per-recipe ticks as the recipe page -------------------------------------------------------------
 const gatherBoxes = [...document.querySelectorAll<HTMLInputElement>('input[data-item]')];
 const ticks = createTicksController({
   store: createTicksStore({ storage: phoneStorage() }),
@@ -32,16 +29,11 @@ const ticks = createTicksController({
   slot,
 });
 
-// --- keep-awake -------------------------------------------------------------------------------------------------------
 const DISMISS_KEY = 'kk:wake-banner-dismissed';
 const wakeStatus = $('#wake-status');
 const wakeBanner = $('#wake-banner');
-let dismissed = false;
-try {
-  dismissed = window.sessionStorage.getItem(DISMISS_KEY) === '1';
-} catch {
-  /* private mode: the banner simply comes back after a reload */
-}
+const sessionStore = pageSession();
+let dismissed = sessionStore.getItem(DISMISS_KEY) === '1';
 function renderWake(status: WakeStatus): void {
   wakeStatus.dataset.status = status;
   wakeStatus.hidden = status === 'off';
@@ -51,15 +43,10 @@ function renderWake(status: WakeStatus): void {
 const wake = createWakeLock({ api: browserWakeApi(), isVisible: () => document.visibilityState === 'visible', onChange: renderWake });
 $('#wake-dismiss').addEventListener('click', () => {
   dismissed = true;
-  try {
-    window.sessionStorage.setItem(DISMISS_KEY, '1');
-  } catch {
-    /* kept in memory for this page */
-  }
+  sessionStore.setItem(DISMISS_KEY, '1');
   renderWake(wake.status());
 });
 
-// --- where we are -----------------------------------------------------------------------------------------------------
 let state: CookState = parse(location.hash, total);
 const screens = { gather: $('#screen-gather'), step: $('#screen-step'), done: $('#screen-done') };
 const segEls = [...document.querySelectorAll<HTMLElement>('.kk-seg')];
@@ -143,7 +130,6 @@ $('#start').addEventListener('click', () => go(next(state, total)));
 $('#next').addEventListener('click', () => go(next(state, total)));
 $('#back-step').addEventListener('click', () => go(back(state, total)));
 
-// --- tap zones on a step: right side forward, left side back ----------------------------------------------------------
 document.addEventListener('click', (event) => {
   if (state.phase !== 'step' || event.defaultPrevented) return;
   const rect = article.getBoundingClientRect();
@@ -159,7 +145,6 @@ document.addEventListener('click', (event) => {
   else if (action === 'back') go(back(state, total));
 });
 
-// --- Exit and Back to recipes ----------------------------------------------------------------------------------------
 const exit = $<HTMLAnchorElement>('#exit');
 exit.addEventListener('click', (event) => {
   void wake.release();
@@ -169,15 +154,9 @@ exit.addEventListener('click', (event) => {
     history.back();
   }
 });
-let session: ReturnType<typeof createSession> | null = null;
-try {
-  session = createSession(window.sessionStorage);
-} catch {
-  /* Back to recipes is a link to "/" */
-}
-$<HTMLAnchorElement>('#back-to-recipes').href = session?.recipesHref() ?? '/';
+const session = createSession(sessionStore);
+$<HTMLAnchorElement>('#back-to-recipes').href = session.recipesHref();
 
-// --- lifecycle ----------------------------------------------------------------------------------------------------
 addEventListener('storage', (event) => event.key === TICKS_KEY && ticks.refresh());
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {

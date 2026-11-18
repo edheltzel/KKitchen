@@ -1,83 +1,16 @@
 // Headless-Chrome check of search, filters, URL state, scroll and tab restore against the built site.
-// Run: npm run build && npm run e2e   (not part of `npm test`: it needs Chrome and starts a local server)
+// Run: npm run e2e, or npm test && node e2e/browse.e2e.mjs   (not part of `npm test`: it needs Chrome and starts a local server)
 // Env: CHROME=/path/to/chrome   PORT=4399   (server binds 127.0.0.1 only and is stopped on exit)
-import { spawn } from 'node:child_process';
-import { createServer } from 'node:http';
-import { readFileSync, existsSync, statSync, mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, extname, resolve } from 'node:path';
-import { PHONE_WIDTH, PHONE_HEIGHT } from './harness.mjs';
+import { startHarness, PHONE_HEIGHT } from './harness.mjs';
 
-const dist = resolve(new URL('../dist', import.meta.url).pathname);
-const PORT = Number(process.env.PORT ?? 4399);
-const DEBUG = 9334;
-const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webmanifest': 'application/manifest+json' };
-
-const server = createServer((req, res) => {
-  const path = new URL(req.url, 'http://x').pathname;
-  let file = join(dist, path);
-  if (!file.startsWith(dist)) return res.writeHead(403).end();
-  if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
-  if (!existsSync(file)) return res.writeHead(404).end('not found');
-  res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file));
-});
-await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
-const base = `http://127.0.0.1:${PORT}`;
-
-const profile = mkdtempSync(join(tmpdir(), 'kk-e2e-'));
-const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${DEBUG}`, `--user-data-dir=${profile}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' });
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-let ws;
-const results = [];
-async function cleanup() {
-  try { ws?.close(); } catch {}
-  chrome.kill();
-  server.close();
-  await sleep(500);
-  rmSync(profile, { recursive: true, force: true });
-}
+const h = await startHarness();
+const { send, ev, waitFor, goto, check, text, visible, click, sleep } = h;
 try {
-  let targets = [];
-  for (let i = 0; i < 40; i++) {
-    try { targets = await (await fetch(`http://127.0.0.1:${DEBUG}/json`)).json(); if (targets.length) break; } catch {}
-    await sleep(250);
-  }
-  ws = new WebSocket(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
-  await new Promise((r) => (ws.onopen = r));
-  let id = 0;
-  const pending = new Map();
-  ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
-  const send = (method, params = {}, ms = 20000) => new Promise((r, rej) => { const i = ++id; pending.set(i, r); setTimeout(() => { if (pending.has(i)) { pending.delete(i); rej(new Error('no answer from Chrome: ' + method)); } }, ms); ws.send(JSON.stringify({ id: i, method, params })); });
-  const ev = async (expression) => {
-    const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, 4000);
-    if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.text + ' ' + (r.result.exceptionDetails.exception?.description ?? ''));
-    return r.result.result.value;
-  };
-  const waitFor = async (expression, ms = 3000) => {
-    const end = Date.now() + ms;
-    let v;
-    while (Date.now() < end) { try { v = await ev(expression); if (v) return v; } catch {} await sleep(50); }
-    return v;
-  };
-  const goto = async (path) => {
-    await send('Page.navigate', { url: base + path });
-    await sleep(100);
-    await waitFor("document.readyState === 'complete'");
-    await sleep(300);
-  };
-  const check = (name, ok, detail = '') => { results.push({ name, ok: Boolean(ok), detail }); };
-  const text = (sel) => ev(`document.querySelector(${JSON.stringify(sel)})?.textContent?.trim() ?? null`);
-  const visible = (sel) => ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); return !!e && !e.hidden && e.getBoundingClientRect().height > 0; })()`);
   const loc = () => ev('location.pathname + location.search');
   const type = async (s) => { await ev("document.querySelector('#search-input').focus()"); await send('Input.insertText', { text: s }); await sleep(120); };
   const clearInput = async () => { await ev("(() => { const i = document.querySelector('#search-input'); i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); })()"); await sleep(100); };
-  const click = async (sel) => { await ev(`document.querySelector(${JSON.stringify(sel)}).click()`); await sleep(120); };
   const chip = (g, v) => `[data-group="${g}"][data-value="${v}"]`;
   const visibleCards = () => ev("[...document.querySelectorAll('#recipe-grid article')].filter((a) => !a.hidden).map((a) => a.dataset.name)");
-
-  await send('Emulation.setDeviceMetricsOverride', { width: PHONE_WIDTH, height: PHONE_HEIGHT, deviceScaleFactor: 2, mobile: true });
-  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
 
   // 0. the whole placeholder fits at 390px with the count badge showing
   await goto('/?meal=lunch&time=30&diet=Meatless');
@@ -392,15 +325,7 @@ try {
   await click(rb('example-6', 'loved'));
   check('rating still works after a garbled value (it is overwritten)', (await saved())['example-6'].ed.value === 'loved');
 } catch (e) {
-  results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
+  h.results.push({ name: 'script ran to the end', ok: false, detail: String(e?.message ?? e) });
 } finally {
-  await cleanup();
+  await h.finish();
 }
-
-let failed = 0;
-for (const r of results) {
-  if (!r.ok) failed++;
-  console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}${!r.ok && r.detail ? `  [${r.detail}]` : ''}`);
-}
-console.log(`\n${results.length - failed}/${results.length} checks passed`);
-process.exit(failed ? 1 : 0);

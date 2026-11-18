@@ -8,7 +8,7 @@
 
 import { isValidId } from './ratings.ts';
 import { isValidDay, mergePlans, sanitizePlan, type Plan } from './week-plan.ts';
-import type { StorageLike } from './browse-state.ts';
+import type { StorageLike } from './phone-storage.ts';
 
 export const WEEK_KEY = 'kk:week';
 
@@ -26,7 +26,7 @@ export class WeekPlanUnavailableError extends Error {
   }
 }
 
-export interface LocalWeekStoreOptions {
+interface LocalWeekStoreOptions {
   storage: StorageLike;
   key?: string;
   /** Injectable clock (milliseconds). */

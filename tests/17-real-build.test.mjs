@@ -131,7 +131,7 @@ test('home cards and recipe pages show honest times: the wait next to the minute
 });
 
 // The gluten-free wording is held until Ed or Kristina confirm each recipe. The only "gluten" left in the build is what we were told to keep:
-// the small label on two recipe pages, the two ingredient/step lines that name something to buy (listed for the captain) and the two untouched source links.
+// the label on two recipe pages, the two lines naming something to buy, and the two untouched source links.
 const KEPT = {
   'all-purpose gluten-free flour': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
   'Combine the gluten-free flour, cornstarch': ['recipe/fried-chicken/index.html', 'cook/fried-chicken/index.html'],
@@ -221,7 +221,10 @@ test('the per-source flag marks exactly the flagged recipes on the home page, re
   assert.deepEqual(marked, flaggedIds);
   const roast = cards.find((c) => c.includes('data-id="slow-cooker-roast"'));
   assert.ok(roast && !roast.includes('data-source-stated'));
-  assert.ok(!/data-source-stated/.test(page('week/index.html')) && !/data-source-stated/.test(page('favorites/index.html')));
+  assert.ok(!/data-source-stated/.test(page('week/index.html')));
+    const favCards = [...page('favorites/index.html').matchAll(/<article [^>]*data-example[^>]*>/g)].map((m) => m[0]);
+    const favMarked = favCards.filter((c) => /data-source-stated(=|\s|>)/.test(c)).map((c) => c.match(/data-id="([^"]*)"/)[1]).sort();
+    assert.deepEqual(favMarked, flaggedIds, 'favorites reuses the card, so the same recipes carry the flag');
 });
 
 test('the chip stays off when no recipe has the flag: a shared ?source=stated link is ignored when the group has no options', () => {

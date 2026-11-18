@@ -23,7 +23,7 @@ test('dist/_headers exists and sends noindex, nosniff and a same-origin referrer
   }
   assert.ok(rule.includes('X-Robots-Tag: noindex, nofollow'), rule.join(' | '));
   assert.ok(rule.includes('X-Content-Type-Options: nosniff'), rule.join(' | '));
-  // same-origin, not no-referrer: Back on the recipe page and Exit in cooking read document.referrer to decide whether to step back in history.
+  // same-origin, not no-referrer: Back and Exit read document.referrer to decide whether to step back in history.
   assert.ok(rule.includes('Referrer-Policy: same-origin'), rule.join(' | '));
   assert.ok(!rule.some((l) => /no-referrer/i.test(l)), 'no-referrer would blank document.referrer on this site');
 });
