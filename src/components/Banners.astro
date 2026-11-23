@@ -1,0 +1,16 @@
+---
+// The notices above the bars: ratings and week plan unavailable, plus whatever the page adds (default slot).
+// Wired by ratings-ui.ts (Retry for ratings) and plan-ui.ts (Retry for the week plan).
+---
+
+<div class="px-4">
+  <div id="ratings-unavailable" role="alert" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
+    <p class="text-[15px] font-bold">Ratings unavailable. Your taps will save when you tap Retry.</p>
+    <button type="button" id="ratings-retry" class="btn btn-primary min-h-11 rounded-full px-5">Retry</button>
+  </div>
+  <div id="week-unavailable" role="alert" hidden class="kk-notice mb-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-2">
+    <p class="text-[15px] font-bold">Week plan unavailable. Your changes will save when you tap Retry.</p>
+    <button type="button" id="week-retry" class="btn btn-primary min-h-11 rounded-full px-5">Retry</button>
+  </div>
+  <slot />
+</div>

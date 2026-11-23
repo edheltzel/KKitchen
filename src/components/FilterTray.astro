@@ -1,0 +1,44 @@
+---
+import { exampleRecipes, filterOptions } from '../data/examples';
+import { LIKED_OPTIONS } from '../scripts/ratings';
+
+const options = filterOptions();
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+// Meal type and time-under come from the example data; diet shows confirmed tags only.
+// The "per source" group is drawn only when some recipe carries glutenFreePerSource, and it matches on that flag alone.
+const hasSourceFlag = exampleRecipes.some((r) => r.glutenFreePerSource);
+const groups = [
+  { id: 'source', title: 'From the source', note: 'Shown only when the original recipe says so.', items: hasSourceFlag ? [{ value: 'stated', label: 'Gluten-free per source' }] : [] },
+  { id: 'meal', title: 'Meal type', items: options.meal.map((v) => ({ value: v, label: cap(v) })) },
+  { id: 'time', title: 'Time', items: options.time.map((v) => ({ value: v, label: `${v} min or less` })) },
+  { id: 'diet', title: 'Diet tags', note: 'Diet tags: a recipe needs all you pick.', items: options.diet.map((v) => ({ value: v, label: v })) },
+  { id: 'who', title: 'Who liked it', noteId: 'who-note', note: 'Pick several to see any of them.', items: LIKED_OPTIONS.map((o) => ({ value: o.value, label: o.label })) },
+].filter((g) => g.items.length > 0);
+---
+
+<dialog id="filter-tray" class="modal modal-bottom" aria-labelledby="filter-title">
+  <div class="modal-box mx-auto max-w-md rounded-t-3xl bg-base-100 p-0">
+    <div class="flex items-center justify-between px-5 pt-4">
+      <h2 id="filter-title" class="text-xl font-extrabold">Filters</h2>
+      <button type="button" id="clear-filters" class="min-h-11 min-w-11 px-2 text-[15px] font-bold text-kk-accent">Clear filters</button>
+    </div>
+    <p class="px-5 text-[13px] text-kk-muted">Meal and time: pick several to see any of them. Different groups all have to match.</p>
+    {groups.map((g) => (
+      <fieldset class="mx-5 mt-3 border-t border-base-300 pt-3">
+        <legend class="pr-2 text-[13px] font-bold uppercase tracking-wide text-kk-muted">{g.title}</legend>
+        {g.note && <p id={g.noteId} class="mb-2 text-[13px] text-kk-muted">{g.note}</p>}
+        <div class="flex flex-wrap gap-2">
+          {g.items.map((i) => (
+            <button type="button" class="kk-chip" aria-pressed="false" data-group={g.id} data-value={i.value}>{i.label}</button>
+          ))}
+        </div>
+      </fieldset>
+    ))}
+    <form method="dialog" class="sticky bottom-0 mt-4 border-t border-base-300 bg-base-100 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      <button class="btn btn-primary btn-block h-12 min-h-11 rounded-full text-base">Done</button>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button aria-label="Close filters">close</button>
+  </form>
+</dialog>

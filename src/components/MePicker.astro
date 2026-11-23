@@ -1,0 +1,27 @@
+---
+// "I'm Ed / I'm Kristina": which person this phone is. Wired by ratings-ui.ts.
+// The inline variant opens in place under the rating buttons when a tap comes with nobody picked (recipe page).
+interface Props {
+  inline?: boolean;
+}
+
+const { inline = false } = Astro.props;
+---
+
+{inline ? (
+  <fieldset id="me-inline" hidden class="kk-me-inline border-0 p-0">
+    <legend class="sr-only">Which person is this phone?</legend>
+    <p class="kk-me-ask">Who's rating? Pick one, then tap again.</p>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="kk-chip" aria-pressed="false" data-me="ed">I'm Ed</button>
+      <button type="button" class="kk-chip" aria-pressed="false" data-me="kristina">I'm Kristina</button>
+    </div>
+  </fieldset>
+) : (
+  <fieldset id="me-picker" class="mt-3 flex flex-wrap items-center gap-2 border-0 p-0">
+    <legend class="sr-only">Which person is this phone?</legend>
+    <button type="button" class="kk-chip" aria-pressed="false" data-me="ed">I'm Ed</button>
+    <button type="button" class="kk-chip" aria-pressed="false" data-me="kristina">I'm Kristina</button>
+    <p id="me-hint" class="text-[13px] text-kk-muted">Pick who you are to start rating.</p>
+  </fieldset>
+)}

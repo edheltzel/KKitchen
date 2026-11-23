@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import RecipeCard from '../components/RecipeCard.astro';
+import MePicker from '../components/MePicker.astro';
+import PlanSheet from '../components/PlanSheet.astro';
+import Banners from '../components/Banners.astro';
+import UndoBar from '../components/UndoBar.astro';
+import { exampleRecipes, isFixture } from '../data/examples';
+---
+
+<Base title="Favorites · Kris's Kitchen" active="favorites">
+  <h1 class="text-3xl font-extrabold tracking-tight">Favorites</h1>
+  {isFixture && <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>}
+  <MePicker />
+  <div id="empty" hidden class="mt-6 rounded-2xl border border-base-300 bg-kk-card p-5 text-center">
+    <p id="empty-message" class="text-[16px] font-semibold">A Family favorite is a recipe both Ed and Kristina loved.</p>
+    <a href="/" class="btn btn-primary mt-4 inline-flex min-h-11 items-center rounded-full px-6">Recipes</a>
+  </div>
+  <div id="recipe-grid" class="mt-4 grid grid-cols-2 gap-3">
+    {exampleRecipes.map((recipe) => <RecipeCard recipe={recipe} startHidden />)}
+  </div>
+  <PlanSheet />
+  <p id="plan-live" class="sr-only" aria-live="polite"></p>
+  <Banners slot="above" />
+  <UndoBar slot="replaces-tabs" />
+</Base>
+
+<script>
+  import '../scripts/favorites';
+</script>

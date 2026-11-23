@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+import TabBar from '../components/TabBar.astro';
+
+interface Props {
+  title?: string;
+  active?: 'recipes' | 'week' | 'favorites';
+  /** The recipe page is two columns from the md breakpoint up. */
+  wide?: boolean;
+  /** Cooking mode: no tab bar, and the page is one full-height column. */
+  bare?: boolean;
+}
+
+const { title = "Kris's Kitchen", active = 'recipes', wide = false, bare = false } = Astro.props;
+const hasSearch = Astro.slots.has('search');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Kris's Kitchen" />
+    <meta name="application-name" content="Kris's Kitchen" />
+    <meta name="apple-mobile-web-app-title" content="Kris's" />
+    <meta name="theme-color" content="#FAF6EF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1E1713" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>{title}</title>
+  </head>
+  <body class="bg-base-100 text-base-content min-h-dvh">
+    <main class:list={['kk-room mx-auto', bare && 'kk-cook', wide ? 'max-w-md md:max-w-4xl' : 'max-w-md', 'px-4 pt-[calc(1rem+env(safe-area-inset-top))]']} data-search={hasSearch ? '' : undefined}>
+      <slot />
+    </main>
+    <div id="bottom-stack" class:list={['fixed inset-x-0 bottom-0 z-10 mx-auto', wide ? 'max-w-md md:max-w-4xl' : 'max-w-md', 'bg-base-100']}>
+      <slot name="above" />
+      <slot name="search" />
+      <slot name="replaces-tabs" />
+      {!bare && <TabBar active={active} />}
+    </div>
+    <script>
+      import '../scripts/stack-room';
+    </script>
+  </body>
+</html>

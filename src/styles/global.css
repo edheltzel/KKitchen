@@ -28,6 +28,16 @@
   --color-warning-content: #2B1D10;
   --color-error: #B3261E;
   --color-error-content: #FFFFFF;
+    --kk-card: #FFFFFF;
+  --kk-tile-from: #F1EADD;
+  --kk-tile-to: #E3D8C6;
+  --kk-tile-ink: #C9B79C;
+  --kk-accent-text: #A63A1A;
+  --kk-muted: #6B5B4F;
+  --kk-shadow: rgb(43 29 16 / 0.16);
+  --kk-banner: #2A2521;
+  --kk-banner-text: #FAF6EF;
+  --kk-banner-accent: #F08A57;
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -63,6 +73,16 @@
   --color-warning-content: #2B1D10;
   --color-error: #F27A70;
   --color-error-content: #2D0C09;
+    --kk-card: #281F19;
+  --kk-tile-from: #352A22;
+  --kk-tile-to: #3B2F26;
+  --kk-tile-ink: #C9A57C;
+  --kk-accent-text: #F08A57;
+  --kk-muted: #A89A8C;
+  --kk-shadow: rgb(0 0 0 / 0.6);
+  --kk-banner: #2A2521;
+  --kk-banner-text: #FAF6EF;
+  --kk-banner-accent: #F08A57;
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -71,4 +91,869 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
+}
+
+@theme inline {
+  --color-kk-card: var(--kk-card);
+  --color-kk-accent: var(--kk-accent-text);
+  --color-kk-muted: var(--kk-muted);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+}
+
+/* One height for the tab bar and the Undo bar that replaces it, so the swap never moves anything. */
+:root {
+  --kk-bar-height: calc(4.5rem + env(safe-area-inset-bottom));
+}
+
+/* Bottom tab bar: daisyUI dock restyled so the active tab is a filled pill. */
+.kk-dock {
+  position: static;
+  box-sizing: border-box;
+  height: var(--kk-bar-height);
+  min-height: 0;
+  padding: 0.375rem 0.5rem calc(0.375rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-base-300);
+  background-color: var(--color-base-100);
+}
+.kk-dock > a {
+  min-height: 3.5rem;
+  height: auto;
+  margin-bottom: 0;
+  gap: 0.125rem;
+  padding: 0.125rem 0;
+  color: var(--kk-muted);
+  -webkit-tap-highlight-color: transparent;
+}
+.kk-dock > a::after {
+  display: none;
+}
+.kk-dock .kk-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  transition: background-color 0.15s ease-out;
+}
+.kk-dock .dock-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1rem;
+}
+.kk-dock > a.dock-active {
+  color: var(--kk-accent-text);
+}
+.kk-dock > a.dock-active .kk-pill {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.kk-dock > a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Search field: keyboard handling lives in src/scripts/keyboard-lift.ts */
+.kk-search:focus-within {
+  border-color: var(--color-primary);
+}
+#bottom-stack {
+  will-change: transform;
+}
+#bottom-stack[data-keyboard='open'] .kk-dock {
+  display: none;
+}
+
+/* The Undo bar takes the tab bar's place while it shows: same height, border and safe-area padding. */
+#bottom-stack[data-undo='on'] .kk-dock {
+  display: none;
+}
+.kk-undo-bar {
+  box-sizing: border-box;
+  height: var(--kk-bar-height);
+  padding: 0.375rem 1rem calc(0.375rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-base-300);
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+}
+
+/* Room under the page for whatever is stacked at the bottom: tab bar, Undo bar, search field, banners.
+   stack-room.ts measures the stack; before it runs (or without script) the old fixed room applies. */
+.kk-room {
+  --kk-stack-fallback: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--kk-stack-height, var(--kk-stack-fallback)) + 1.5rem);
+}
+.kk-room[data-search] {
+  --kk-stack-fallback: calc(8.5rem + env(safe-area-inset-bottom));
+}
+
+/* A rating tap with nobody picked highlights the hint. */
+#me-hint[data-nudge='on'] {
+  color: var(--kk-accent-text);
+  font-weight: 700;
+}
+
+/* Browse grid cards (example data) */
+.kk-card {
+  position: relative;
+}
+.kk-tile {
+  background: linear-gradient(160deg, var(--kk-tile-from), var(--kk-tile-to));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kk-tile-letter {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--kk-tile-ink);
+}
+
+/* Filter chips: toggles in the tray and removable chips above the grid. 44px tall tap targets. */
+.kk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-base-300);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.kk-chip[aria-pressed='true'],
+.kk-chip-on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+/* A Who liked it chip while ratings are unavailable: the filter is paused, so it is dashed and says so in words. */
+.kk-chip-paused {
+  border-style: dashed;
+  border-color: var(--color-base-content);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+}
+
+/* Ratings (branch 3a): compact row on each card, derived Family favorite badge, notices. Tokens only. */
+.kk-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+.kk-rate-status {
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+  color: var(--kk-muted);
+}
+.kk-rate-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+.kk-rate-btn {
+  min-height: 2.75rem;
+  min-width: 0;
+  padding: 0 0.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-base-300);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.1;
+  -webkit-tap-highlight-color: transparent;
+}
+.kk-rate-btn[aria-pressed='true'][data-rating='loved'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+.kk-rate-btn[aria-pressed='true'][data-rating='not-for-us'] {
+  border-color: var(--color-base-content);
+  background: var(--color-base-content);
+  color: var(--color-base-100);
+}
+.kk-rate-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-rate-btn:disabled {
+  opacity: 0.55;
+}
+.kk-fav-badge {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+}
+.kk-notice {
+  border: 1px solid var(--color-primary);
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  box-shadow: 0 2px 8px var(--kk-shadow);
+}
+
+/* Week plan (branch 3b): a label per day over one card. Remove is an outlined icon; empty days are dashed. Tokens only. */
+.kk-week {
+  display: grid;
+  gap: 0.75rem;
+}
+.kk-week-day {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kk-muted);
+}
+.kk-week-row[data-today] .kk-week-day {
+  color: var(--kk-accent-text);
+}
+.kk-week-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  min-height: 4.25rem;
+  padding: 0.5rem 0.625rem 0.5rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--kk-card);
+  box-shadow: var(--kk-shadow);
+}
+.kk-week-tile {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.75rem;
+}
+.kk-week-letter {
+  font-size: 1.5rem;
+}
+.kk-week-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 2.75rem;
+  background: transparent;
+  text-align: left;
+}
+.kk-week-name {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.kk-week-note {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--kk-accent-text);
+}
+.kk-week-remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1.5px solid var(--kk-accent-text);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--kk-accent-text);
+}
+.kk-week-remove:disabled,
+.kk-week-text:disabled,
+.kk-week-add:disabled {
+  opacity: 0.5;
+}
+.kk-week-add {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1.5px dashed var(--kk-muted);
+  border-radius: 1rem;
+  background: transparent;
+  color: var(--kk-accent-text);
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.kk-week-add:focus-visible,
+.kk-week-remove:focus-visible,
+.kk-week-text:focus-visible,
+.kk-sheet-row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-sheet-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  text-align: left;
+}
+
+/* Swipe to remove: the red area sits under the card and is as wide as the card has slid. */
+.kk-week-swipe {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  touch-action: pan-y;
+}
+.kk-week-swipe .kk-week-card {
+  position: relative;
+  transition: transform 0.18s ease-out;
+}
+.kk-week-swipe[data-state='dragging'] .kk-week-card,
+.kk-week-swipe[data-state='dragging'] .kk-week-reveal {
+  transition: none;
+}
+.kk-week-reveal {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 0;
+  min-height: 2.75rem;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: width 0.18s ease-out;
+}
+
+/* Plan button on each card: status on the left, a 44px outlined button on the right. */
+.kk-plan {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.kk-plan-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--kk-accent-text);
+}
+.kk-plan-btn {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin-left: auto;
+  padding: 0 1rem;
+  border: 1.5px solid var(--kk-accent-text);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--kk-accent-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+.kk-plan-btn:disabled {
+  opacity: 0.5;
+}
+.kk-plan-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Card title link: the whole card opens the recipe, and the rating and Plan buttons stay on top of it. */
+.kk-card-link {
+  color: inherit;
+  text-decoration: none;
+}
+.kk-card-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-box);
+}
+.kk-card-link:focus-visible {
+  outline: none;
+}
+.kk-card-link:focus-visible::after {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-card .kk-rate,
+.kk-card .kk-plan {
+  position: relative;
+}
+/* On a card Plan is its own full-width 44px row under Loved it / Not for us, with its status above it. */
+.kk-card .kk-plan {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.25rem;
+}
+.kk-card .kk-plan-status {
+  flex: none;
+}
+.kk-card .kk-plan-btn {
+  width: 100%;
+  margin-left: 0;
+  padding: 0 0.5rem;
+  border-radius: 0.75rem;
+}
+
+/* Recipe page (branch 4a): back link, hero tile, tick rows, numbered steps. Tokens only. */
+.kk-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.75rem;
+  padding-right: 0.75rem;
+  color: var(--kk-accent-text);
+  font-weight: 700;
+}
+.kk-hero {
+  /* A short strip on the phone so the title and the first ingredient stay in view; the full 16:9 photo from tablet width up. */
+  height: 8.75rem;
+  border-radius: var(--radius-box);
+}
+@media (min-width: 48rem) {
+  .kk-hero {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+}
+/* "Start cooking": the big tomato button under the title, before the rating row. */
+.kk-start-cooking {
+  display: flex;
+  width: 100%;
+  min-height: 3.5rem;
+  margin-top: 0.75rem;
+  border-radius: 9999px;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+/* The recipe page's one row of three actions: Loved it, Not for us, Plan (outlined). */
+.kk-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.kk-actions .kk-rate-btn,
+.kk-actions .kk-plan-btn {
+  min-width: 0;
+  margin-left: 0;
+  padding: 0 0.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.kk-plan-status-page,
+.kk-rate-status-page {
+  margin-top: 0.5rem;
+}
+.kk-rate-status-page {
+  font-size: 0.9375rem;
+  line-height: 1.5rem;
+}
+.kk-me-inline {
+  margin-top: 0.5rem;
+}
+.kk-me-ask {
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--kk-muted);
+}
+.kk-hero .kk-tile-letter {
+  font-size: 5rem;
+}
+.kk-tag {
+  padding: 0.125rem 0.75rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 9999px;
+  background: var(--kk-card);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.kk-source {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 0.25rem;
+  color: var(--kk-accent-text);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kk-reset {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1.5px solid var(--kk-accent-text);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--kk-accent-text);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+.kk-reset:disabled {
+  opacity: 0.5;
+}
+.kk-ticks {
+  display: flex;
+  flex-direction: column;
+}
+.kk-tick {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--color-base-300);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+}
+.kk-tick-box {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: var(--color-primary);
+}
+.kk-tick:has(input:checked) span {
+  color: var(--kk-muted);
+  text-decoration: line-through;
+}
+.kk-tick:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-steps {
+  counter-reset: step;
+}
+.kk-steps > li {
+  position: relative;
+  min-height: 2rem;
+  margin-top: 1rem;
+  padding-left: 2.75rem;
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  counter-increment: step;
+}
+.kk-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-weight: 800;
+}
+
+/* Cooking mode (branch 4b): no tab bar, one full-height column. Tokens only; motion only where the phone allows it (see the
+   reduced-motion block at the end). */
+.kk-room.kk-cook {
+  padding-bottom: calc(var(--kk-stack-height, 0px) + 1rem + env(safe-area-inset-bottom));
+}
+.kk-cook-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--kk-stack-height, 0px));
+}
+.kk-cook-screen {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.kk-cook-screen[hidden],
+.kk-wake[hidden],
+.kk-wake-banner[hidden] {
+  display: none;
+}
+.kk-cook-screen [tabindex='-1']:focus {
+  outline: none;
+}
+.kk-cook-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.kk-exit,
+.kk-cook-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 9999px;
+  background: var(--kk-card);
+  color: var(--color-base-content);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  -webkit-tap-highlight-color: transparent;
+}
+.kk-exit:focus-visible,
+.kk-cook-back:focus-visible,
+.kk-wake-dismiss:focus-visible,
+.kk-cook-main:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.kk-wake {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border: 1.5px solid var(--color-base-content);
+  border-radius: 9999px;
+  background: var(--color-base-content);
+  color: var(--color-base-100);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+.kk-wake[data-status='failed'] {
+  border: 1.5px dashed var(--kk-muted);
+  background: transparent;
+  color: var(--kk-muted);
+}
+.kk-progress {
+  display: flex;
+  gap: 0.375rem;
+  margin: 0.875rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.kk-seg {
+  flex: 1;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-base-300);
+}
+.kk-seg[data-state='done'],
+.kk-seg[data-state='current'] {
+  background: var(--color-primary);
+}
+.kk-wake-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.5rem 0.75rem 1rem;
+  border-radius: 1rem;
+  background: var(--kk-banner);
+  color: var(--kk-banner-text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.kk-wake-dismiss {
+  flex: none;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--kk-banner-accent);
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.kk-cook-title {
+  margin-top: 1rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.kk-ready {
+  margin-top: 0.25rem;
+  color: var(--kk-muted);
+  font-size: 0.875rem;
+}
+.kk-ticks-big .kk-tick {
+  min-height: 3.5rem;
+  gap: 1rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.kk-ticks-big .kk-tick-box {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+/* On a step the tick shows but the words stay full strength: you are about to use them, so no strike-through. Gather keeps it. */
+.kk-use-now .kk-tick:has(input:checked) span {
+  color: inherit;
+  text-decoration: none;
+}
+.kk-step-label {
+  margin-top: 1.25rem;
+  color: var(--kk-accent-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.kk-step-text {
+  margin-top: 0.5rem;
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.kk-use-label {
+  margin-top: 1.75rem;
+  color: var(--kk-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.kk-cook-actions {
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+.kk-zone-hint {
+  margin-bottom: 0.5rem;
+  color: var(--kk-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+.kk-cook-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+.kk-cook-main {
+  flex: 1;
+  width: 100%;
+  min-height: 3.75rem;
+  border-radius: 9999px;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+.kk-cook-back {
+  min-height: 3.75rem;
+  padding: 0 1.25rem;
+  font-size: 1rem;
+}
+.kk-cook-wide {
+  width: 100%;
+}
+/* Over 900px the room is read from an arm's length away, so the step sentence, Use now rows and Next step grow together.
+   Phones keep the sizes above. The tap zones are measured on the column, which does not change. */
+@media (min-width: 901px) {
+  .kk-step-text {
+    font-size: 2.5rem;
+  }
+  .kk-ticks-big .kk-tick {
+    min-height: 4.5rem;
+    font-size: 1.5rem;
+  }
+  .kk-ticks-big .kk-tick-box {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .kk-cook-main {
+    min-height: 4.75rem;
+    font-size: 1.5rem;
+  }
+  .kk-cook-back {
+    min-height: 4.75rem;
+    font-size: 1.25rem;
+  }
+}
+.kk-done-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  margin: 1.5rem auto 0;
+  border-radius: 9999px;
+  background: var(--kk-tile-from);
+  color: var(--kk-accent-text);
+}
+.kk-done-note {
+  margin-top: 0.5rem;
+  color: var(--kk-muted);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+.kk-fav-badge-flow {
+  position: static;
+  align-self: center;
+  margin-top: 0.75rem;
+}
+.kk-how {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+}
+.kk-cook-rate {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.kk-cook-rate .kk-rate-btn {
+  min-height: 3.5rem;
+  border-radius: 9999px;
+  font-size: 1.0625rem;
+  font-weight: 800;
+}
+.kk-cook-done .kk-rate-status-page {
+  text-align: center;
+}
+.kk-cook-done #me-picker {
+  justify-content: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .kk-seg {
+    transition: background-color 0.2s ease;
+  }
+  .kk-cook-main:active,
+  .kk-cook-back:active {
+    transform: scale(0.98);
+    transition: transform 0.08s ease;
+  }
 }

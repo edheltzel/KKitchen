@@ -1,0 +1,149 @@
+// Pure browse state: no DOM, so node:test can run it. The page address is the source of truth
+// (?q=...&meal=...&time=...&diet=...&who=...&source=...), which makes refresh, Back and shared links restore the same results.
+
+import { likedBy, type Liked, type Ratings } from './ratings.ts';
+import type { StorageLike } from './phone-storage.ts';
+
+// `who` is the "Who liked it" rating group: favorite, ed, kristina, untried (see ratings.ts).
+// `source` is the one-chip "per source" group (value `stated`): it needs the recipe's own source-stated flag, nothing inferred.
+export const GROUPS = ['meal', 'time', 'diet', 'who', 'source'] as const;
+export type Group = (typeof GROUPS)[number];
+export type Options = Record<Group, string[]>;
+
+export interface BrowseState {
+  q: string;
+  meal: string[];
+  time: string[];
+  diet: string[];
+  who: string[];
+  source: string[];
+}
+
+export interface Searchable {
+  id?: string;
+  name: string;
+  ingredients: string[];
+  meal: string;
+  minutes: number;
+  diet: string[];
+  /** True only when the recipe's data sets its source-stated flag (glutenFreePerSource on the page side). Missing means no. */
+  sourceStated?: boolean;
+}
+
+const MAX_QUERY = 100;
+
+export const emptyState = (): BrowseState => ({ q: '', meal: [], time: [], diet: [], who: [], source: [] });
+
+// Keep only known values, in the canonical option order.
+const canonical = (values: string[], allowed: string[]): string[] => allowed.filter((v) => values.includes(v));
+
+export function parseState(search: string, options: Options): BrowseState {
+  const params = new URLSearchParams(search);
+  const list = (group: Group) => canonical((params.get(group) ?? '').split(','), options[group]);
+  return {
+    q: (params.get('q') ?? '').trim().slice(0, MAX_QUERY),
+    meal: list('meal'),
+    time: list('time'),
+    diet: list('diet'),
+    who: list('who'),
+    source: list('source'),
+  };
+}
+
+/** Returns '' or '?q=...&meal=...'. Same state always gives the same string. */
+export function serializeState(state: BrowseState, options: Options): string {
+  const params = new URLSearchParams();
+  const q = state.q.trim().slice(0, MAX_QUERY);
+  if (q) params.set('q', q);
+  for (const group of GROUPS) {
+    const values = canonical(state[group], options[group]);
+    if (values.length) params.set(group, values.join(','));
+  }
+  const text = params.toString();
+  return text ? `?${text}` : '';
+}
+
+export const activeFilterCount = (state: BrowseState): number =>
+  GROUPS.reduce((sum, group) => sum + state[group].length, 0);
+
+export function toggleValue(state: BrowseState, group: Group, value: string, options: Options): BrowseState {
+  const has = state[group].includes(value);
+  const next = has ? state[group].filter((v) => v !== value) : [...state[group], value];
+  return { ...state, [group]: canonical(next, options[group]) };
+}
+
+// Search: every word must appear in the name or in an ingredient. Filters: AND across groups.
+// Within a group: meal is any-of, time is "N min or less" (several picks mean the loosest one),
+// diet is every-of (a recipe needs ALL the picked tags), who is any-of (Ed loved it OR Kristina loved it).
+// source is every-of too, but it has one value: the recipe's flag must be exactly true.
+// `ratings` is null while the ratings store is unavailable: the who group is then not applied, so
+// browsing and search keep working.
+function matchesRecipe(recipe: Searchable, state: BrowseState, ratings: Ratings | null = null): boolean {
+  const name = recipe.name.toLowerCase();
+  const ingredients = recipe.ingredients.map((i) => i.toLowerCase());
+  const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.every((w) => name.includes(w) || ingredients.some((i) => i.includes(w)))) return false;
+  if (state.meal.length && !state.meal.includes(recipe.meal)) return false;
+  if (state.time.length && recipe.minutes > Math.max(...state.time.map(Number))) return false;
+  if (!state.diet.every((d) => recipe.diet.includes(d))) return false;
+  if (state.source.length && recipe.sourceStated !== true) return false;
+  if (ratings && state.who.length) {
+    const liked = recipe.id ? likedBy(ratings, recipe.id) : new Set<Liked>(['untried']);
+    if (!state.who.some((w) => liked.has(w as Liked))) return false;
+  }
+  return true;
+}
+
+export const filterRecipes = <T extends Searchable>(recipes: readonly T[], state: BrowseState, ratings: Ratings | null = null): T[] =>
+  recipes.filter((r) => matchesRecipe(r, state, ratings));
+
+export function emptyMessage(state: BrowseState): string {
+  const q = state.q.trim();
+  const filtered = activeFilterCount(state) > 0;
+  if (q && filtered) return `No recipe lists '${q}' with these filters`;
+  if (q) return `No recipe lists '${q}'`;
+  return 'No recipes match these filters';
+}
+
+const ENTRY_KEY = 'kk:recipes';
+
+// Only "/" or "/?query" is ever accepted, so a poisoned value cannot redirect off-site.
+export const isRecipesUrl = (url: string): boolean => /^\/(\?[^\s\\]*)?$/.test(url);
+
+type Entry = { url: string; y: number };
+
+export function createSession(storage: StorageLike) {
+  const safe = <T>(fn: () => T, fallback: T): T => {
+    try {
+      return fn();
+    } catch {
+      return fallback;
+    }
+  };
+  // One entry only: the last Recipes URL and how far it was scrolled.
+  const read = (): Entry | null =>
+    safe(() => {
+      const raw = JSON.parse(storage.getItem(ENTRY_KEY) ?? 'null');
+      if (!raw || typeof raw.url !== 'string' || !isRecipesUrl(raw.url)) return null;
+      const y = typeof raw.y === 'number' && Number.isFinite(raw.y) && raw.y > 0 ? Math.round(raw.y) : 0;
+      return { url: raw.url, y };
+    }, null);
+  const write = (entry: Entry): void =>
+    safe(() => (isRecipesUrl(entry.url) ? storage.setItem(ENTRY_KEY, JSON.stringify(entry)) : storage.removeItem(ENTRY_KEY)), undefined);
+  return {
+    saveRecipesUrl(url: string): void {
+      const old = read();
+      write({ url, y: old && old.url === url ? old.y : 0 });
+    },
+    recipesHref(): string {
+      return read()?.url ?? '/';
+    },
+    saveScroll(url: string, y: number): void {
+      write({ url, y: Math.max(0, Math.round(y)) });
+    },
+    readScroll(url: string): number {
+      const entry = read();
+      return entry && entry.url === url ? entry.y : 0;
+    },
+  };
+}

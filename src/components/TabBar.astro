@@ -1,0 +1,62 @@
+---
+interface Props {
+  active: 'recipes' | 'week' | 'favorites';
+}
+
+const { active } = Astro.props;
+
+const tabs = [
+  { id: 'recipes', label: 'Recipes', href: '/' },
+  { id: 'week', label: 'Week', href: '/week/' },
+  { id: 'favorites', label: 'Favorites', href: '/favorites/' },
+] as const;
+---
+
+<nav class="dock kk-dock" aria-label="Main">
+  {
+    tabs.map((tab) => (
+      <a
+        href={tab.href}
+        data-tab={tab.id}
+        class:list={[tab.id === active && 'dock-active']}
+        aria-current={tab.id === active ? 'page' : undefined}
+      >
+        <span class="kk-pill">
+          {tab.id === 'recipes' && (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v14H6.5A1.5 1.5 0 0 0 5 18.5v-14Z" />
+              <path d="M5 18.5A1.5 1.5 0 0 0 6.5 20H19M9 7.5h6" />
+            </svg>
+          )}
+          {tab.id === 'week' && (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <rect x="3.5" y="5" width="17" height="15" rx="3" />
+              <path d="M8 3v4M16 3v4M3.5 10h17" />
+            </svg>
+          )}
+          {tab.id === 'favorites' && (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" />
+            </svg>
+          )}
+        </span>
+        <span class="dock-label">{tab.label}</span>
+      </a>
+    ))
+  }
+</nav>
+
+<script>
+  // The Recipes tab goes back to the last search, filters and scroll. Without JS it is just "/".
+  import { createSession } from '../scripts/browse-state';
+  import { pageSession } from '../scripts/phone-storage';
+
+  const link = document.querySelector<HTMLAnchorElement>('nav[aria-label="Main"] a[data-tab="recipes"]');
+    if (link) {
+    const session = createSession(pageSession());
+      const sync = () => link.setAttribute('href', session.recipesHref());
+    sync();
+    link.addEventListener('click', sync);
+      addEventListener('pageshow', sync);
+    }
+</script>
