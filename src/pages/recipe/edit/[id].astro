@@ -1,0 +1,45 @@
+---
+import { env } from 'cloudflare:workers';
+import Base from '../../../layouts/Base.astro';
+import { createRecipeStore } from '../../../lib/recipe-store';
+
+export const prerender = false;
+
+const meals = ['breakfast', 'lunch', 'dinner', 'snack'];
+const store = createRecipeStore(env.RECIPES);
+const recipe = (await store.list()).find((item) => item.id === Astro.params.id);
+if (!recipe) return new Response(null, { status: 404 });
+---
+
+<Base title={`Edit ${recipe.name} · Kris's Kitchen`} active="recipes">
+  <a href={`/recipe/${recipe.id}/`} class="kk-back">{recipe.name}</a>
+  <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Edit recipe</h1>
+  <form method="post" action="/api/recipes" class="kk-form mt-4 grid gap-4">
+    <input type="hidden" name="id" value={recipe.id} />
+    <label class="grid gap-1">
+      <span class="text-[13px] font-bold">Name</span>
+      <input name="name" required value={recipe.name} class="input input-bordered h-12 w-full" />
+    </label>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="grid gap-1">
+        <span class="text-[13px] font-bold">Meal</span>
+        <select name="meal" class="select select-bordered h-12 w-full">
+          {meals.map((meal) => <option value={meal} selected={meal === recipe.meal}>{meal}</option>)}
+        </select>
+      </label>
+      <label class="grid gap-1">
+        <span class="text-[13px] font-bold">Minutes</span>
+        <input name="minutes" type="number" min="0" value={recipe.minutes} class="input input-bordered h-12 w-full" />
+      </label>
+    </div>
+    <label class="grid gap-1">
+      <span class="text-[13px] font-bold">Ingredients, one per line</span>
+      <textarea name="ingredients" required rows="6" class="textarea textarea-bordered w-full">{recipe.groups.flatMap((group) => group.items).map((item) => item.text).join('\n')}</textarea>
+    </label>
+    <label class="grid gap-1">
+      <span class="text-[13px] font-bold">Method, one step per line</span>
+      <textarea name="method" required rows="8" class="textarea textarea-bordered w-full">{recipe.steps.map((step) => step.text).join('\n')}</textarea>
+    </label>
+    <button class="btn btn-primary h-12 min-h-11 rounded-full">Save recipe</button>
+  </form>
+</Base>

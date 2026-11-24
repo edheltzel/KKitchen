@@ -1,0 +1,16 @@
+---
+import { env } from 'cloudflare:workers';
+import CookView from '../../../components/CookView.astro';
+import { recipesFor } from '../../../lib/live-recipes';
+
+export const prerender = false;
+
+const recipe = (await recipesFor(env.RECIPES)).find((item) => item.id === Astro.params.id);
+if (!recipe) return new Response(null, { status: 404 });
+---
+
+<CookView recipe={recipe} />
+
+<script>
+  import '../../../scripts/cook-page';
+</script>

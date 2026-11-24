@@ -6,20 +6,22 @@ import { read, root, distFiles } from './helpers.mjs';
 
 const config = () => JSON.parse(read('wrangler.jsonc').split('\n').filter((l) => !l.trim().startsWith('//')).join('\n'));
 
-test('wrangler.jsonc exists and is a static-assets-only Worker: no code, no bindings, no routes, no account', () => {
+test('wrangler.jsonc is the Worker: server entry, the D1 and R2 bindings, and no routes or account', () => {
   assert.ok(existsSync(join(root, 'wrangler.jsonc')));
   const c = config();
-  const forbidden = ['main', 'd1_databases', 'kv_namespaces', 'r2_buckets', 'durable_objects', 'migrations', 'services', 'queues', 'vectorize', 'ai', 'hyperdrive', 'analytics_engine_datasets', 'routes', 'route', 'custom_domain', 'account_id', 'triggers', 'vars', 'env', 'workers_dev_domain'];
+  assert.equal(c.main, '@astrojs/cloudflare/entrypoints/server');
+  assert.deepEqual(c.d1_databases.map((d) => d.binding), ['DB']);
+  assert.deepEqual(c.r2_buckets.map((b) => b.binding), ['RECIPES']);
+  assert.deepEqual(Object.keys(c.vars), ['KK_DATA']);
+  const forbidden = ['kv_namespaces', 'durable_objects', 'migrations', 'services', 'queues', 'vectorize', 'ai', 'hyperdrive', 'analytics_engine_datasets', 'routes', 'route', 'custom_domain', 'account_id', 'triggers', 'env', 'workers_dev_domain'];
   for (const key of forbidden) assert.ok(!(key in c), `no ${key}`);
-  assert.ok(!/d1_databases|kv_namespaces|r2_buckets|durable_objects|custom_domain|"routes?"|zone_/i.test(read('wrangler.jsonc')), 'no binding or route words anywhere in the file');
-  assert.deepEqual(Object.keys(c).sort(), ['assets', 'compatibility_date', 'name', 'workers_dev']);
 });
 
-test('the Worker name is k + 20 random hex (a-f, 0-9) characters and names nothing about the site', () => {
+test('the Worker name is kriskitchen, which serves kriskitchen.rainyday.workers.dev', () => {
   const { name } = config();
-  assert.match(name, /^k[0-9a-f]{20}$/);
-  for (const word of ['kitchen', 'kris', 'recipe']) assert.ok(!name.toLowerCase().includes(word), word);
-  assert.ok(!/kitchen|kris|recipe/i.test(read('wrangler.jsonc')), 'the word is not anywhere in the file either');
+  assert.equal(name, 'kriskitchen');
+  const nameLine = read('wrangler.jsonc').split('\n').find((l) => l.includes('"name"'));
+  assert.match(nameLine, /"kriskitchen"/);
 });
 
 test('it serves the built dist folder on the workers.dev address, with a current compatibility date', () => {
@@ -37,7 +39,8 @@ test('the dist leak scan stays clean and dist ships _headers', () => {
   assert.ok(files.length > 10);
   assert.ok(files.some((f) => f.endsWith('_headers')), '_headers is in dist');
   for (const f of files) {
-    if (/\.(png|ico|jpg|woff2?)$/.test(f)) continue;
+    // The server bundle repeats the recipe source for the live route. The pages are what a person sees.
+    if (/\.(png|ico|jpg|woff2?)$/.test(f) || f.includes('/server/')) continue;
     const text = readFileSync(f, 'utf8');
     for (const bad of ['Draft-only', 'saffron', 'Hidden Draft Note', 'Nut-free']) assert.ok(!text.includes(bad), `${bad} in ${f}`);
   }

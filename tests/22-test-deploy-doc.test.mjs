@@ -80,7 +80,7 @@ test('test-deploy doc warns the Workers-edit token covers all 8 existing Workers
   assert.match(d, /short-lived/i);
   const pre = d.slice(d.search(/## Before the first deploy/i));
   assert.ok(pre.length < d.length, 'a "Before the first deploy" section');
-  assert.ok(pre.includes(name()), 'the section names the random Worker name');
+  assert.ok(pre.includes(name()), 'the section names the Worker');
   assert.match(pre, /does not already exist/i);
   assert.match(pre, /workers_list/);
   assert.match(pre, /read-only/i);

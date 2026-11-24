@@ -131,7 +131,7 @@ test('page order: title, meta, tags, the big Start cooking button, ONE row of th
     assert.deepEqual(order, [...order].sort((a, b) => a - b), `${r.id}: order ${order}`);
     if (r.source) assert.ok(at('class="kk-source"') > at('id="me-picker"'), `${r.id}: source link last`);
     const actions = html.match(/<div class="kk-actions"[\s\S]*?<\/div>/)[0];
-    assert.deepEqual([...actions.matchAll(/data-rating="([^"]+)"|data-role="(plan)"/g)].map((m) => m[1] ?? m[2]), ['loved', 'not-for-us', 'plan'], `${r.id}: one row, in order`);
+    assert.deepEqual([...actions.matchAll(/data-rating="([^"]+)"|data-role="(plan)"/g)].map((m) => m[1] ?? m[2]), ['loved', 'fine', 'not-for-us', 'plan'], `${r.id}: one row, in order`);
     assert.equal([...html.matchAll(/data-person="ed"/g)].length, 1, 'one status line per person');
   }
 });

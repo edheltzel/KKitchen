@@ -16,8 +16,12 @@ import {
   type Options,
   type Searchable,
 } from './browse-state';
-import { pageSession } from './phone-storage';
+import { pageSession, phoneStorage } from './phone-storage';
+import { localCopy } from './import-local';
 import { mountRatings } from './ratings-ui';
+
+// The first time a signed-in phone still holds its own ratings or week, offer to copy them into the shared store.
+if (localCopy(phoneStorage()) && !sessionStorage.getItem('kk:import-declined')) location.assign('/import/');
 import { mountUndoSlot } from './undo-mount';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
@@ -44,6 +48,29 @@ for (const chip of trayChips) {
 }
 
 const list = (value: string | undefined) => (value ?? '').split('|').filter(Boolean);
+// Recipes saved after the build are not in the prerendered grid. Add a card for each one the page does not have.
+const grid = document.querySelector('#recipe-grid');
+const template = document.querySelector<HTMLElement>('#recipe-grid article');
+void fetch('/api/recipes')
+  .then((response) => (response.ok ? response.json() : []))
+  .then((saved: { id: string; name: string; meal: string; minutes: number; ingredients: string[] }[]) => {
+    for (const recipe of saved) {
+      if (document.querySelector(`article[data-id="${recipe.id}"]`) || !template || !grid) continue;
+      const card = template.cloneNode(true) as HTMLElement;
+      card.hidden = false;
+      card.dataset.id = recipe.id;
+      card.dataset.name = recipe.name;
+      card.dataset.meal = recipe.meal;
+      card.dataset.minutes = String(recipe.minutes);
+      card.dataset.ingredients = (recipe.ingredients ?? []).join('|');
+      const link = card.querySelector<HTMLAnchorElement>('a');
+      if (link) { link.href = `/recipe/saved/${recipe.id}/`; link.textContent = recipe.name; }
+      const letter = card.querySelector('.kk-tile-letter');
+      if (letter) letter.textContent = recipe.name.charAt(0);
+      grid.append(card);
+    }
+  });
+
 const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')].map((el) => {
   const data: Searchable = {
     id: el.dataset.id ?? '',

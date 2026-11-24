@@ -1,7 +1,7 @@
 // EXAMPLE DATA ONLY. These are obvious placeholders, not real family recipes: a TEST FIXTURE.
 // Every title starts with EXAMPLE_PREFIX so nothing here can be mistaken for real content.
 // The site ships the real recipes (recipes.ts). Only a build run with KK_DATA=fixture (npm test) uses these examples.
-import { realNotes } from './recipes.ts';
+import { recipesFromFiles } from '../lib/recipes.ts';
 
 export const EXAMPLE_PREFIX = 'Example recipe: ';
 
@@ -146,10 +146,13 @@ const fixtureNotes: readonly ExampleRecipe[] = [
     steps: [step('Draft only.')] },
 ];
 
-/** True only when KK_DATA=fixture is set (npm test). A plain build or `npm run build` has it false and ships the real recipes. */
-export const isFixture: boolean = process.env.KK_DATA === 'fixture';
+/**
+ * True only when KK_DATA=fixture is set (npm test). A plain build or `npm run build` has it false and ships the real recipes.
+ * The build prerenders inside workerd, which cannot see the shell's environment, so the value also comes through wrangler.jsonc's vars.
+ */
+export const isFixture: boolean = (process.env.KK_DATA || (globalThis as { KK_DATA?: string }).KK_DATA) === 'fixture';
 
-const notes: readonly ExampleRecipe[] = isFixture ? fixtureNotes : realNotes;
+const notes: readonly ExampleRecipe[] = isFixture ? fixtureNotes : await recipesFromFiles();
 
 export const allExampleNotes = notes;
 export const exampleRecipes: readonly ExampleRecipe[] = notes.filter((r) => r.approved === true);

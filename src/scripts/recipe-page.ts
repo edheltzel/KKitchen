@@ -30,8 +30,17 @@ mountPlanSheet({ cards: [article], names: new Map(catalog.map((r) => [r.id, r.na
 void ratings.init();
 
 const boxes = [...document.querySelectorAll<HTMLInputElement>('input[data-item]')];
+const local = createTicksStore({ storage: phoneStorage() });
+const share = (itemId: string, checked: boolean) =>
+  void fetch('/api/ticks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ recipeId, itemId, checked }) });
+const store = {
+  read: (id: string) => local.read(id),
+  set: (id: string, itemId: string, checked: boolean) => { const result = local.set(id, itemId, checked); share(itemId, checked); return result; },
+  clear: (id: string) => { const before = local.read(id); const result = local.clear(id); for (const itemId of before) share(itemId, false); return result; },
+  add: (id: string, itemIds: readonly string[]) => { const result = local.add(id, itemIds); for (const itemId of itemIds) share(itemId, true); return result; },
+};
 const ticks = createTicksController({
-  store: createTicksStore({ storage: phoneStorage() }),
+  store,
   recipeId,
   itemIds: boxes.map((box) => box.dataset.item!),
   slot,
@@ -48,6 +57,17 @@ reset.addEventListener('click', () => ticks.reset());
 $('#ticks-retry').addEventListener('click', () => ticks.retry());
 ticks.subscribe(renderTicks);
 addEventListener('storage', (event) => event.key === TICKS_KEY && ticks.refresh());
+
+// The shared ticks win over the phone copy once they load, so Ed's two devices agree.
+void fetch(`/api/ticks?recipe=${recipeId}`)
+  .then((response) => (response.ok ? response.json() : null))
+  .then((body: { ticks: string[] } | null) => {
+    if (!body) return;
+    const remote = new Set(body.ticks);
+    for (const itemId of local.read(recipeId)) if (!remote.has(itemId)) local.set(recipeId, itemId, false);
+    for (const itemId of body.ticks) local.add(recipeId, [itemId]);
+    ticks.refresh();
+  });
 document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && ticks.refresh());
 addEventListener('pageshow', (event) => {
   if (event.persisted) {

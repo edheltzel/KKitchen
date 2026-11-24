@@ -14,6 +14,8 @@ const groups = [
   { id: 'diet', title: 'Diet tags', note: 'Diet tags: a recipe needs all you pick.', items: options.diet.map((v) => ({ value: v, label: v })) },
   { id: 'who', title: 'Who liked it', noteId: 'who-note', note: 'Pick several to see any of them.', items: LIKED_OPTIONS.map((o) => ({ value: o.value, label: o.label })) },
 ].filter((g) => g.items.length > 0);
+
+export const prerender = true;
 ---
 
 <dialog id="filter-tray" class="modal modal-bottom" aria-labelledby="filter-title">

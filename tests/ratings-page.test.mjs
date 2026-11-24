@@ -7,14 +7,14 @@ const tray = home.match(/<dialog[\s\S]*?<\/dialog>/)?.[0] ?? '';
 const articles = [...home.matchAll(/<article [^>]*data-example[\s\S]*?<\/article>/g)].map((m) => m[0]);
 const stack = home.match(/<div id="bottom-stack"[\s\S]*$/)?.[0] ?? '';
 
-test('every card has its id and a compact rating row: Loved it and Not for us, 44px, not pressed', () => {
+test('every card has its id and a compact rating row: Loved it, It was fine and Not for us, 44px, not pressed', () => {
   assert.equal(articles.length, 6);
   const ids = articles.map((a) => a.match(/<article[^>]*data-id="([^"]+)"/)?.[1]);
   assert.deepEqual(ids, ['example-1', 'example-2', 'example-3', 'example-4', 'example-5', 'example-6']);
   for (const a of articles) {
     assert.match(a, /role="group"[^>]*aria-label="Ratings for Example recipe: [^"]+"/);
     const buttons = [...a.matchAll(/<button[^>]*data-rating="([\w-]+)"[^>]*>([^<]*)<\/button>/g)];
-    assert.deepEqual(buttons.map((b) => [b[1], b[2].trim()]), [['loved', 'Loved it'], ['not-for-us', 'Not for us']]);
+    assert.deepEqual(buttons.map((b) => [b[1], b[2].trim()]), [['loved', 'Loved it'], ['fine', 'It was fine'], ['not-for-us', 'Not for us']]);
     for (const b of buttons) {
       assert.match(b[0], /aria-pressed="false"/);
       assert.match(b[0], /type="button"/);

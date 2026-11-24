@@ -21,8 +21,10 @@ test('the line and paragraph separators and ">" and "&" are escaped too, and the
 
 test('the recipe page puts its catalog through jsonForScript', () => {
   const page = read('src/pages/recipe/[id].astro');
-  assert.match(page, /jsonForScript\(catalog\)/);
-  assert.ok(!/JSON\.stringify\(catalog\)/.test(page));
+  const view = read('src/components/RecipeView.astro');
+  assert.match(page, /<RecipeView[^>]*catalog=\{catalog\}/);
+  assert.match(view, /jsonForScript\(catalog\)/);
+  assert.ok(!/JSON\.stringify\(catalog\)/.test(view));
   const html = decode(read('dist/recipe/example-1/index.html'));
   const block = html.match(/<script id="catalog" type="application\/json">([\s\S]*?)<\/script>/)[1];
   assert.ok(!block.includes('<') && JSON.parse(block).length === 6, block);

@@ -1,0 +1,15 @@
+x 2026-11-17 2026-11-16 Favorites page is a Coming soon stub with a live tab (src/pages/favorites.astro) +kriskitchen
+x 2026-11-17 2026-11-16 Wire a typecheck: astro check needs the check package and typescript, and no typecheck script exists +kriskitchen
+x 2026-11-17 2026-11-16 Patch updates waiting: astro 7.4.12, tailwindcss 4.3.5, daisyui 5.8.1 (versions as of 2026-10-13, recheck before bumping) +kriskitchen
+x 2026-11-17 2026-11-16 Repo has no git remote, so nothing can be pushed or deployed from here +kriskitchen
+x 2026-11-17 2026-11-16 browse.ts render() rebuilds every filter chip and re-filters all cards on each keystroke (src/scripts/browse.ts:85); fine at 6 recipes, revisit if the list grows +kriskitchen
+x 2026-11-17 2026-11-16 Three near-copies of the blocked-storage stand-in: pageStorage in src/scripts/browse.ts:68, phoneStorage in src/scripts/phone-storage.ts:3, and the inline read in src/components/TabBar.astro:55; behavior differs on purpose (session forgets vs local throws), so unify only the session ones +kriskitchen
+x 2026-11-17 2026-11-16 StorageLike interface lives in src/scripts/browse-state.ts:93 while the stores import it from there; move it next to the stores if browse-state keeps growing +kriskitchen
+x 2026-11-17 2026-11-16 README gluten-free bullet is split into short lines; tests/10-docs still pins its phrases, so the wording itself cannot change without updating that test +kriskitchen
+x 2026-11-17 2026-11-16 34 comment lines over 130 characters across src, e2e and tests restate the code; trim only after checking each against the text-scanning tests +kriskitchen
+x 2026-11-18 2026-11-18 Chip row reuses buttons, but a paused rating filter still rebuilds the row and drops focus; only the label text is refreshed in place (src/scripts/browse.ts render) +kriskitchen pr:https://github.com/edheltzel/KKitchen/pull/1
+x 2026-11-18 2026-11-18 Turn the shared kitchen requirements into an implementation plan +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-requirements.md report:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
+x 2026-11-18 2026-11-18 Build the shared kitchen from the plan +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
+x 2026-11-18 2026-11-18 U2 sign-in for two people: Cloudflare Access identity mapped to Ed or Kristina, others rejected +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
+x 2026-11-18 2026-11-18 U3 recipes become markdown: the three real recipes seeded into R2 and read at request time +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
+x 2026-11-18 2026-11-18 U4 the recipe form: plain inputs that write a recipe to R2 so the other person sees it without a deploy +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md

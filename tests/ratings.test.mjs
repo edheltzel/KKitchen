@@ -15,10 +15,10 @@ import {
 
 const e = (value, at) => ({ value, at });
 
-test('two people, labelled exactly Ed and Kristina; two buttons, Loved it and Not for us', () => {
+test('two people, labelled exactly Ed and Kristina; three ratings, and only Loved it counts', () => {
   assert.deepEqual([...PEOPLE], ['ed', 'kristina']);
   assert.deepEqual(PERSON_LABEL, { ed: 'Ed', kristina: 'Kristina' });
-  assert.deepEqual(RATING_LABEL, { loved: 'Loved it', 'not-for-us': 'Not for us' });
+  assert.deepEqual(RATING_LABEL, { loved: 'Loved it', fine: 'It was fine', 'not-for-us': 'Not for us' });
 });
 
 test('Family favorite is derived: only when both people say Loved it', () => {

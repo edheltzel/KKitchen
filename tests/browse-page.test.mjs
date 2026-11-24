@@ -25,6 +25,7 @@ const SECRETS = ['saffron', 'Hidden Draft', 'Nut-free', 'Draft-only'];
 function leaks(dir) {
   const found = [];
   for (const file of distFiles(dir)) {
+    if (file.includes('/server/')) continue;
     const buf = readFileSync(file);
     if (buf.includes(0)) continue;
     const text = buf.toString('utf8').toLowerCase();

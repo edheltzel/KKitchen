@@ -1,0 +1,7 @@
+---
+import { env } from 'cloudflare:workers';
+
+const row = await env.DB.prepare('SELECT COUNT(*) AS people FROM people').first<{ people: number }>();
+---
+
+<p>people: {row?.people ?? 0}</p>

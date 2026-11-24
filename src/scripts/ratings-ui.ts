@@ -38,7 +38,32 @@ export function mountRatings({
   // behind the same RatingsStore shape. Blocked storage reads as empty and refuses saves, which shows as
   // "Ratings unavailable" rather than silently losing a tap.
   const storage = phoneStorage();
-  const controller = createRatingsController({ store: createLocalRatingsStore({ storage }), identity: createIdentity(storage) });
+  // A prerendered page cannot know who is signed in, so the page asks. The picker remains when nobody is.
+  const who = document.cookie.match(/(?:^|; )kk-person=([^;]+)/);
+  const signedIn = who ? decodeURIComponent(who[1]) : null;
+  const identity = signedIn === 'ed' || signedIn === 'kristina'
+    ? { get: () => signedIn, set: () => {} }
+    : createIdentity(storage);
+  const sharedStore = {
+    async load() {
+      const response = await fetch('/api/ratings');
+      if (!response.ok) throw new Error('ratings unavailable');
+      return (await response.json()).ratings;
+    },
+    async set(recipeId: string, person: 'ed' | 'kristina', value: Rating | null) {
+      const response = await fetch('/api/ratings', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ recipeId, person, value }),
+      });
+      if (!response.ok) throw new Error('ratings unavailable');
+      return (await response.json()).ratings;
+    },
+  };
+  const controller = createRatingsController({
+    store: signedIn ? sharedStore : createLocalRatingsStore({ storage }),
+    identity,
+  });
 
   // The Undo offer on the shared bar: one per controller undo, so the bar's 10 second clock does not restart on redraws.
   let offered: { undo: object; offer: UndoOffer } | null = null;

@@ -4,6 +4,7 @@ import { createWeekController } from './week-controller';
 import { createLocalWeekStore } from './week-store';
 import { phoneStorage } from './phone-storage';
 import { noteText, weekDays } from './week-plan';
+import { createWeekClient } from './week-shared-client';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -32,6 +33,8 @@ export function mountPlanSheet({ cards: elements, names }: { cards: HTMLElement[
   const shortOf = (key: string) => days.find((d) => d.key === key)!.short;
 
   const store = createLocalWeekStore({ storage: phoneStorage(), knownRecipeIds: new Set(names.keys()) });
+  // A plan made from a card is shared too. The local store stays for the sheet's own Undo.
+  const shared = createWeekClient();
   const controller = createWeekController({ store, days: keys });
 
   const slots = [...sheet.querySelectorAll<HTMLButtonElement>('button[data-slot]')];
@@ -92,6 +95,10 @@ export function mountPlanSheet({ cards: elements, names }: { cards: HTMLElement[
     picking = null;
     sheet.close();
     void controller.plan(button.dataset.day!, card.id);
+      void shared.get(button.dataset.day!, 'dinner').then(async (slot) => {
+        const result = await shared.set(button.dataset.day!, 'dinner', [...slot.recipes, card.id], slot.recipes);
+        if ('conflict' in result) live.textContent = `${nameOf(card.id)} was not added. That dinner changed. Open the week to choose.`;
+      });
   });
 
   let announced: unknown = null;

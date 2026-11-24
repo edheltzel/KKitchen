@@ -30,7 +30,9 @@ test('dist/_headers exists and sends noindex, nosniff and a same-origin referrer
 
 test('_headers has no redirects or other rules that could change what is served', () => {
   const text = read('dist/_headers');
-  assert.equal(text.split('\n').filter((l) => l.startsWith('/')).length, 1, 'a single path rule');
+  // The adapter adds one rule that only caches the hashed /_astro assets. Nothing else may be added.
+  const paths = text.split('\n').filter((l) => l.startsWith('/'));
+  assert.deepEqual(paths.sort(), ['/*', '/_astro/*']);
   assert.ok(!/Set-Cookie|Access-Control-Allow-Origin|Location:/i.test(text));
 });
 

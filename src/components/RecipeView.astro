@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro';
+import Banners from '../components/Banners.astro';
+import TicksBanner from '../components/TicksBanner.astro';
+import MePicker from '../components/MePicker.astro';
+import RatingBlock from '../components/RatingBlock.astro';
+import PlanBlock from '../components/PlanBlock.astro';
+import PlanSheet from '../components/PlanSheet.astro';
+import UndoBar from '../components/UndoBar.astro';
+import { jsonForScript } from '../scripts/json-script';
+import { confirmedTags, exampleTitle, isFixture, recipeMeta, type ExampleRecipe } from '../data/examples';
+
+interface Props { recipe: ExampleRecipe; catalog: { id: string; name: string }[] }
+const { recipe, catalog } = Astro.props;
+const title = exampleTitle(recipe);
+const tags = confirmedTags(recipe);
+---
+<Base title={`${title} · Kris's Kitchen`} active="recipes" wide>
+  <a id="back" href="/" class="kk-back">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7" /></svg>
+    Recipes
+  </a>
+  <article id="recipe" data-id={recipe.id} data-name={recipe.name} class="mt-1">
+    <header class="md:grid md:grid-cols-2 md:items-start md:gap-8">
+      <div class="relative">
+        <div class="kk-tile kk-hero relative" aria-hidden="true">
+          <span class="kk-tile-letter">{recipe.name.charAt(0)}</span>
+        </div>
+        <span data-role="family-badge" hidden class="kk-fav-badge">★ Family favorite</span>
+        {isFixture && <span class="badge absolute right-2 top-2 border-0 bg-base-content font-bold text-base-100">Example</span>}
+      </div>
+      <div class="mt-3 md:mt-0">
+        <h1 class="text-3xl font-extrabold leading-tight tracking-tight">{title}</h1>
+        <p class="mt-1 font-mono text-[14px] text-kk-muted">{recipeMeta(recipe)}</p>
+        {recipe.glutenFreePerSource && <p data-role="recipe-label" class="mt-1 text-[13px] text-kk-muted">Gluten-free per the original recipe</p>}
+        {tags.length > 0 && (
+          <ul class="mt-2 flex flex-wrap gap-2" aria-label="Tags">
+            {tags.map((tag) => <li class="kk-tag">{tag}</li>)}
+          </ul>
+        )}
+        <a id="start-cooking" href={Astro.url.pathname.includes('/saved/') ? `/cook/saved/${recipe.id}/` : `/cook/${recipe.id}/`} class="btn btn-primary kk-start-cooking">Start cooking <span aria-hidden="true">→</span></a>
+        <div class="kk-actions" role="group" aria-label={`Rate or plan ${title}`}>
+          <RatingBlock title={title} part="buttons" />
+          <PlanBlock title={title} part="button" />
+        </div>
+        <PlanBlock title={title} part="status" />
+        <MePicker inline />
+      </div>
+    </header>
+
+    <div class="mt-6 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-10">
+      <section aria-labelledby="ingredients-title">
+        <div class="flex items-center justify-between gap-3">
+          <h2 id="ingredients-title" class="text-xl font-extrabold">Ingredients</h2>
+          <button type="button" id="reset-ticks" class="kk-reset">Reset checks</button>
+        </div>
+        {recipe.groups.map((group) => (
+          <div class="mt-2">
+            {group.title && <h3 class="mt-3 text-[13px] font-bold uppercase tracking-wide text-kk-muted">{group.title}</h3>}
+            <ul class="kk-ticks" aria-label={group.title ?? 'Ingredients'}>
+              {group.items.map((item) => (
+                <li>
+                  <label class="kk-tick">
+                    <input type="checkbox" class="kk-tick-box" data-item={item.id} />
+                    <span>{item.text}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+      <section aria-labelledby="steps-title" class="mt-8 md:mt-0">
+        <div class="md:flex md:min-h-11 md:items-center">
+          <h2 id="steps-title" class="text-xl font-extrabold">Steps</h2>
+        </div>
+        <ol id="steps" class="kk-steps mt-2">
+          {recipe.steps.map((step) => <li>{step.text}</li>)}
+        </ol>
+      </section>
+    </div>
+
+    {recipe.notes && recipe.notes.length > 0 && (
+      <section aria-labelledby="notes-title" class="mt-8">
+        <h2 id="notes-title" class="text-xl font-extrabold">Notes</h2>
+        <ul class="mt-2 list-disc space-y-2 pl-5 text-[17px] leading-snug">
+          {recipe.notes.map((note) => <li>{note}</li>)}
+        </ul>
+      </section>
+    )}
+
+    <section aria-labelledby="ratings-title" class="mt-8">
+      <h2 id="ratings-title" class="text-xl font-extrabold">Ratings</h2>
+      <RatingBlock title={title} part="status" />
+      <MePicker />
+      {recipe.source && (
+        <a href={recipe.source} target="_blank" rel="noopener noreferrer" class="kk-source">Original recipe<span class="sr-only"> (opens in a new tab)</span> ↗</a>
+      )}
+    </section>
+  </article>
+  <PlanSheet />
+  <p id="plan-live" class="sr-only" aria-live="polite"></p>
+  <script id="catalog" type="application/json" set:html={jsonForScript(catalog)} />
+  <Banners slot="above"><TicksBanner /></Banners>
+  <UndoBar slot="replaces-tabs" />
+</Base>

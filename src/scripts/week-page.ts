@@ -19,13 +19,19 @@ const recipes = new Map(
 );
 const nameOf = (id: string) => recipes.get(id)?.name ?? 'a recipe';
 
-const days: WeekDay[] = weekDays(new Date());
+const asked = new URLSearchParams(location.search).get('week');
+const start = asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) ? new Date(asked + 'T12:00:00') : new Date();
+const days: WeekDay[] = weekDays(start);
 const keys = days.map((d) => d.key);
 const dayOf = (key: string) => days.find((d) => d.key === key)!;
 const longOf = (key: string) => dayOf(key).long;
 
 const rows = new Map<string, { li: HTMLElement; cell: HTMLElement }>();
 $('#week-range').textContent = weekRange(days);
+const prev = new Date(start);
+prev.setDate(prev.getDate() - 7);
+const prevKey = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-${String(prev.getDate()).padStart(2, '0')}`;
+$('#week-prev').setAttribute('href', `?week=${prevKey}`);
 const todayKey = days[(new Date().getDay() + 6) % 7].key;
 document.querySelectorAll<HTMLElement>('#week-list li[data-slot]').forEach((li) => {
   const day = days[Number(li.dataset.slot)];
@@ -81,6 +87,7 @@ function dinnerCell(day: WeekDay, recipeId: string, note: string | null, disable
   words.disabled = disabled;
   words.setAttribute('aria-label', `Change the dinner on ${day.long}`);
   const title = el('span', 'kk-week-name', 'name');
+  title.dataset.id = recipeId;
   title.textContent = name;
   words.append(title);
   if (note) {
@@ -130,14 +137,14 @@ function render(): void {
   unavailableBar.hidden = !view.unavailable;
   for (const day of days) {
     const { cell } = rows.get(day.key)!;
-    // A saved dinner whose recipe is no longer on the site (an old id) is ignored: the day shows as empty.
-    const saved = plan[day.key]?.recipeId ?? null;
-    const recipeId = saved !== null && recipes.has(saved) ? saved : null;
-    const noteHere = view.note?.day === day.key ? note : null;
-    const sig = `${recipeId}|${noteHere}|${view.unavailable}`;
-    if (cell.dataset.sig === sig) continue;
-    cell.dataset.sig = sig;
-    cell.replaceChildren(recipeId ? dinnerCell(day, recipeId, noteHere, view.unavailable) : emptyCell(day, view.unavailable));
+    const planned = plan[day.key]?.recipeId ?? '';
+      const dayNote = view.note?.day === day.key ? note : null;
+      const sig = `${planned}|${dayNote ?? ''}|${view.unavailable}`;
+      if (cell.dataset.sig === sig) continue;
+      cell.dataset.sig = sig;
+      cell.replaceChildren();
+      if (planned && recipes.has(planned)) cell.append(dinnerCell(day, planned, dayNote, view.unavailable));
+      else cell.append(emptyCell(day, view.unavailable));
   }
 }
 
@@ -158,16 +165,8 @@ $('#week-list').addEventListener('click', (event) => {
   if (swallowClick || !target || target.disabled) return;
   const day = dayOf(target.closest<HTMLElement>('li[data-day]')!.dataset.day!);
   if (target.dataset.role === 'add' || target.dataset.role === 'change') openSheet(day);
-  if (target.dataset.role === 'remove' || target.dataset.role === 'reveal') removeDinner(day.key);
+  if (target.dataset.role === 'remove' || target.dataset.role === 'reveal') void controller.remove(day.key);
 });
-
-// One tap, one removal: a second tap while the first is saving does nothing (the controller also refuses an empty day).
-const removing = new Set<string>();
-function removeDinner(day: string): void {
-  if (removing.has(day)) return;
-  removing.add(day);
-  void controller.remove(day).finally(() => removing.delete(day));
-}
 
 // Swipe left on a dinner: past about 40px it can rest open on the red Remove; a long swipe (more than half
 // the row) says "Release to remove" and removes when the finger lifts. A mostly-vertical drag is just scrolling.
@@ -223,24 +222,25 @@ function endDrag(event: PointerEvent): void {
   if (!current || current.mode !== 'swipe') return;
   swallowClick = true;
   setTimeout(() => (swallowClick = false), 0);
-  const day = current.swipe.closest<HTMLElement>('li[data-day]')!.dataset.day!;
+  const row = current.swipe.closest<HTMLElement>('li[data-day]')!;
+  const day = row.dataset.day!;
   if (event.type === 'pointercancel') return settle(current.swipe, 'closed');
-  if (-current.offset > current.width * LONG) {
-    settle(current.swipe, 'closed');
-    removeDinner(day);
-  } else settle(current.swipe, -current.offset > REVEAL / 2 ? 'open' : 'closed');
+    if (-current.offset > current.width * LONG) {
+      settle(current.swipe, 'closed');
+      void controller.remove(day);
+    } else settle(current.swipe, -current.offset > REVEAL / 2 ? 'open' : 'closed');
 }
 list.addEventListener('pointerup', endDrag);
 list.addEventListener('pointercancel', endDrag);
 
 sheet.addEventListener('click', (event) => {
-  const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-id]');
-  if (!button || !addDay) return;
-  const day = addDay;
-  addDay = null;
-  sheet.close();
-  void controller.plan(day.key, button.dataset.id!);
-});
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-id]');
+    if (!button || !addDay) return;
+    const day = addDay;
+    addDay = null;
+    sheet.close();
+    void controller.plan(day.key, button.dataset.id!);
+  });
 
 // What a change did, for people who cannot see the row: a polite announcement.
 let announced: unknown = null;

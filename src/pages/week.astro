@@ -3,19 +3,22 @@ import Base from '../layouts/Base.astro';
 import { exampleRecipes, exampleTitle, isFixture } from '../data/examples';
 
 const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+export const prerender = true;
 ---
 
 <Base title="Week · Kris's Kitchen" active="week">
   <header class="flex items-baseline justify-between gap-3">
     <h1 class="text-3xl font-extrabold tracking-tight">This week</h1>
     <p id="week-range" class="text-[13px] font-semibold text-kk-muted"></p>
+      <a id="week-prev" class="text-[13px] font-bold">Earlier</a>
   </header>
   {isFixture && <p class="mt-1 text-[13px] text-kk-muted">Example recipes only: placeholder content, not real recipes.</p>}
   <ul id="week-list" class="kk-week mt-3">
     {labels.map((label, i) => (
       <li class="kk-week-row" data-slot={i}>
         <span class="kk-week-day">{label}</span>
-        <div class="kk-week-cell"></div>
+        <div class="kk-week-cell" data-meal="dinner"></div>
       </li>
     ))}
   </ul>

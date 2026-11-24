@@ -1,8 +1,31 @@
 {
-  "name": "k9b86a4baf5538442773d",
+  "name": "kriskitchen",
+  "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-10-25",
   "workers_dev": true,
   "assets": {
     "directory": "./dist"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kris-kitchen",
+      "database_id": "local-kris-kitchen"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "RECIPES",
+      "bucket_name": "kris-kitchen-recipes"
+    }
+  ],
+  "vars": {
+    "KK_DATA": ""
+  },
+  "access": {
+    "dev": {
+      "aud": "local",
+      "identity": { "email": "ed@local" }
+    }
   }
 }

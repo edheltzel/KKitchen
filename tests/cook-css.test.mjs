@@ -24,7 +24,7 @@ test('the cook screens obey [hidden] (flex would otherwise win) and every tap ta
 test('on a step the Use now rows are not struck through or greyed; the strike stays the general rule (Gather)', () => {
   assert.match(css, /\.kk-use-now \.kk-tick:has\(input:checked\) span \{\s*color: inherit;\s*text-decoration: none;\s*\}/);
   assert.match(css, /\.kk-tick:has\(input:checked\) span \{[^}]*line-through/);
-  assert.match(read('src/pages/cook/[id].astro'), /id="use-now" class="[^"]*kk-use-now/);
+  assert.match(read('src/components/CookView.astro'), /id="use-now" class="[^"]*kk-use-now/);
 });
 
 test('over 900px the step sentence, Use now rows and Next step scale up; the phone sizes stay in the base rules', () => {

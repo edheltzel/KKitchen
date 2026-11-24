@@ -8,6 +8,7 @@ const h = await startHarness();
 const { ev, check, goto, text, visible, click, sleep, waitFor, send } = h;
 const THU = '2026-10-29', FRI = '2026-10-30';
 const row = (day) => `#week-list li[data-day="${day}"]`;
+const dinner = (day) => `${row(day)} [data-meal="dinner"]`;
 const errors = () => ev('window.__errs.slice()');
 const seed = (key, value) => ev(`localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(JSON.stringify(value))})`);
 try {
@@ -25,9 +26,9 @@ try {
   const thu = await ev(`document.querySelector(${JSON.stringify(row(THU))}).textContent.replace(/\\s+/g, ' ').trim()`);
   const cards = await ev('document.querySelectorAll("#week-list [data-role=card]").length');
   console.log('PROBE week Thursday text:', JSON.stringify(thu), 'dinner cards on the page:', cards, 'errors:', JSON.stringify(await errors()));
-  check('Week: the day planned with a recipe that is gone shows as an empty day with "+ Add a dinner", not a card', (await visible(`${row(THU)} [data-role="add"]`)) && !(await visible(`${row(THU)} [data-role="card"]`)), thu);
+  check('Week: the day planned with a recipe that is gone shows as an empty day with "+ Add a dinner", not a card', (await visible(`${dinner(THU)} [data-role="add"]`)) && !(await visible(`${dinner(THU)} [data-role="card"]`)), thu);
   check('Week: no card is named "a recipe"', !/a recipe/i.test(await ev('document.querySelector("#week-list").textContent')));
-  check('Week: a day planned with a real recipe still shows it', (await text(`${row(FRI)} [data-role="name"]`)) === 'Weeknight Pasta', await text(`${row(FRI)} [data-role="name"]`));
+  check('Week: a day planned with a real recipe still shows it', (await text(`${dinner(FRI)} [data-role="name"]`)) === 'Weeknight Pasta', await text(`${dinner(FRI)} [data-role="name"]`));
   check('Week: exactly one dinner card (the real one)', cards === 1, String(cards));
   check('Week: no console error or exception', (await errors()).length === 0, JSON.stringify(await errors()));
   const stored = JSON.parse(await ev("localStorage.getItem('kk:week')"));
