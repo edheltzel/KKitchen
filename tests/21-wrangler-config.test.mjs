@@ -17,13 +17,11 @@ test('wrangler.jsonc is the Worker: server entry, the D1 and R2 bindings, and no
   for (const key of forbidden) assert.ok(!(key in c), `no ${key}`);
 });
 
-test('the Worker name is k + 20 random hex (a-f, 0-9) characters and names nothing about the site', () => {
+test('the Worker name is kriskitchen, which serves kriskitchen.rainyday.workers.dev', () => {
   const { name } = config();
-  assert.match(name, /^k[0-9a-f]{20}$/);
-  for (const word of ['kitchen', 'kris', 'recipe']) assert.ok(!name.toLowerCase().includes(word), word);
-  // The bindings name the database and the recipe bucket. The Worker name itself stays anonymous.
+  assert.equal(name, 'kriskitchen');
   const nameLine = read('wrangler.jsonc').split('\n').find((l) => l.includes('"name"'));
-  assert.ok(!/kitchen|kris|recipe/i.test(nameLine));
+  assert.match(nameLine, /"kriskitchen"/);
 });
 
 test('it serves the built dist folder on the workers.dev address, with a current compatibility date', () => {

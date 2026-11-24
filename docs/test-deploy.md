@@ -7,12 +7,12 @@ Nothing is published by committing this. A person runs the deploy by hand, with 
 - Static files only: the built `dist` folder, served by a Cloudflare Worker with static assets. No Worker code, no D1, KV, R2, durable objects, services, routes or custom domain. See `wrangler.jsonc`.
 - The three real recipes (fried chicken, slow cooker roast, brownies) from a plain build. No example or fixture recipes, no stories, no photos of people.
 - Ratings, the week plan and ticks stay on each phone (browser storage). They are not shared: nothing is sent to the Worker, and two phones will not see each other's.
-- Worker name: `k9b86a4baf5538442773d` (random, no site name in it). The address is `https://k9b86a4baf5538442773d.<your-subdomain>.workers.dev`, which `wrangler deploy` prints.
+- Worker name: `kriskitchen`. The address is `https://kriskitchen.rainyday.workers.dev`.
 - Every response carries `X-Robots-Tag: noindex, nofollow` (from `public/_headers`) and every page has `<meta name="robots" content="noindex">`.
 
 ## Before the first deploy
 
-Confirm the random name is free, so the deploy cannot overwrite an existing Worker. This is a read-only check: list the account's Workers with the Cloudflare connector (`workers_list`) or in the dashboard, and confirm that `k9b86a4baf5538442773d` does not already exist. If it does, stop and tell Atlas; do not deploy over it.
+Confirm the name is free before the first deploy, so it cannot overwrite an existing Worker. This is a read-only check: list the account's Workers with the Cloudflare connector (`workers_list`) or in the dashboard, and confirm that `kriskitchen` does not already exist. If it does, stop and tell Atlas; do not deploy over it.
 
 ## Deploy (repeatable, manual only, no automatic republish)
 
@@ -32,7 +32,7 @@ cd /Users/ed && wrangler deploy -c /Users/ed/Developer/KKitchen/wrangler.jsonc
 
 Set `URL` to the printed address.
 
-1. Random address: the host starts with `k` plus 20 hex characters and has no site name in it.
+1. Address: the host is `kriskitchen.rainyday.workers.dev`.
 2. Noindex header on every path: `curl -sI "$URL/" | grep -i x-robots-tag` shows `noindex, nofollow`. Repeat for `$URL/week/` and `$URL/recipe/fried-chicken/`.
 3. Noindex tag: `curl -s "$URL/" | grep -o '<meta name="robots" content="noindex">'` prints the tag (also on `/week/`, `/favorites/`, `/recipe/fried-chicken/` and `/cook/fried-chicken/`).
 4. Check dist before deploy: `ls dist/recipe` shows exactly the three real folders (`fried-chicken`, `high-protein-brownies`, `slow-cooker-roast`), and `grep -ril "example recipe" dist` prints nothing.
@@ -49,7 +49,7 @@ Set `URL` to the printed address.
 ## Delete
 
 ```
-cd /Users/ed && wrangler delete k9b86a4baf5538442773d -c /Users/ed/Developer/KKitchen/wrangler.jsonc
+cd /Users/ed && wrangler delete kriskitchen -c /Users/ed/Developer/KKitchen/wrangler.jsonc
 ```
 
 Then `curl -sI "$URL/"` should no longer serve the site.
@@ -70,7 +70,7 @@ cd /Users/ed && wrangler deploy -c "$SRC/wrangler.jsonc"
 
 3. Run the verify steps again, then clean up: `cd /Users/ed/Developer/KKitchen && rm -rf "$SRC"`.
 
-- Fallback: if a redeploy will not go through or the site must come down now, delete it with `cd /Users/ed && wrangler delete k9b86a4baf5538442773d -c /Users/ed/Developer/KKitchen/wrangler.jsonc`.
+- Fallback: if a redeploy will not go through or the site must come down now, delete it with `cd /Users/ed && wrangler delete kriskitchen -c /Users/ed/Developer/KKitchen/wrangler.jsonc`.
 - `wrangler rollback` is unchecked for asset Workers (not tried, not relied on here). Do not count on it.
 
 ## Token
