@@ -5,10 +5,6 @@ import { createLocalWeekStore } from './week-store';
 import { phoneStorage } from './phone-storage';
 import { createUndoBar } from './undo-bar';
 import { noteText, weekDays, weekRange, type WeekDay } from './week-plan';
-import { createWeekClient } from './week-shared-client';
-import type { Meal } from '../lib/week-shared';
-
-const MEALS: Meal[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -30,7 +26,7 @@ const keys = days.map((d) => d.key);
 const dayOf = (key: string) => days.find((d) => d.key === key)!;
 const longOf = (key: string) => dayOf(key).long;
 
-const rows = new Map<string, { li: HTMLElement; cells: Map<Meal, HTMLElement> }>();
+const rows = new Map<string, { li: HTMLElement; cell: HTMLElement }>();
 $('#week-range').textContent = weekRange(days);
 const prev = new Date(start);
 prev.setDate(prev.getDate() - 7);
@@ -44,26 +40,8 @@ document.querySelectorAll<HTMLElement>('#week-list li[data-slot]').forEach((li) 
     li.dataset.today = '';
     li.querySelector('.kk-week-day')!.setAttribute('aria-current', 'date');
   }
-  const cells = new Map<Meal, HTMLElement>();
-  for (const cell of li.querySelectorAll<HTMLElement>('.kk-week-cell')) cells.set(cell.dataset.meal as Meal, cell);
-  rows.set(day.key, { li, cells });
+  rows.set(day.key, { li, cell: li.querySelector<HTMLElement>('.kk-week-cell')! });
 });
-
-// The shared week, one list per meal. `seen` is what this device last read, which a save sends back so a meal
-// someone else changed is never overwritten without a choice.
-const shared = createWeekClient();
-const meals = new Map<string, { recipes: string[]; seen: string[] }>();
-const slotKey = (day: string, meal: Meal) => `${day}/${meal}`;
-
-async function loadMeals(): Promise<void> {
-  for (const day of keys) {
-    for (const meal of MEALS) {
-      const slot = await shared.get(day, meal);
-      meals.set(slotKey(day, meal), { recipes: slot.recipes, seen: slot.recipes });
-    }
-  }
-  render();
-}
 
 const store = createLocalWeekStore({ storage: phoneStorage(), knownRecipeIds: new Set(recipes.keys()) });
 const controller = createWeekController({ store, days: keys });
@@ -158,38 +136,16 @@ function render(): void {
   undoBar.show(view.undo);
   unavailableBar.hidden = !view.unavailable;
   for (const day of days) {
-    const { cells } = rows.get(day.key)!;
-    for (const meal of MEALS) {
-      const cell = cells.get(meal)!;
-      const held = meals.get(slotKey(day.key, meal));
-      const ids = (held?.recipes ?? []).filter((id) => recipes.has(id));
-      const sig = `${meal}|${ids.join(',')}|${view.unavailable}`;
+    const { cell } = rows.get(day.key)!;
+    const planned = plan[day.key]?.recipeId ?? '';
+      const dayNote = view.note?.day === day.key ? note : null;
+      const sig = `${planned}|${dayNote ?? ''}|${view.unavailable}`;
       if (cell.dataset.sig === sig) continue;
       cell.dataset.sig = sig;
       cell.replaceChildren();
-      if (ids.length === 0) cell.append(emptyCell(day, view.unavailable));
-      else for (const id of ids) cell.append(dinnerCell(day, id, null, view.unavailable));
-    }
+      if (planned && recipes.has(planned)) cell.append(dinnerCell(day, planned, dayNote, view.unavailable));
+      else cell.append(emptyCell(day, view.unavailable));
   }
-}
-
-let pending: { day: string; meal: Meal; recipes: string[] } | null = null;
-const conflict = $<HTMLDialogElement>('#conflict');
-
-async function saveMeal(day: string, meal: Meal, recipes: string[]): Promise<void> {
-  const held = meals.get(slotKey(day, meal)) ?? { recipes: [], seen: [] };
-  const result = await shared.set(day, meal, recipes, held.seen);
-  if ('conflict' in result) {
-    pending = { day, meal, recipes };
-    const names = (ids: string[]) => ids.map(nameOf).join(', ') || 'nothing';
-    $('#conflict-text').textContent = `This ${meal} is ${names(result.current)}. Yours would make it ${names(recipes)}. Replace it, or keep it?`;
-    meals.set(slotKey(day, meal), { recipes: result.current, seen: result.current });
-    conflict.showModal();
-    render();
-    return;
-  }
-  meals.set(slotKey(day, meal), { recipes: result.recipes, seen: result.recipes });
-  render();
 }
 
 let addDay: WeekDay | null = null;
@@ -208,25 +164,9 @@ $('#week-list').addEventListener('click', (event) => {
   const target = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-role]');
   if (swallowClick || !target || target.disabled) return;
   const day = dayOf(target.closest<HTMLElement>('li[data-day]')!.dataset.day!);
-  const meal = (target.closest<HTMLElement>('[data-meal]')?.dataset.meal ?? 'dinner') as Meal;
-  addMeal = meal;
   if (target.dataset.role === 'add' || target.dataset.role === 'change') openSheet(day);
-  if (target.dataset.role === 'remove' || target.dataset.role === 'reveal') {
-    const recipeId = target.closest<HTMLElement>('.kk-week-swipe')?.querySelector<HTMLElement>('[data-role="name"]')?.dataset.id;
-    if (recipeId) removeDinner(day.key, meal, recipeId);
-  }
+  if (target.dataset.role === 'remove' || target.dataset.role === 'reveal') void controller.remove(day.key);
 });
-
-// One tap, one removal: a second tap while the first is saving does nothing (the controller also refuses an empty day).
-const removing = new Set<string>();
-function removeDinner(day: string, meal: Meal, recipeId: string): void {
-  const key = `${day}/${meal}/${recipeId}`;
-  if (removing.has(key)) return;
-  removing.add(key);
-  const held = meals.get(slotKey(day, meal));
-  const next = (held?.recipes ?? []).filter((id) => id !== recipeId);
-  void saveMeal(day, meal, next).finally(() => removing.delete(key));
-}
 
 // Swipe left on a dinner: past about 40px it can rest open on the red Remove; a long swipe (more than half
 // the row) says "Release to remove" and removes when the finger lifts. A mostly-vertical drag is just scrolling.
@@ -284,30 +224,23 @@ function endDrag(event: PointerEvent): void {
   setTimeout(() => (swallowClick = false), 0);
   const row = current.swipe.closest<HTMLElement>('li[data-day]')!;
   const day = row.dataset.day!;
-  const meal = (current.swipe.closest<HTMLElement>('[data-meal]')?.dataset.meal ?? 'dinner') as Meal;
-    if (event.type === 'pointercancel') return settle(current.swipe, 'closed');
+  if (event.type === 'pointercancel') return settle(current.swipe, 'closed');
     if (-current.offset > current.width * LONG) {
       settle(current.swipe, 'closed');
-    const recipeId = current.swipe.querySelector<HTMLElement>('[data-role="name"]')?.dataset.id;
-    if (recipeId) removeDinner(day, meal, recipeId);
-  } else settle(current.swipe, -current.offset > REVEAL / 2 ? 'open' : 'closed');
+      void controller.remove(day);
+    } else settle(current.swipe, -current.offset > REVEAL / 2 ? 'open' : 'closed');
 }
 list.addEventListener('pointerup', endDrag);
 list.addEventListener('pointercancel', endDrag);
 
-let addMeal: Meal = 'dinner';
-
 sheet.addEventListener('click', (event) => {
-  const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-id]');
-  if (!button || !addDay) return;
-  const day = addDay;
-  const meal = addMeal;
-  addDay = null;
-  sheet.close();
-  const held = meals.get(slotKey(day.key, meal));
-  const next = [...(held?.recipes ?? []), button.dataset.id!];
-  void saveMeal(day.key, meal, next);
-});
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-id]');
+    if (!button || !addDay) return;
+    const day = addDay;
+    addDay = null;
+    sheet.close();
+    void controller.plan(day.key, button.dataset.id!);
+  });
 
 // What a change did, for people who cannot see the row: a polite announcement.
 let announced: unknown = null;
@@ -330,17 +263,5 @@ document.addEventListener('visibilitychange', () => {
 });
 $('#week-retry').addEventListener('click', () => void controller.retry());
 $('#undo-button').addEventListener('click', () => void controller.undo());
-$('#conflict-keep').addEventListener('click', () => { pending = null; conflict.close(); });
-$('#conflict-replace').addEventListener('click', () => {
-  const choice = pending;
-  pending = null;
-  conflict.close();
-  if (choice) {
-    const held = meals.get(slotKey(choice.day, choice.meal));
-    if (held) held.seen = held.recipes;
-    void saveMeal(choice.day, choice.meal, choice.recipes);
-  }
-});
 addEventListener('storage', (event) => event.key === 'kk:week' && void controller.refresh());
 void controller.init();
-void loadMeals();
