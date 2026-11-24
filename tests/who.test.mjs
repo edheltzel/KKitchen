@@ -22,6 +22,11 @@ test('Kristina is Kristina and the page is served', async () => {
   assert.equal(r.person, 'kristina');
 });
 
+test('the real Access emails are Ed and Kristina, whatever their case', async () => {
+  assert.equal((await run('ed@rainyday.media')).person, 'ed');
+  assert.equal((await run('Kristina.Hodgkinson@yahoo.com')).person, 'kristina');
+});
+
 test('anyone else, including nobody, gets no page', async () => {
   for (const email of ['bob@local', '', undefined]) {
     const r = await run(email);
