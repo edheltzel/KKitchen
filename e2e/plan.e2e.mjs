@@ -12,7 +12,7 @@ const plan = async (id, slot) => {
   await click(`${card(id)} [data-role="plan"]`);
   await sleep(450);
   await click(`#plan-sheet button[data-slot="${slot}"]`);
-  await sleep(150);
+  await sleep(650);
 };
 try {
   await goto('/');
@@ -35,7 +35,10 @@ try {
   check('every day is a button at least 44px tall', await ev("[...document.querySelectorAll('#plan-sheet button[data-slot]')].every((b) => b.getBoundingClientRect().height >= 44)"));
   check('an empty week says every day is free; today is named', (await ev("[...document.querySelectorAll('#plan-sheet [data-role=\"day-status\"]')].map((s) => s.textContent).join('|')")) === 'Free|Free|Free|Free (today)|Free|Free|Free');
   await click('#plan-sheet button[data-slot="1"]');
-  await sleep(150);
+  await sleep(100);
+  check('the picked day turns solid with a check and says Planned while the sheet stays a moment', (await ev("document.querySelector('#plan-sheet').open")) && (await ev("document.querySelector('#plan-sheet button[data-slot=\"1\"]').dataset.picked")) === 'on' && (await text('#plan-sheet button[data-slot="1"] [data-role="day-status"]')) === 'Planned');
+  await sleep(550);
+  check("a bar takes the tab bar's place and says what was planned, with Undo", (await visible('#undo-bar')) && (await text('#undo-text')) === 'Tomato Soup planned for Tuesday', await text('#undo-text'));
   check('picking Tuesday closes the sheet, saves it, and the card says where it is', !(await ev("document.querySelector('#plan-sheet').open")) && (await saved()).entries[TUE].recipeId === 'example-3' && (await status('example-3')) === 'On Tue', await status('example-3'));
   check('planning does not change the address or add a Back step', (await ev('location.search')) === '' && (await ev('history.length')) === historyBefore);
 
@@ -43,7 +46,7 @@ try {
   await sleep(450);
   check('the picker warns that a taken day is replaced', (await text('#plan-sheet button[data-slot="1"] [data-role="day-status"]')) === 'Replaces Tomato Soup');
   await click('#plan-sheet button[data-slot="1"]');
-  await sleep(150);
+  await sleep(650);
   check('planning on a taken day replaces it: one dinner per day', (await saved()).entries[TUE].recipeId === 'example-1' && (await status('example-3')) === '' && (await status('example-1')).startsWith('On Tue. Replaced Tomato Soup'), await status('example-1'));
 
   await click(`${card('example-1')} [data-role="plan"]`);
@@ -51,9 +54,13 @@ try {
   check('the picker says planning it on another day moves it', (await text('#plan-sheet button[data-slot="3"] [data-role="day-status"]')) === 'Moves it from Tuesday (today)', await text('#plan-sheet button[data-slot="3"] [data-role="day-status"]'));
   check('the day it is on says "Planned here"', (await text('#plan-sheet button[data-slot="1"] [data-role="day-status"]')) === 'Planned here');
   await click('#plan-sheet button[data-slot="3"]');
-  await sleep(150);
+  await sleep(650);
   check('moving it says "Moved from Tuesday" and clears Tuesday', (await status('example-1')) === 'On Thu. Moved from Tuesday' && (await saved()).entries[TUE].recipeId === null && (await saved()).entries[THU].recipeId === 'example-1', await status('example-1'));
-  check('the live region announces it', (await text('#plan-live')) === 'Moved from Tuesday', await text('#plan-live'));
+  check('the bar names the move', (await text('#undo-text')).endsWith('planned for Thursday. Moved from Tuesday'), await text('#undo-text'));
+  await click('#undo-button');
+  await sleep(200);
+  check('Undo puts it back on Tuesday and Thursday is free again', (await saved()).entries[TUE].recipeId === 'example-1' && (await saved()).entries[THU].recipeId === null && (await status('example-1')).startsWith('On Tue'), await status('example-1'));
+  await plan('example-1', 3);
 
   await goto('/week/');
   check('the Week page shows the same plan', (await text('#week-list li[data-day="2026-10-29"] [data-role="name"]')) === 'Weeknight Pasta');

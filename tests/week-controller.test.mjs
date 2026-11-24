@@ -64,6 +64,21 @@ test('planning a recipe that is on another day MOVES it and the note says from w
   assert.equal(days.filter((d) => dinnerOn(plan, d) === 'r1').length, 1, 'only one day has it');
 });
 
+test('restore puts back what a move over a replaced dinner changed, and clears the note', async () => {
+  const { controller } = phone();
+  await controller.init();
+  await controller.plan(TUE, 'r1');
+  await controller.plan(THU, 'r2');
+  await controller.plan(THU, 'r1');
+  await controller.restore([
+    { day: THU, recipeId: 'r2' },
+    { day: TUE, recipeId: 'r1' },
+  ]);
+  assert.equal(dinner(controller, TUE), 'r1');
+  assert.equal(dinner(controller, THU), 'r2');
+  assert.equal(controller.view().note, null);
+});
+
 test('planning the same dinner on the same day changes nothing and saves nothing', async () => {
   const { controller, calls } = phone();
   await controller.init();

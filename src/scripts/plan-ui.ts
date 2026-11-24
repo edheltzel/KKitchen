@@ -5,6 +5,7 @@ import { createLocalWeekStore } from './week-store';
 import { phoneStorage } from './phone-storage';
 import { noteText, weekDays } from './week-plan';
 import { createWeekClient } from './week-shared-client';
+import type { createUndoSlot } from './undo-slot';
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -13,7 +14,15 @@ const $ = <T extends HTMLElement>(selector: string): T => document.querySelector
  * approved recipe id and name, because the sheet says "Replaces <name>" for dinners that are not on this page and
  * the store must know every id (an id it does not know is refused).
  */
-export function mountPlanSheet({ cards: elements, names }: { cards: HTMLElement[]; names: ReadonlyMap<string, string> }): void {
+export function mountPlanSheet({
+  cards: elements,
+  names,
+  slot,
+}: {
+  cards: HTMLElement[];
+  names: ReadonlyMap<string, string>;
+  slot: ReturnType<typeof createUndoSlot>;
+}): void {
   const sheet = $<HTMLDialogElement>('#plan-sheet');
   const title = $('#plan-title');
   const live = $('#plan-live');
@@ -88,27 +97,62 @@ export function mountPlanSheet({ cards: elements, names }: { cards: HTMLElement[
   for (const card of cards) {
     card.button.addEventListener('click', () => !card.button.disabled && openFor(card));
   }
+  function share(day: string, recipeId: string): Promise<(() => void) | null> {
+    return shared
+      .get(day, 'dinner')
+      .then(async (meal) => {
+        const result = await shared.set(day, 'dinner', [...meal.recipes, recipeId], meal.recipes);
+        if ('conflict' in result) {
+          live.textContent = `${nameOf(recipeId)} was not added to the shared week. That dinner changed. Open the week to choose.`;
+          return null;
+        }
+        return () => void shared.set(day, 'dinner', meal.recipes, result.recipes).catch(() => undefined);
+      })
+      .catch(() => {
+        live.textContent = 'Saved on this phone. The shared week could not be reached.';
+        return null;
+      });
+  }
+
+  function flash(card: (typeof cards)[number]): void {
+    card.status.dataset.flash = 'on';
+    card.status.addEventListener('animationend', () => delete card.status.dataset.flash, { once: true });
+  }
+
   sheet.addEventListener('click', (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-day]');
-    if (!button || !picking) return;
+    if (!button || !picking || sheet.dataset.picked) return;
     const card = picking;
     picking = null;
-    sheet.close();
-    void controller.plan(button.dataset.day!, card.id);
-      void shared.get(button.dataset.day!, 'dinner').then(async (slot) => {
-        const result = await shared.set(button.dataset.day!, 'dinner', [...slot.recipes, card.id], slot.recipes);
-        if ('conflict' in result) live.textContent = `${nameOf(card.id)} was not added. That dinner changed. Open the week to choose.`;
+    const day = button.dataset.day!;
+    sheet.dataset.picked = 'on';
+    button.dataset.picked = 'on';
+    button.querySelector('[data-role="day-status"]')!.textContent = 'Planned';
+    navigator.vibrate?.(10);
+    setTimeout(() => {
+      sheet.close();
+      delete sheet.dataset.picked;
+      delete button.dataset.picked;
+    }, 450);
+    if (dinnerOf(day) === card.id) return;
+    const restores = [...new Set([day, ...daysOf(card.id)])].map((key) => ({ day: key, recipeId: dinnerOf(key) }));
+    const sharedUndo = share(day, card.id);
+    void controller.plan(day, card.id).then(() => {
+      const view = controller.view();
+      if (view.unavailable) return;
+      flash(card);
+      const note = noteText(view.note, longOf, nameOf);
+      slot.offer({
+        text: [`${nameOf(card.id)} planned for ${longOf(day)}`, note].filter(Boolean).join('. '),
+        run: () => {
+          void controller.restore(restores);
+          void sharedUndo.then((undo) => undo?.());
+        },
+        drop: () => undefined,
       });
+    });
   });
 
-  let announced: unknown = null;
-  controller.subscribe(() => {
-    const view = controller.view();
-    if (!view.note || view.note === announced) return;
-    announced = view.note;
-    live.textContent =
-      noteText(view.note, longOf, nameOf) ?? `Planned ${nameOf(dinnerOf(view.note.day) ?? '')} on ${longOf(view.note.day)}.`;
-  });
   controller.subscribe(render);
   $('#week-retry').addEventListener('click', () => void controller.retry());
   render();
