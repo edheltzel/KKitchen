@@ -99,7 +99,18 @@ export function createWeekController({ store, days }: { store: WeekPlanStore; da
       };
       return queue.enqueue({ kind: 'write', run });
     },
-    dismissUndo(): void {
+          /** Put days back to what they held before a plan, as the plan sheet's Undo. Clears the note and any Undo offer. */
+      restore(writes: readonly { day: string; recipeId: string | null }[]): Promise<void> {
+        const run = async () => {
+          let after = await store.load();
+          for (const write of writes) if (dinnerOn(after, write.day) !== write.recipeId) after = await store.set(write.day, write.recipeId);
+          data = after;
+          note = null;
+          undo = null;
+        };
+        return queue.enqueue({ kind: 'write', run });
+      },
+      dismissUndo(): void {
       undo = null;
       emit();
     },

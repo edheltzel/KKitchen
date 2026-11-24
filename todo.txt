@@ -13,3 +13,6 @@ x 2026-11-18 2026-11-18 Build the shared kitchen from the plan +kriskitchen note
 x 2026-11-18 2026-11-18 U2 sign-in for two people: Cloudflare Access identity mapped to Ed or Kristina, others rejected +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
 x 2026-11-18 2026-11-18 U3 recipes become markdown: the three real recipes seeded into R2 and read at request time +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
 x 2026-11-18 2026-11-18 U4 the recipe form: plain inputs that write a recipe to R2 so the other person sees it without a deploy +kriskitchen note:/Users/ed/Developer/KrisKitchen/docs/plans/2026-11-18-shared-kitchen-plan.md
+2026-11-24 Deploy the shared kitchen to the kriskitchen Worker: create the D1 database and the R2 bucket, put the real database_id in wrangler.jsonc, then sign in as Ed and Kristina to check Access +kriskitchen
+2026-11-24 Planning from a card still writes the phone's kk:week, so the next Recipes visit redirects to /import (src/scripts/browse.ts:24, import-local.ts localCopy); also breaks e2e/plan reopen check +kriskitchen
+2026-11-24 Local D1 was made before meal_slots.seen existed and db/schema.sql has no migration; add a migrations folder so local and remote D1 match +kriskitchen

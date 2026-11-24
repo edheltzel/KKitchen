@@ -23,6 +23,7 @@ import { mountRatings } from './ratings-ui';
 // The first time a signed-in phone still holds its own ratings or week, offer to copy them into the shared store.
 if (localCopy(phoneStorage()) && !sessionStorage.getItem('kk:import-declined')) location.assign('/import/');
 import { mountUndoSlot } from './undo-mount';
+import { mountPlanSheet } from "./plan-ui";
 
 const $ = <T extends HTMLElement>(selector: string): T => document.querySelector<T>(selector)!;
 
@@ -85,11 +86,9 @@ const cards = [...document.querySelectorAll<HTMLElement>('#recipe-grid article')
 });
 
 // The ratings buttons, picker, banner and Undo offer are drawn by ratings-ui.ts (shared with the recipe page).
-const { controller } = mountRatings({
-  root: $('#recipe-grid'),
-  cards: cards.map((c) => c.el),
-  slot: mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') }),
-});
+const slot = mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') });
+const { controller } = mountRatings({ root: $('#recipe-grid'), cards: cards.map((c) => c.el), slot });
+mountPlanSheet({ cards: cards.map((c) => c.el), names: new Map(cards.map((c) => [c.el.dataset.id!, c.el.dataset.name!])), slot });
 
 let state: BrowseState = parseState(location.search, options);
 

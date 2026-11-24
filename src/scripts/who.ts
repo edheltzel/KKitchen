@@ -2,12 +2,14 @@
 export const PEOPLE = {
   'ed@local': 'ed',
   'kristina@local': 'kristina',
+  'ed@rainyday.media': 'ed',
+  'kristina.hodgkinson@yahoo.com': 'kristina',
 } as const;
 
 export type Person = (typeof PEOPLE)[keyof typeof PEOPLE];
 
 export const personFor = (email: string | undefined): Person | null =>
-  (email && PEOPLE[email as keyof typeof PEOPLE]) || null;
+  (email && PEOPLE[email.toLowerCase() as keyof typeof PEOPLE]) || null;
 
 export const REFUSED = 'This site is for Ed and Kristina.';
 

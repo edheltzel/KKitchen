@@ -26,7 +26,7 @@ back.addEventListener('click', (event) => {
 const slot = mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') });
 const { controller: ratings } = mountRatings({ root: article, cards: [article], slot, inlinePicker: document.getElementById('me-inline')! });
 const catalog: { id: string; name: string }[] = JSON.parse($('#catalog').textContent ?? '[]');
-mountPlanSheet({ cards: [article], names: new Map(catalog.map((r) => [r.id, r.name])) });
+mountPlanSheet({ cards: [article], names: new Map(catalog.map((r) => [r.id, r.name])), slot });
 void ratings.init();
 
 const boxes = [...document.querySelectorAll<HTMLInputElement>('input[data-item]')];

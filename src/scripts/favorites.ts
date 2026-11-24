@@ -12,11 +12,8 @@ const grid = $('#recipe-grid');
 const empty = $('#empty');
 const cards = [...grid.querySelectorAll<HTMLElement>('article[data-id]')];
 
-const { controller } = mountRatings({
-  root: grid,
-  cards,
-  slot: mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') }),
-});
+const slot = mountUndoSlot({ bar: $('#undo-bar'), stack: $('#bottom-stack'), text: $('#undo-text'), button: $('#undo-button') });
+const { controller } = mountRatings({ root: grid, cards, slot });
 
 type ListName = 'family' | 'ed' | 'kristina';
 let lists: Record<ListName, string[]> = { family: [], ed: [], kristina: [] };
@@ -54,4 +51,4 @@ showFavorites();
 void controller.init();
 void loadLists();
 
-mountPlanSheet({ cards, names: new Map(cards.map((el) => [el.dataset.id!, el.dataset.name!])) });
+mountPlanSheet({ cards, names: new Map(cards.map((el) => [el.dataset.id!, el.dataset.name!])), slot });
