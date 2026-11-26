@@ -5,6 +5,7 @@ meal: dinner
 approved: true
 tags: []
 source: "https://fitfoodiefinds.com/slow-cooker-pork-roast/"
+photo: photos/slow-cooker-roast.jpg
 author: Linley Hanson
 ingredients:
   - pork

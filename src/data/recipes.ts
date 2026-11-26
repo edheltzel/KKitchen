@@ -1,4 +1,4 @@
-// REAL RECIPES, written by hand from the captain's notes. Nothing here is copied from a file: no photo, no photo link, no blog text.
+// REAL RECIPES, written by hand from the captain's notes. No blog text. Each photo is a key in the RECIPES bucket, not a link.
 //
 // Approval: these notes carry no approved marker, but the captain asked for these three by name, so each is treated as approved.
 // Gluten-free: the gluten-free tag is held until the captain confirms it (the fried chicken is still open), so no recipe has any tag.
@@ -12,6 +12,7 @@ const step = (text: string, ...uses: string[]): Step => (uses.length > 0 ? { tex
 const friedChicken: ExampleRecipe = {
   id: 'fried-chicken', name: 'Fried Chicken', meal: 'dinner', approved: true, tags: [], glutenFreePerSource: true,
   source: 'https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/',
+  photo: 'photos/fried-chicken.jpg',
   ingredients: ['chicken', 'milk', 'vinegar', 'flour', 'cornstarch', 'paprika', 'oil'],
   prep: 15, cook: 45, minutes: 60, wait: '2 h marinate', serves: 6,
   groups: [
@@ -58,6 +59,7 @@ const friedChicken: ExampleRecipe = {
 const roast: ExampleRecipe = {
   id: 'slow-cooker-roast', name: 'Slow Cooker Roast', meal: 'dinner', approved: true, tags: [],
   source: 'https://fitfoodiefinds.com/slow-cooker-pork-roast/', author: 'Linley Hanson',
+  photo: 'photos/slow-cooker-roast.jpg',
   ingredients: ['pork', 'potatoes', 'carrots', 'onion', 'garlic', 'rosemary', 'thyme', 'balsamic', 'red wine', 'cornstarch'],
   prep: 25, cook: 360, minutes: 385, serves: 8,
   groups: [
@@ -112,6 +114,7 @@ const roast: ExampleRecipe = {
 const brownies: ExampleRecipe = {
   id: 'high-protein-brownies', name: 'High Protein Brownies', meal: 'snack', approved: true, tags: [], glutenFreePerSource: true,
   source: 'https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/', author: 'Instructables',
+  photo: 'photos/high-protein-brownies.jpg',
   ingredients: ['cottage cheese', 'eggs', 'cocoa', 'whey', 'baking powder', 'walnuts', 'chocolate chips'],
   prep: 0, cook: 25, minutes: 25, serves: 8,
   groups: [

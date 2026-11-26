@@ -14,7 +14,7 @@ if (!recipe) return new Response(null, { status: 404 });
 <Base title={`Edit ${recipe.name} · Kris's Kitchen`} active="recipes">
   <a href={`/recipe/${recipe.id}/`} class="kk-back">{recipe.name}</a>
   <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Edit recipe</h1>
-  <form method="post" action="/api/recipes" class="kk-form mt-4 grid gap-4">
+  <form method="post" action="/api/recipes" enctype="multipart/form-data" class="kk-form mt-4 grid gap-4">
     <input type="hidden" name="id" value={recipe.id} />
     <label class="grid gap-1">
       <span class="text-[13px] font-bold">Name</span>
@@ -39,6 +39,11 @@ if (!recipe) return new Response(null, { status: 404 });
     <label class="grid gap-1">
       <span class="text-[13px] font-bold">Method, one step per line</span>
       <textarea name="method" required rows="8" class="textarea textarea-bordered w-full">{recipe.steps.map((step) => step.text).join('\n')}</textarea>
+    </label>
+    <label class="grid gap-1">
+      <span class="text-[13px] font-bold">{recipe.photo ? 'Photo, leave empty to keep this one' : 'Photo, optional'}</span>
+      {recipe.photo && <img src={`/${recipe.photo}`} alt="" class="kk-form-photo" />}
+      <input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" class="kk-file w-full" />
     </label>
     <button class="btn btn-primary h-12 min-h-11 rounded-full">Save recipe</button>
   </form>

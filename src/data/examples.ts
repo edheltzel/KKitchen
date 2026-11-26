@@ -51,6 +51,8 @@ export interface ExampleRecipe {
   steps: readonly Step[];
   /** Link to the original recipe. Only a recipe that has one shows the link. */
   source?: string;
+  /** R2 key of the recipe's photo, under photos/. Served at /<key>. Omitted means the letter tile. */
+  photo?: string;
   /** Who wrote the original. Kept in the data only: no page shows it yet. */
   author?: string;
   /** Short plain lines shown under the steps on the recipe page (tips, wait time, equipment). Omitted means no Notes section. */

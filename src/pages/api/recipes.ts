@@ -1,21 +1,27 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
-import { createRecipeStore, RecipeRejected, type RecipeInput } from '../../lib/recipe-store';
+import { createRecipeStore, RecipeRejected, type PhotoUpload, type RecipeInput } from '../../lib/recipe-store';
 import { ensureRecipe } from '../../lib/recipes-row';
 
 export const prerender = false;
 
+const photoOf = async (value: FormDataEntryValue | null): Promise<PhotoUpload | undefined> => {
+  if (!(value instanceof File) || value.size === 0) return undefined;
+  return { type: value.type, size: value.size, data: await value.arrayBuffer() };
+};
+
 const inputOf = async (request: Request): Promise<RecipeInput> => {
   const form = await request.formData();
   const text = (name: string) => String(form.get(name) ?? '');
-  return { id: text('id'), name: text('name'), minutes: Number(text('minutes')) || 0, meal: text('meal'), ingredients: text('ingredients'), method: text('method') };
+  const photo = await photoOf(form.get('photo'));
+  return { id: text('id'), name: text('name'), minutes: Number(text('minutes')) || 0, meal: text('meal'), ingredients: text('ingredients'), method: text('method'), ...(photo ? { photo } : {}) };
 };
 
 export const GET: APIRoute = async ({ locals }) => {
   const bucket = env.RECIPES;
   if (!bucket) return Response.json([]);
   const recipes = await createRecipeStore(bucket).list();
-  return Response.json(recipes.map((recipe) => ({ id: recipe.id, name: recipe.name, meal: recipe.meal, minutes: recipe.minutes, ingredients: recipe.ingredients })));
+  return Response.json(recipes.map((recipe) => ({ id: recipe.id, name: recipe.name, meal: recipe.meal, minutes: recipe.minutes, ingredients: recipe.ingredients, photo: recipe.photo })));
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {

@@ -25,6 +25,7 @@ const tags = confirmedTags(recipe);
       <div class="relative">
         <div class="kk-tile kk-hero relative" aria-hidden="true">
           <span class="kk-tile-letter">{recipe.name.charAt(0)}</span>
+          {recipe.photo && <img src={`/${recipe.photo}`} alt="" decoding="async" class="kk-tile-photo" />}
         </div>
         <span data-role="family-badge" hidden class="kk-fav-badge">★ Family favorite</span>
         {isFixture && <span class="badge absolute right-2 top-2 border-0 bg-base-content font-bold text-base-100">Example</span>}

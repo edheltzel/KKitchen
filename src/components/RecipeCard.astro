@@ -27,6 +27,7 @@ export const prerender = true;
   <div class="relative">
     <div class="kk-tile relative aspect-[4/3]" aria-hidden="true">
       <span class="kk-tile-letter">{recipe.name.charAt(0)}</span>
+      {recipe.photo && <img src={`/${recipe.photo}`} alt="" loading="lazy" decoding="async" class="kk-tile-photo" />}
     </div>
     <span data-role="family-badge" hidden class="kk-fav-badge">★ Family favorite</span>
   </div>
