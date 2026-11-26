@@ -10,7 +10,7 @@ const meals = ['breakfast', 'lunch', 'dinner', 'snack'];
   <a href="/" class="kk-back">Recipes</a>
   <h1 class="mt-1 text-3xl font-extrabold tracking-tight">New recipe</h1>
   <div class="kk-form-layout mt-4 lg:grid lg:grid-cols-2 lg:gap-8">
-  <form method="post" action="/api/recipes" class="kk-form grid gap-4">
+  <form method="post" action="/api/recipes" enctype="multipart/form-data" class="kk-form grid gap-4">
     <label class="grid gap-1">
       <span class="text-[13px] font-bold">Name</span>
       <input name="name" required class="input input-bordered h-12 w-full" />
@@ -38,6 +38,10 @@ const meals = ['breakfast', 'lunch', 'dinner', 'snack'];
     <label class="grid gap-1">
       <span class="text-[13px] font-bold">Method, one step per line</span>
       <textarea name="method" required rows="8" class="textarea textarea-bordered w-full"></textarea>
+    </label>
+    <label class="grid gap-1">
+      <span class="text-[13px] font-bold">Photo, optional</span>
+      <input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" class="kk-file w-full" />
     </label>
     <button class="btn btn-primary h-12 min-h-11 rounded-full">Save recipe</button>
   </form>

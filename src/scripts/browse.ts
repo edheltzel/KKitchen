@@ -54,7 +54,7 @@ const grid = document.querySelector('#recipe-grid');
 const template = document.querySelector<HTMLElement>('#recipe-grid article');
 void fetch('/api/recipes')
   .then((response) => (response.ok ? response.json() : []))
-  .then((saved: { id: string; name: string; meal: string; minutes: number; ingredients: string[] }[]) => {
+  .then((saved: { id: string; name: string; meal: string; minutes: number; ingredients: string[]; photo?: string }[]) => {
     for (const recipe of saved) {
       if (document.querySelector(`article[data-id="${recipe.id}"]`) || !template || !grid) continue;
       const card = template.cloneNode(true) as HTMLElement;
@@ -68,6 +68,16 @@ void fetch('/api/recipes')
       if (link) { link.href = `/recipe/saved/${recipe.id}/`; link.textContent = recipe.name; }
       const letter = card.querySelector('.kk-tile-letter');
       if (letter) letter.textContent = recipe.name.charAt(0);
+      card.querySelector('.kk-tile-photo')?.remove();
+      if (recipe.photo) {
+        const photo = document.createElement('img');
+        photo.src = `/${recipe.photo}`;
+        photo.alt = '';
+        photo.loading = 'lazy';
+        photo.decoding = 'async';
+        photo.className = 'kk-tile-photo';
+        letter?.after(photo);
+      }
       grid.append(card);
     }
   });

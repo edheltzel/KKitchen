@@ -13,7 +13,32 @@ export interface RecipeInput {
   method: string;
   /** The recipe being edited, so a save keeps its prep, source, notes and tags instead of blanking them. */
   previous?: ExampleRecipe;
+  /** A new photo from the form. Without one, an edit keeps the recipe's photo. */
+  photo?: PhotoUpload;
 }
+
+export interface PhotoUpload {
+  type: string;
+  size: number;
+  data: ArrayBuffer;
+}
+
+export const PHOTO_TYPES: Readonly<Record<string, string>> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'image/gif': 'gif',
+};
+export const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+export const PHOTO_KEY = /^photos\/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:jpg|png|webp|avif|gif)$/;
+
+export const checkPhoto = (photo: PhotoUpload): string => {
+  const ext = PHOTO_TYPES[photo.type];
+  if (!ext) throw new RecipeRejected('A photo needs to be a JPEG, PNG, WebP, AVIF or GIF.');
+  if (photo.size > PHOTO_MAX_BYTES) throw new RecipeRejected('A photo can be at most 10 MB.');
+  return ext;
+};
 
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -69,9 +94,20 @@ const fileFor = (recipe: ExampleRecipe): string => {
 
 export interface RecipeBucket {
   get(key: string): Promise<{ text(): Promise<string> } | null>;
-  put(key: string, value: string): Promise<unknown>;
-  list(): Promise<{ objects: { key: string }[] }>;
+  put(key: string, value: string | ArrayBuffer, options?: { httpMetadata: { contentType: string } }): Promise<unknown>;
+  list(options?: { cursor?: string }): Promise<{ objects: { key: string }[]; truncated?: boolean; cursor?: string }>;
 }
+
+const recipeKeys = async (bucket: RecipeBucket): Promise<string[]> => {
+  const keys: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await bucket.list(cursor ? { cursor } : undefined);
+    keys.push(...page.objects.map((object) => object.key).filter((key) => key.endsWith('.md')));
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return keys;
+};
 
 // The bundled files, for a bucket that has never been written to. Tests and dev read them from disk; the build bundles them.
 const seed = async (): Promise<ExampleRecipe[]> => {
@@ -89,10 +125,9 @@ const seed = async (): Promise<ExampleRecipe[]> => {
 export const createRecipeStore = (bucket: RecipeBucket) => ({
   async list(): Promise<ExampleRecipe[]> {
     const seeded = await seed();
-    const listed = await bucket.list();
     const saved = new Map<string, ExampleRecipe>();
-    for (const object of listed.objects) {
-      const file = await bucket.get(object.key);
+    for (const key of await recipeKeys(bucket)) {
+      const file = await bucket.get(key);
       if (file) {
         const recipe = recipeFromFile(await file.text());
         saved.set(recipe.id, recipe);
@@ -103,7 +138,15 @@ export const createRecipeStore = (bucket: RecipeBucket) => ({
     return [...ids].map((id) => saved.get(id) ?? seeded.find((recipe) => recipe.id === id)!);
   },
   async save(input: RecipeInput): Promise<ExampleRecipe> {
-    const recipe = checkRecipe(input);
+    const checked = checkRecipe(input);
+    const photo = input.photo;
+    if (!photo) {
+      await bucket.put(`${checked.id}.md`, fileFor(checked));
+      return checked;
+    }
+    const key = `photos/${checked.id}-${Date.now()}.${checkPhoto(photo)}`;
+    await bucket.put(key, photo.data, { httpMetadata: { contentType: photo.type } });
+    const recipe = { ...checked, photo: key };
     await bucket.put(`${recipe.id}.md`, fileFor(recipe));
     return recipe;
   },

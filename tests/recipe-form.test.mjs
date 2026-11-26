@@ -43,6 +43,33 @@ test('posting a recipe writes it to the bucket and reading it back gives the sam
   assert.equal(read.approved, true);
 });
 
+const jpeg = { type: 'image/jpeg', size: 3, data: new Uint8Array([1, 2, 3]).buffer };
+
+test('a recipe saved with a photo stores the photo under photos/ and the list still reads only recipes', async () => {
+const bucket = memoryBucket();
+const store = createRecipeStore(bucket);
+const saved = await store.save({ ...soup, photo: jpeg });
+assert.match(saved.photo, /^photos\/tomato-soup-\d+\.jpg$/);
+assert.equal(bucket.objects.get(saved.photo), jpeg.data);
+const read = (await store.list()).find((recipe) => recipe.id === 'tomato-soup');
+assert.equal(read.photo, saved.photo);
+});
+
+test('an edit without a new photo keeps the old one', async () => {
+const store = createRecipeStore(memoryBucket());
+const first = await store.save({ ...soup, photo: jpeg });
+const edited = await store.save({ ...soup, name: 'Red soup', previous: first });
+assert.equal(edited.photo, first.photo);
+});
+
+test('a photo that is not an image, or is over 10 MB, is refused and nothing is saved', async () => {
+const bucket = memoryBucket();
+const store = createRecipeStore(bucket);
+await assert.rejects(store.save({ ...soup, photo: { ...jpeg, type: 'image/heic' } }), RecipeRejected);
+await assert.rejects(store.save({ ...soup, photo: { ...jpeg, size: 11 * 1024 * 1024 } }), RecipeRejected);
+assert.equal(bucket.objects.size, 0);
+});
+
 test('a recipe with no name is rejected and nothing is written', async () => {
   const bucket = memoryBucket();
   const store = createRecipeStore(bucket);

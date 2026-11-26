@@ -18,7 +18,7 @@ Ed and Kristina share one week of meals, one set of ratings and one set of recip
 
 - Anyone other than Ed and Kristina.
 - A way to delete a recipe, or a public page for people who are not signed in.
-- Photos, comments, or a shopping list.
+- Comments or a shopping list. Photos were added on 25 Nov 2026: one per recipe, uploaded from the recipe form and stored in R2 under `photos/`.
 - Sharing ratings or a week with anyone outside the two of them.
 
 ## Success
