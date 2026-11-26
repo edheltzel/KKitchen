@@ -6,6 +6,7 @@ approved: true
 tags: []
 glutenFreePerSource: true
 source: "https://www.mamaknowsglutenfree.com/gluten-free-fried-chicken/"
+photo: photos/fried-chicken.jpg
 ingredients:
   - chicken
   - milk

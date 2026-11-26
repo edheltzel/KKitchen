@@ -40,7 +40,8 @@ test('the home page lists the three real recipes by their note titles, with no E
   for (const id of IDS) assert.match(html, new RegExp(`data-id="${id}"`));
   for (const t of Object.values(TITLES)) assert.ok(html.includes(`>${t}</a>`), t);
   assert.ok(!/>Example</.test(html) && !/Example recipe/.test(html) && !/placeholder content/.test(html));
-  assert.ok(!/<img/i.test(html));
+  const images = [...html.matchAll(/<img[^>]*src="([^"]+)"/gi)].map((m) => m[1]).sort();
+  assert.deepEqual(images, IDS.map((id) => `/photos/${id}.jpg`), 'each card shows its own photo from the bucket, and no other image');
 });
 
 test('the week page offers the real titles with no placeholder line', () => {
@@ -49,11 +50,12 @@ test('the week page offers the real titles with no placeholder line', () => {
   assert.ok(!/placeholder content/.test(html) && !/Example/.test(html));
 });
 
-test('every recipe page and cooking page carries the real title and no Example badge, no image, no tags', () => {
+test('every recipe page and cooking page carries the real title, its own photo and no Example badge, no other image, no tags', () => {
   for (const id of IDS) {
     const recipe = page(`recipe/${id}/index.html`);
     assert.ok(recipe.includes(`>${TITLES[id]}</h1>`), id);
-    assert.ok(!/>Example</.test(recipe) && !/<img/i.test(recipe));
+    assert.ok(!/>Example</.test(recipe));
+    assert.deepEqual([...recipe.matchAll(/<img[^>]*src="([^"]+)"/gi)].map((m) => m[1]), [`/photos/${id}.jpg`], id);
     assert.ok(!/aria-label="Tags"/.test(recipe), `${id}: no tag list`);
     assert.match(recipe, /rel="noopener noreferrer" class="kk-source"/);
     assert.ok(page(`cook/${id}/index.html`).includes(`Cooking ${TITLES[id]}`), id);

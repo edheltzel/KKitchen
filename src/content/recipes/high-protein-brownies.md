@@ -6,6 +6,7 @@ approved: true
 tags: []
 glutenFreePerSource: true
 source: "https://www.instructables.com/High-Protein-Gluten-Free-Brownies-That-Actually-Ta/"
+photo: photos/high-protein-brownies.jpg
 author: Instructables
 ingredients:
   - cottage cheese

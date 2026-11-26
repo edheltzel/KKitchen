@@ -93,8 +93,10 @@ test('gluten-free is held: no diet tag at all on any of them, so no badge and no
   assert.ok(!/gluten/i.test(JSON.stringify(by('slow-cooker-roast'))), 'the roast makes no gluten-free claim at all');
 });
 
-test('no image, no image link, no affiliate link, no promo or review text, no vault path', () => {
-  assert.ok(!/<img|!\[|\[\[|\.(jpe?g|png|gif|webp|svg|heic)\b/i.test(json), 'no image');
+test('each recipe has its own photo in the bucket, and no other image, image link, affiliate link, promo text or vault path', () => {
+  for (const r of realNotes) assert.equal(r.photo, `photos/${r.id}.jpg`, r.id);
+  const withoutPhotos = JSON.stringify(realNotes.map(({ photo, ...rest }) => rest));
+  assert.ok(!/<img|!\[|\[\[|\.(jpe?g|png|gif|webp|svg|heic)\b/i.test(withoutPhotos), 'no image');
   assert.ok(!/http:\/\//.test(json), 'no plain http link');
   assert.ok(!/amzn|affiliate|goto\.|Jump to Recipe|votes|kcal|Rick|youtube|inthekitchenwithmatt/i.test(json));
   assert.ok(!/FieldNotes|iCloud|Mobile Documents|Obsidian|\/Users\//.test(json));
